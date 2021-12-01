@@ -97,6 +97,3 @@ class Tester(interfaces.TesterInterface):
                 "test_name": test_name
             })
         return result
-
-    def _get_all_inbound_permissions_of_instance(self, instances):
-        pass
