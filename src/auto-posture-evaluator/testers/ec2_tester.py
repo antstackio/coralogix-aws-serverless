@@ -22,7 +22,10 @@ class Tester(interfaces.TesterInterface):
     def run_tests(self) -> list:
         return \
             self.get_inbound_http_access(self.instances) + \
-            self.get_inbound_https_access(self.instances)
+            self.get_inbound_https_access(self.instances) + \
+            self.get_inbound_mongodb_access(self.instances) + \
+            self.get_inbound_mysql_access(self.instances) + \
+            self.get_inbound_mssql_access(self.instances)
     
     def _get_inbound_port_access(self, instances, target_port, test_name):
         result = []
@@ -67,3 +70,17 @@ class Tester(interfaces.TesterInterface):
     def get_inbound_https_access(self, instances):
         test_name = "ec2_inbound_https_access_restricted"
         return self._get_inbound_port_access(instances, 443, test_name)
+    
+    def get_inbound_mongodb_access(self, instances):
+        test_name = "ec2_inbound_mongodb_access_restricted"
+        return self._get_inbound_port_access(instances, 27017, test_name)
+    
+    def get_inbound_mysql_access(self, instances):
+        test_name = "ec2_inbound_mysql_access_restricted"
+        return self._get_inbound_port_access(instances, 3306, test_name)
+    
+    def get_inbound_mssql_access(self, instances):
+        test_name = "ec2_inbound_mssql_access_restricted"
+        return self._get_inbound_port_access(instances, 1433, test_name)
+
+print(Tester().run_tests())
