@@ -23,9 +23,8 @@ class Tester(interfaces.TesterInterface):
         return \
             self.get_inbound_http_access(self.instances) + \
             self.get_inbound_https_access(self.instances)
-
-    def get_inbound_http_access(self, instances):
-        test_name = "ec2_inbound_http_access_restricted"
+    
+    def _get_inbound_port_access(self, instances, target_port, test_name):
         result = []
         for instance in instances:
             # get security group of that instance 
@@ -36,44 +35,7 @@ class Tester(interfaces.TesterInterface):
                 for i in inbound_permissions:
                     all_inbound_permissions.append(i)
 
-            http_port_access = list(filter(lambda permission: permission['FromPort'] == 80 and permission['ToPort'] == 80, all_inbound_permissions))
-            if len(http_port_access) == 0:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": instance.id,
-                    "item_type": "ec2",
-                    "test_name": test_name
-                })
-            else:
-                pass
-        if len(result) == 0:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": None,
-                "item_type": "ec2",
-                "test_name": test_name
-            })
-        return result
-
-    def get_inbound_https_access(self, instances):
-        test_name = "ec2_inbound_https_access_restricted"
-        result = []
-        for instance in instances:
-            # get security group of that instance 
-            security_groups = instance.security_groups
-            all_inbound_permissions = []
-            for security_group in security_groups:
-                inbound_permissions = self.aws_ec2_resource.SecurityGroup(security_group['GroupId']).ip_permissions
-                for i in inbound_permissions:
-                    all_inbound_permissions.append(i)
-
-            https_port_access = list(filter(lambda permission: permission['FromPort'] == 443 and permission['ToPort'] == 443, all_inbound_permissions))
+            https_port_access = list(filter(lambda permission: permission['FromPort'] == target_port and permission['ToPort'] == target_port, all_inbound_permissions))
             if len(https_port_access) == 0:
                 result.append({
                     "user": self.user_id,
@@ -97,3 +59,11 @@ class Tester(interfaces.TesterInterface):
                 "test_name": test_name
             })
         return result
+
+    def get_inbound_http_access(self, instances):
+        test_name = "ec2_inbound_http_access_restricted"
+        return self._get_inbound_port_access(instances, 80, test_name)
+
+    def get_inbound_https_access(self, instances):
+        test_name = "ec2_inbound_https_access_restricted"
+        return self._get_inbound_port_access(instances, 443, test_name)
