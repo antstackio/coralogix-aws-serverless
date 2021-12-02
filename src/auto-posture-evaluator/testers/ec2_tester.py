@@ -27,9 +27,11 @@ class Tester(interfaces.TesterInterface):
             self.get_inbound_mysql_access(self.instances) + \
             self.get_inbound_mssql_access(self.instances) + \
             self.get_inbound_ssh_access(self.instances) + \
-            self.get_inbound_rdp_access(self.instances)
+            self.get_inbound_rdp_access(self.instances) + \
+            self.get_inbound_postgresql_access(self.instances) + \
+            self.get_inbound_tcp_netbios_access(self.instances)
     
-    def _get_inbound_port_access(self, instances, target_port, test_name):
+    def _get_inbound_port_access(self, instances, target_port, test_name, protocol="tcp"):
         result = []
         for instance in instances:
             # get security group of that instance 
@@ -40,7 +42,7 @@ class Tester(interfaces.TesterInterface):
                 for i in inbound_permissions:
                     all_inbound_permissions.append(i)
 
-            https_port_access = list(filter(lambda permission: permission['FromPort'] == target_port and permission['ToPort'] == target_port, all_inbound_permissions))
+            https_port_access = list(filter(lambda permission: permission['FromPort'] == target_port and permission['ToPort'] == target_port and permission['IpProtocol'] == protocol, all_inbound_permissions))
             if len(https_port_access) == 0:
                 result.append({
                     "user": self.user_id,
@@ -92,3 +94,11 @@ class Tester(interfaces.TesterInterface):
     def get_inbound_rdp_access(self, instances):
         test_name = "ec2_inbound_rdp_access_restricted"
         return self._get_inbound_port_access(instances, 3389, test_name)
+    
+    def get_inbound_postgresql_access(self, instances):
+        test_name = "ec2_inbound_postgresql_access_restricted"
+        return self._get_inbound_port_access(instances, 5432, test_name)
+
+    def get_inbound_tcp_netbios_access(self, instances):
+        test_name = "ec2_inbound_tcp_netbios_access_restricted"
+        return self._get_inbound_port_access(instances, 139, test_name)
