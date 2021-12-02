@@ -25,7 +25,9 @@ class Tester(interfaces.TesterInterface):
             self.get_inbound_https_access(self.instances) + \
             self.get_inbound_mongodb_access(self.instances) + \
             self.get_inbound_mysql_access(self.instances) + \
-            self.get_inbound_mssql_access(self.instances)
+            self.get_inbound_mssql_access(self.instances) + \
+            self.get_inbound_ssh_access(self.instances) + \
+            self.get_inbound_rdp_access(self.instances)
     
     def _get_inbound_port_access(self, instances, target_port, test_name):
         result = []
@@ -83,4 +85,10 @@ class Tester(interfaces.TesterInterface):
         test_name = "ec2_inbound_mssql_access_restricted"
         return self._get_inbound_port_access(instances, 1433, test_name)
 
-print(Tester().run_tests())
+    def get_inbound_ssh_access(self, instances):
+        test_name = "ec2_inbound_ssh_access_restricted"
+        return self._get_inbound_port_access(instances, 22, test_name)
+
+    def get_inbound_rdp_access(self, instances):
+        test_name = "ec2_inbound_rdp_access_restricted"
+        return self._get_inbound_port_access(instances, 3389, test_name)
