@@ -147,3 +147,40 @@ class Tester(interfaces.TesterInterface):
     def get_inbound_elasticsearch_access(self, all_inbound_permissions):
         test_name = "ec2_inbound_elasticsearch_access_restricted"
         return self._get_inbound_port_access(all_inbound_permissions, 9200, test_name)
+    
+    def get_inbound_smtp_access(self, all_inbound_permissions):
+        test_name = "ec2_inbound_smtp_access_restricted"
+        result = []
+        port_25 = 25
+        port_587 = 587
+        port_2525 = 2525
+        instances = []
+        instances_25 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == port_25 and permission['ToPort'] == port_25 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        instances.extend(instances_25)
+        instances_587 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == port_587 and permission['ToPort'] == port_587 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        instances.extend(instances_587)
+        instances_2525 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == port_2525 and permission['ToPort'] == port_2525 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        instances.extend(instances_2525)
+        instances = set(instances)
+
+        for i in instances:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": i,
+                "item_type": "ec2_instance",
+                "test_name": test_name 
+            })
+        if len(result) == 0:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": None,
+                "item_type": "ec2_instance",
+                "test_name": test_name
+            })
+        return result
