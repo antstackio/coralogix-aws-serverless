@@ -135,3 +135,7 @@ class Tester(interfaces.TesterInterface):
                 "test_name": test_name
             })
         return result
+
+    def get_inbound_telnet_access(self, all_inbound_permissions):
+        test_name = "ec2_inbound_telnet_access_restricted"
+        return self._get_inbound_port_access(all_inbound_permissions, 23, test_name)
