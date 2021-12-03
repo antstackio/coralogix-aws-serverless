@@ -31,7 +31,11 @@ class Tester(interfaces.TesterInterface):
             self.get_inbound_rdp_access(all_inbound_permissions) + \
             self.get_inbound_postgresql_access(all_inbound_permissions) + \
             self.get_inbound_tcp_netbios_access(all_inbound_permissions) + \
-            self.get_inbound_dns_access(all_inbound_permissions)
+            self.get_inbound_dns_access(all_inbound_permissions) + \
+            self.get_inbound_elasticsearch_access(all_inbound_permissions) + \
+            self.get_inbound_smtp_access(all_inbound_permissions) + \
+            self.get_inbound_telnet_access(all_inbound_permissions) + \
+            self.get_inbound_rpc_access(all_inbound_permissions)
     
     def _get_all_instance_ids(self, instances):
         return list(map(lambda i: i.id, list(instances)))
@@ -184,3 +188,7 @@ class Tester(interfaces.TesterInterface):
                 "test_name": test_name
             })
         return result
+
+    def get_inbound_rpc_access(self, all_inbound_permissions):
+        test_name = "ec2_inbound_rpc_access_restricted"
+        return self._get_inbound_port_access(all_inbound_permissions, 135, test_name)
