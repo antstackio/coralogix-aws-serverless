@@ -1,5 +1,6 @@
 import json
 import time
+from warnings import resetwarnings
 import boto3
 import botocore.exceptions
 import interfaces
@@ -36,7 +37,8 @@ class Tester(interfaces.TesterInterface):
             self.get_inbound_smtp_access(all_inbound_permissions) + \
             self.get_inbound_telnet_access(all_inbound_permissions) + \
             self.get_inbound_rpc_access(all_inbound_permissions) + \
-            self.get_inbound_ftp_access(all_inbound_permissions)
+            self.get_inbound_ftp_access(all_inbound_permissions) + \
+            self.get_inbound_udp_netbios(all_inbound_permissions)
     
     def _get_all_instance_ids(self, instances):
         return list(map(lambda i: i.id, list(instances)))
@@ -195,5 +197,42 @@ class Tester(interfaces.TesterInterface):
         return self._get_inbound_port_access(all_inbound_permissions, 135, test_name)
 
     def get_inbound_ftp_access(self, all_inbound_permissions):
-        test_name = "ec2_inbound-ftp_access_restricted"
+        test_name = "ec2_inbound_ftp_access_restricted"
         return self._get_inbound_port_access(all_inbound_permissions, 21, test_name)
+
+    def get_inbound_udp_netbios(self, all_inbound_permissions):
+        test_name = "ec2_inbound_udp_access_restricted"
+        result = []
+        instances = []
+        instances_137_to_138 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == 137 and permission['ToPort'] == 138 and permission['IpProtocol'] == 'udp', all_inbound_permissions))))
+        instances.extend(instances_137_to_138)
+        instancse_137 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == 137 and permission['ToPort'] == 137 and permission['IpProtocol'] == 'udp', all_inbound_permissions))))
+        instances.extend(instancse_137)
+        instancse_138 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == 138 and permission['ToPort'] == 138 and permission['IpProtocol'] == 'udp', all_inbound_permissions))))
+        instances.extend(instancse_138)
+        instances = set(instances)
+
+        for i in instances:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": i,
+                "item_type": "ec2_instance",
+                "test_name": test_name
+            })
+        if len(result) == 0:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": None,
+                "item_type": "ec2_instance",
+                "test_name": test_name
+            })
+        
+        return result
+
+print(Tester().run_tests())
