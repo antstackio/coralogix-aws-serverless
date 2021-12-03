@@ -143,3 +143,7 @@ class Tester(interfaces.TesterInterface):
     def get_inbound_cifs_access(self, all_inbound_permissions):
         test_name = "ec2_inbound_cifs_access_restricted"
         return self._get_inbound_port_access(all_inbound_permissions, 445, test_name)
+    
+    def get_inbound_elasticsearch_access(self, all_inbound_permissions):
+        test_name = "ec2_inbound_elasticsearch_access_restricted"
+        return self._get_inbound_port_access(all_inbound_permissions, 9200, test_name)
