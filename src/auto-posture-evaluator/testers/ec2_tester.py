@@ -30,7 +30,8 @@ class Tester(interfaces.TesterInterface):
             self.get_inbound_ssh_access(all_inbound_permissions) + \
             self.get_inbound_rdp_access(all_inbound_permissions) + \
             self.get_inbound_postgresql_access(all_inbound_permissions) + \
-            self.get_inbound_tcp_netbios_access(all_inbound_permissions)
+            self.get_inbound_tcp_netbios_access(all_inbound_permissions) + \
+            self.get_inbound_dns_access(all_inbound_permissions)
     
     def _get_all_instance_ids(self, instances):
         return list(map(lambda i: i.id, list(instances)))
@@ -107,3 +108,30 @@ class Tester(interfaces.TesterInterface):
         test_name = "ec2_inbound_tcp_netbios_access_restricted"
         return self._get_inbound_port_access(all_inbound_permissions, 139, test_name)
 
+    def get_inbound_dns_access(self, all_inbound_permissions):
+        test_name = "ec2_inbound_dns_access_restricted"
+        result = []
+        target_port = 53
+        instances = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == target_port and permission['ToPort'] == target_port and (permission['IpProtocol'] == "tcp" or permission['IpProtocol'] == "udp"), all_inbound_permissions))))
+        instances = set(instances)
+        for i in instances:
+            result.append({
+               "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": i,
+                "item_type": "ec2_instance",
+                "test_name": test_name 
+            })
+        if len(result) == 0:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": None,
+                "item_type": "ec2_instance",
+                "test_name": test_name
+            })
+        return result
