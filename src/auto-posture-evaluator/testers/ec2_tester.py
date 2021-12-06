@@ -22,6 +22,7 @@ class Tester(interfaces.TesterInterface):
 
     def run_tests(self) -> list:
         all_inbound_permissions = self._get_all_inbound_permissions(self.instances)
+        all_vpcs = self._get_all_vpc_ids(self.instances)
         return \
             self.get_inbound_http_access(all_inbound_permissions) + \
             self.get_inbound_https_access(all_inbound_permissions) + \
@@ -38,7 +39,8 @@ class Tester(interfaces.TesterInterface):
             self.get_inbound_telnet_access(all_inbound_permissions) + \
             self.get_inbound_rpc_access(all_inbound_permissions) + \
             self.get_inbound_ftp_access(all_inbound_permissions) + \
-            self.get_inbound_udp_netbios(all_inbound_permissions)
+            self.get_inbound_udp_netbios(all_inbound_permissions) + \
+            self.get_outbound_access_to_all_ports(all_vpcs)
     
     def _get_all_instance_ids(self, instances):
         return list(map(lambda i: i.id, list(instances)))
@@ -264,3 +266,43 @@ class Tester(interfaces.TesterInterface):
         
         return result
 
+    def _get_all_vpc_ids(self, instances):
+        vpc_ids = []
+        for instance in instances:
+            vpc_ids.append(instance.vpc_id)
+        vpc_ids = set(vpc_ids)
+        return vpc_ids
+
+    def get_outbound_access_to_all_ports(self, all_vpcs):
+        test_name = "ec2_outbound_access_to_all_ports_restricted"
+        result = []
+        security_groups = []
+        for vpc in all_vpcs:
+            vpc = self.aws_ec2_resource.Vpc(vpc)
+            security_groups.extend(vpc.security_groups.all())
+
+        for security_group in security_groups:
+            outbound_permissions = security_group.ip_permissions_egress
+            for outbound_permission in outbound_permissions:
+                if outbound_permission['IpProtocol'] == '-1':
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": security_group.id,
+                        "item_type": "ec2_security_group",
+                        "test_name": test_name
+                    })
+        if len(result) == 0:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": None,
+                "item_type": "ec2_security_group",
+                "test_name": test_name
+            })
+
+        return result 
