@@ -264,4 +264,3 @@ class Tester(interfaces.TesterInterface):
         
         return result
 
-print(Tester().run_tests())
