@@ -41,7 +41,8 @@ class Tester(interfaces.TesterInterface):
             self.get_inbound_ftp_access(all_inbound_permissions) + \
             self.get_inbound_udp_netbios(all_inbound_permissions) + \
             self.get_outbound_access_to_all_ports(all_vpcs) + \
-            self.get_vpc_default_security_group_restrict_traffic(all_vpcs)
+            self.get_vpc_default_security_group_restrict_traffic(all_vpcs) + \
+            self.get_inbound_oracle_access(all_inbound_permissions)
     
     def _get_all_instance_ids(self, instances):
         return list(map(lambda i: i.id, list(instances)))
@@ -343,3 +344,7 @@ class Tester(interfaces.TesterInterface):
                 "test_name": test_name
             })
         return result
+    
+    def get_inbound_oracle_access(self, all_inbound_permissions):
+        test_name = "ec2_inbound_oracle_access_restricted"
+        return self._get_inbound_port_access(all_inbound_permissions, 1521, test_name)
