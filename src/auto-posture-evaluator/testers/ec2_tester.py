@@ -113,7 +113,36 @@ class Tester(interfaces.TesterInterface):
 
     def get_inbound_tcp_netbios_access(self, all_inbound_permissions):
         test_name = "ec2_inbound_tcp_netbios_access_restricted"
-        return self._get_inbound_port_access(all_inbound_permissions, 139, test_name)
+        result = []
+        instances = []
+        instancse_137 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == 137 and permission['ToPort'] == 137 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        instances.extend(instancse_137)
+        instancse_139 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == 139 and permission['ToPort'] == 139 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        instances.extend(instancse_139)
+        instances = set(instances)
+
+        for i in instances:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": i,
+                "item_type": "ec2_instance",
+                "test_name": test_name
+            })
+        if len(result) == 0:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": None,
+                "item_type": "ec2_instance",
+                "test_name": test_name
+            })
+        
+        return result
 
     def get_inbound_dns_access(self, all_inbound_permissions):
         test_name = "ec2_inbound_dns_access_restricted"
