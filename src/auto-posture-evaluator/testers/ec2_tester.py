@@ -43,7 +43,8 @@ class Tester(interfaces.TesterInterface):
             self.get_outbound_access_to_all_ports(all_vpcs) + \
             self.get_vpc_default_security_group_restrict_traffic(all_vpcs) + \
             self.get_inbound_oracle_access(all_inbound_permissions) + \
-            self.get_inbound_icmp_access(all_inbound_permissions)
+            self.get_inbound_icmp_access(all_inbound_permissions) + \
+            self.get_security_group_allows_ingress_from_anywhere(all_inbound_permissions)
     
     def _get_all_instance_ids(self, instances):
         return list(map(lambda i: i.id, list(instances)))
@@ -56,6 +57,7 @@ class Tester(interfaces.TesterInterface):
                 inbound_permissions = self.aws_ec2_resource.SecurityGroup(security_group['GroupId']).ip_permissions
                 for i in inbound_permissions:
                     i['instance'] = instance
+                    i['security_group'] = security_group
                     all_inbound_permissions.append(i)
         return all_inbound_permissions
 
@@ -376,4 +378,39 @@ class Tester(interfaces.TesterInterface):
                 "test_name": test_name
             })
 
+        return result
+
+    def get_security_group_allows_ingress_from_anywhere(self, all_inbound_permissions):
+        test_name = "security_group_allows_ingress_to_remote_administration_ports_from_anywhere"
+        result = []
+        security_groups = []
+        for i in all_inbound_permissions:
+            if (i['FromPort'] == 22 and i['ToPort'] == 22) or (i['FromPort'] == 3389 and i['ToPort'] == 3389):
+                if len(i['IpRanges']) == 1 and i['IpRanges'][0]['CidrIp'] == '0.0.0.0/0':
+                    security_groups.append(i['security_group']['GroupId'])
+            else:
+                continue
+        
+        if len(security_groups) == 0:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": None,
+                "item_type": "ec2_security_group",
+                "test_name": test_name
+            })
+        else:
+            security_groups = set(security_groups)
+            for s in security_groups:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": s,
+                    "item_type": "ec2_security_group",
+                    "test_name": test_name
+                })
         return result
