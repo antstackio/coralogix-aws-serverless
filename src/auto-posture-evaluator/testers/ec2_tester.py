@@ -187,7 +187,40 @@ class Tester(interfaces.TesterInterface):
     
     def get_inbound_elasticsearch_access(self, all_inbound_permissions):
         test_name = "ec2_inbound_elasticsearch_access_restricted"
-        return self._get_inbound_port_access(all_inbound_permissions, 9200, test_name)
+        results = []
+        instances = []
+        instances_9200 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == 9200 and permission['ToPort'] == 9200 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        instances.extend(instances_9200)
+        instances_9300 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == 9300 and permission['ToPort'] == 9300 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        instances.extend(instances_9300)
+        instances_92_93_00 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == 9200 and permission['ToPort'] == 9300 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        instances.extend(instances_92_93_00)
+
+        instances = set(instances)
+
+        for i in instances:
+            results.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": i,
+                "item_type": "ec2_instance",
+                "test_name": test_name
+            })
+        
+        if len(results) == 0:
+            results.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": None,
+                "item_type": "ec2_instance",
+                "test_name": test_name
+            })
+    
+        return results
     
     def get_inbound_smtp_access(self, all_inbound_permissions):
         test_name = "ec2_inbound_smtp_access_restricted"
