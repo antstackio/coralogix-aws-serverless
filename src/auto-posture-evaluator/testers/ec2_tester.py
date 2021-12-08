@@ -1,6 +1,4 @@
-import json
 import time
-from warnings import resetwarnings
 import boto3
 import botocore.exceptions
 import interfaces
