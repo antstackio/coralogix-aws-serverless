@@ -340,7 +340,7 @@ class Tester(interfaces.TesterInterface):
         return result
 
     def get_inbound_udp_netbios(self, all_inbound_permissions):
-        test_name = "ec2_inbound_udp_access_restricted"
+        test_name = "ec2_inbound_udp_netbios_access_restricted"
         result = []
         instances = []
         instances_137_to_138 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == 137 and permission['ToPort'] == 138 and permission['IpProtocol'] == 'udp', all_inbound_permissions))))
