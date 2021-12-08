@@ -38,6 +38,7 @@ class Tester(interfaces.TesterInterface):
             self.get_inbound_rpc_access(all_inbound_permissions) + \
             self.get_inbound_ftp_access(all_inbound_permissions) + \
             self.get_inbound_udp_netbios(all_inbound_permissions) + \
+            self.get_inbound_cifs_access(all_inbound_permissions) + \
             self.get_outbound_access_to_all_ports(all_vpcs) + \
             self.get_vpc_default_security_group_restrict_traffic(all_vpcs) + \
             self.get_inbound_oracle_access(all_inbound_permissions) + \
@@ -183,7 +184,46 @@ class Tester(interfaces.TesterInterface):
 
     def get_inbound_cifs_access(self, all_inbound_permissions):
         test_name = "ec2_inbound_cifs_access_restricted"
-        return self._get_inbound_port_access(all_inbound_permissions, 445, test_name)
+        result = []
+        instances = []
+
+        instances_137_to_138 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == 137 and permission['ToPort'] == 138 and permission['IpProtocol'] == 'udp', all_inbound_permissions))))
+        instances.extend(instances_137_to_138)
+        instancse_137 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == 137 and permission['ToPort'] == 137 and permission['IpProtocol'] == 'udp', all_inbound_permissions))))
+        instances.extend(instancse_137)
+        instancse_138 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == 138 and permission['ToPort'] == 138 and permission['IpProtocol'] == 'udp', all_inbound_permissions))))
+        instances.extend(instancse_138)
+        instancse_139 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == 139 and permission['ToPort'] == 139 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        instances.extend(instancse_139)
+        instancse_445 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == 445 and permission['ToPort'] == 445 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        instances.extend(instancse_445)
+        instancse_3020 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == 3020 and permission['ToPort'] == 3020 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        instances.extend(instancse_3020)
+
+        instances = set(instances)
+
+        for i in instances:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": i,
+                "item_type": "ec2_instance",
+                "test_name": test_name
+            })
+        
+        if len(result) == 0:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": None,
+                "item_type": "ec2_instance",
+                "test_name": test_name
+            })
+        return result
     
     def get_inbound_elasticsearch_access(self, all_inbound_permissions):
         test_name = "ec2_inbound_elasticsearch_access_restricted"
