@@ -232,7 +232,39 @@ class Tester(interfaces.TesterInterface):
 
     def get_inbound_ftp_access(self, all_inbound_permissions):
         test_name = "ec2_inbound_ftp_access_restricted"
-        return self._get_inbound_port_access(all_inbound_permissions, 21, test_name)
+        result = []
+        instances = []
+        instances_20 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == 20 and permission['ToPort'] == 20 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        instances.extend(instances_20)
+        instances_21 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == 21 and permission['ToPort'] == 21 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        instances.extend(instances_21)
+        instances_20_21 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == 20 and permission['ToPort'] == 21 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        instances.extend(instances_20_21)
+
+        instances = set(instances)
+
+        for i in instances:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": i,
+                "item_type": "ec2_instance",
+                "test_name": test_name
+            })
+        
+        if len(result) == 0:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": None,
+                "item_type": "ec2_instance",
+                "test_name": test_name
+            })
+        return result
 
     def get_inbound_udp_netbios(self, all_inbound_permissions):
         test_name = "ec2_inbound_udp_access_restricted"
