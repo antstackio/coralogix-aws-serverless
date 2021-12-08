@@ -62,7 +62,9 @@ class Tester(interfaces.TesterInterface):
 
     def _get_inbound_port_access(self, all_inbound_permissions, target_port, test_name, protocol="tcp"):
         result = []
-        instances = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == target_port and permission['ToPort'] == target_port and permission['IpProtocol'] == protocol, all_inbound_permissions))))
+        instances = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= target_port and permission['ToPort'] >= target_port and permission['IpProtocol'] == protocol, all_inbound_permissions))))
+        print(f'{test_name} - {instances}')
+        instances = set(instances)
         for i in instances:
             result.append({
                "user": self.user_id,
@@ -154,7 +156,7 @@ class Tester(interfaces.TesterInterface):
         test_name = "ec2_inbound_dns_access_restricted"
         result = []
         target_port = 53
-        instances = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == target_port and permission['ToPort'] == target_port and (permission['IpProtocol'] == "tcp" or permission['IpProtocol'] == "udp"), all_inbound_permissions))))
+        instances = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= target_port and permission['ToPort'] >= target_port and (permission['IpProtocol'] == "tcp" or permission['IpProtocol'] == "udp"), all_inbound_permissions))))
         instances = set(instances)
         for i in instances:
             result.append({
