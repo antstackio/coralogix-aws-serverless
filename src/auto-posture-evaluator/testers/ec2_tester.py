@@ -280,6 +280,7 @@ class Tester(interfaces.TesterInterface):
         test_name = "ec2_outbound_access_to_all_ports_restricted"
         result = []
         security_groups = []
+        effective_security_group = []
         for vpc in all_vpcs:
             vpc = self.aws_ec2_resource.Vpc(vpc)
             security_groups.extend(vpc.security_groups.all())
@@ -288,15 +289,20 @@ class Tester(interfaces.TesterInterface):
             outbound_permissions = security_group.ip_permissions_egress
             for outbound_permission in outbound_permissions:
                 if outbound_permission['IpProtocol'] == '-1':
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": security_group.id,
-                        "item_type": "ec2_security_group",
-                        "test_name": test_name
-                    })
+                    effective_security_group.append(security_group.id)
+        
+        effective_security_group = set(effective_security_group)
+        for i in effective_security_group:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": i,
+                "item_type": "ec2_security_group",
+                "test_name": test_name
+            })
+
         if len(result) == 0:
             result.append({
                 "user": self.user_id,
