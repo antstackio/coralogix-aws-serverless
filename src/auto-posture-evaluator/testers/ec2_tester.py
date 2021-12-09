@@ -44,7 +44,7 @@ class Tester(interfaces.TesterInterface):
             self.get_inbound_oracle_access(all_inbound_permissions) + \
             self.get_inbound_icmp_access(all_inbound_permissions) + \
             self.get_security_group_allows_ingress_from_anywhere(all_inbound_permissions)
-                
+
     def _get_all_instance_ids(self, instances):
         return list(map(lambda i: i.id, list(instances)))
 
@@ -541,7 +541,6 @@ class Tester(interfaces.TesterInterface):
         RDPPORT = 3389
         for i in all_inbound_permissions:
             if (i['FromPort'] <= SSHPORT and i['ToPort'] >= SSHPORT) or (i['FromPort'] <= RDPPORT and i['ToPort'] >= RDPPORT):
-                print(i)
                 if len(i['IpRanges']) == 1 and i['IpRanges'][0]['CidrIp'] == '0.0.0.0/0':
                     security_groups.append(i['security_group']['GroupId'])
             else:
