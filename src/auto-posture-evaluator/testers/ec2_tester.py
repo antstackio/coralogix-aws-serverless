@@ -122,9 +122,12 @@ class Tester(interfaces.TesterInterface):
         test_name = "ec2_inbound_tcp_netbios_access_restricted"
         result = []
         instances = []
-        instancse_137 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == 137 and permission['ToPort'] == 137 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        NAMERESPORT = 137
+        SESSIONPORT = 139
+        instancse_137 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= NAMERESPORT and permission['ToPort'] >= NAMERESPORT and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
         instances.extend(instancse_137)
-        instancse_139 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == 139 and permission['ToPort'] == 139 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        instancse_139 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= SESSIONPORT and permission['ToPort'] >= SESSIONPORT and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        print(f"{test_name} - {instances}")
         instances.extend(instancse_139)
         instances = set(instances)
 
