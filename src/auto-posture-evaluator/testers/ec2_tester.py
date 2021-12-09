@@ -463,7 +463,45 @@ class Tester(interfaces.TesterInterface):
     
     def get_inbound_oracle_access(self, all_inbound_permissions):
         test_name = "ec2_inbound_oracle_access_restricted"
-        return self._get_inbound_port_access(all_inbound_permissions, 1521, test_name)
+        PORT1521 = 1521
+        PORT2483 = 2483
+        PORT2484 = 2484
+
+        result = []
+        instances = []
+
+        instances_1521 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= PORT1521 and permission['ToPort'] >= PORT1521 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        instances.extend(instances_1521)
+        instances_2483 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= PORT2483 and permission['ToPort'] >= PORT2483, all_inbound_permissions))))
+        instances.extend(instances_2483)
+        instances_2484 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= PORT2484 and permission['ToPort'] >= PORT2484, all_inbound_permissions))))
+        instances.extend(instances_2484)
+
+        instances = set(instances)
+
+        for i in instances:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": i,
+                "item_type": "ec2_instance",
+                "test_name": test_name
+            })
+
+        if len(result) == 0:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": None,
+                "item_type": "ec2_instance",
+                "test_name": test_name
+            })
+        
+        return result
 
     def get_inbound_icmp_access(self, all_inbound_permissions):
         test_name = "ec2_inbound_icmp_access_restricted"
