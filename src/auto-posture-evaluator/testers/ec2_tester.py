@@ -127,7 +127,6 @@ class Tester(interfaces.TesterInterface):
         instancse_137 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= NAMERESPORT and permission['ToPort'] >= NAMERESPORT and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
         instances.extend(instancse_137)
         instancse_139 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= SESSIONPORT and permission['ToPort'] >= SESSIONPORT and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
-        print(f"{test_name} - {instances}")
         instances.extend(instancse_139)
         instances = set(instances)
 
@@ -190,18 +189,21 @@ class Tester(interfaces.TesterInterface):
         test_name = "ec2_inbound_cifs_access_restricted"
         result = []
         instances = []
-
-        instances_137_to_138 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == 137 and permission['ToPort'] == 138 and permission['IpProtocol'] == 'udp', all_inbound_permissions))))
-        instances.extend(instances_137_to_138)
-        instancse_137 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == 137 and permission['ToPort'] == 137 and permission['IpProtocol'] == 'udp', all_inbound_permissions))))
+        PORT137 = 137
+        PORT138 = 138
+        PORT139 = 139
+        PORT445 = 445
+        PORT3020 = 3020
+        
+        instancse_137 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= PORT137 and permission['ToPort'] >= PORT137 and permission['IpProtocol'] == 'udp', all_inbound_permissions))))
         instances.extend(instancse_137)
-        instancse_138 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == 138 and permission['ToPort'] == 138 and permission['IpProtocol'] == 'udp', all_inbound_permissions))))
+        instancse_138 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= PORT138 and permission['ToPort'] >= PORT138 and permission['IpProtocol'] == 'udp', all_inbound_permissions))))
         instances.extend(instancse_138)
-        instancse_139 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == 139 and permission['ToPort'] == 139 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        instancse_139 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= PORT139 and permission['ToPort'] >= PORT139 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
         instances.extend(instancse_139)
-        instancse_445 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == 445 and permission['ToPort'] == 445 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        instancse_445 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= PORT445 and permission['ToPort'] >= PORT445 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
         instances.extend(instancse_445)
-        instancse_3020 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == 3020 and permission['ToPort'] == 3020 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        instancse_3020 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= PORT3020 and permission['ToPort'] >= PORT3020 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
         instances.extend(instancse_3020)
 
         instances = set(instances)
