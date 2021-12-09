@@ -266,16 +266,14 @@ class Tester(interfaces.TesterInterface):
     def get_inbound_smtp_access(self, all_inbound_permissions):
         test_name = "ec2_inbound_smtp_access_restricted"
         result = []
-        port_25 = 25
-        port_587 = 587
-        port_2525 = 2525
+        PORT25 = 25
+        PORT587 = 587
         instances = []
-        instances_25 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == port_25 and permission['ToPort'] == port_25 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        instances_25 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= PORT25 and permission['ToPort'] >= PORT25 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
         instances.extend(instances_25)
-        instances_587 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == port_587 and permission['ToPort'] == port_587 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        instances_587 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= PORT587 and permission['ToPort'] >= PORT587 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
         instances.extend(instances_587)
-        instances_2525 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == port_2525 and permission['ToPort'] == port_2525 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
-        instances.extend(instances_2525)
+        
         instances = set(instances)
 
         for i in instances:
