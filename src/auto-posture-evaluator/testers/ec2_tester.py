@@ -21,30 +21,30 @@ class Tester(interfaces.TesterInterface):
     def run_tests(self) -> list:
         all_inbound_permissions = self._get_all_inbound_permissions(self.instances)
         all_vpcs = self._get_all_vpc_ids(self.instances)
-        return \
-            self.get_inbound_http_access(all_inbound_permissions) + \
-            self.get_inbound_https_access(all_inbound_permissions) + \
-            self.get_inbound_mongodb_access(all_inbound_permissions) + \
-            self.get_inbound_mysql_access(all_inbound_permissions) + \
-            self.get_inbound_mssql_access(all_inbound_permissions) + \
-            self.get_inbound_ssh_access(all_inbound_permissions) + \
-            self.get_inbound_rdp_access(all_inbound_permissions) + \
-            self.get_inbound_postgresql_access(all_inbound_permissions) + \
-            self.get_inbound_tcp_netbios_access(all_inbound_permissions) + \
-            self.get_inbound_dns_access(all_inbound_permissions) + \
-            self.get_inbound_elasticsearch_access(all_inbound_permissions) + \
-            self.get_inbound_smtp_access(all_inbound_permissions) + \
-            self.get_inbound_telnet_access(all_inbound_permissions) + \
-            self.get_inbound_rpc_access(all_inbound_permissions) + \
-            self.get_inbound_ftp_access(all_inbound_permissions) + \
-            self.get_inbound_udp_netbios(all_inbound_permissions) + \
-            self.get_inbound_cifs_access(all_inbound_permissions) + \
-            self.get_outbound_access_to_all_ports(all_vpcs) + \
-            self.get_vpc_default_security_group_restrict_traffic(all_vpcs) + \
-            self.get_inbound_oracle_access(all_inbound_permissions) + \
-            self.get_inbound_icmp_access(all_inbound_permissions) + \
-            self.get_security_group_allows_ingress_from_anywhere(all_inbound_permissions)
-    
+        # return \
+        #     self.get_inbound_http_access(all_inbound_permissions) + \
+        #     self.get_inbound_https_access(all_inbound_permissions) + \
+        #     self.get_inbound_mongodb_access(all_inbound_permissions) + \
+        #     self.get_inbound_mysql_access(all_inbound_permissions) + \
+        #     self.get_inbound_mssql_access(all_inbound_permissions) + \
+        #     self.get_inbound_ssh_access(all_inbound_permissions) + \
+        #     self.get_inbound_rdp_access(all_inbound_permissions) + \
+        #     self.get_inbound_postgresql_access(all_inbound_permissions) + \
+        #     self.get_inbound_tcp_netbios_access(all_inbound_permissions) + \
+        #     self.get_inbound_dns_access(all_inbound_permissions) + \
+        #     self.get_inbound_elasticsearch_access(all_inbound_permissions) + \
+        #     self.get_inbound_smtp_access(all_inbound_permissions) + \
+        #     self.get_inbound_telnet_access(all_inbound_permissions) + \
+        #     self.get_inbound_rpc_access(all_inbound_permissions) + \
+        #     self.get_inbound_ftp_access(all_inbound_permissions) + \
+        #     self.get_inbound_udp_netbios(all_inbound_permissions) + \
+        #     self.get_inbound_cifs_access(all_inbound_permissions) + \
+        #     self.get_outbound_access_to_all_ports(all_vpcs) + \
+        #     self.get_vpc_default_security_group_restrict_traffic(all_vpcs) + \
+        #     self.get_inbound_oracle_access(all_inbound_permissions) + \
+        #     self.get_inbound_icmp_access(all_inbound_permissions) + \
+        #     self.get_security_group_allows_ingress_from_anywhere(all_inbound_permissions)
+        return self.get_security_group_allows_ingress_from_anywhere(all_inbound_permissions)    
     def _get_all_instance_ids(self, instances):
         return list(map(lambda i: i.id, list(instances)))
 
@@ -537,8 +537,11 @@ class Tester(interfaces.TesterInterface):
         test_name = "security_group_allows_ingress_to_remote_administration_ports_from_anywhere"
         result = []
         security_groups = []
+        SSHPORT = 22
+        RDPPORT = 3389
         for i in all_inbound_permissions:
-            if (i['FromPort'] == 22 and i['ToPort'] == 22) or (i['FromPort'] == 3389 and i['ToPort'] == 3389):
+            if (i['FromPort'] <= SSHPORT and i['ToPort'] >= SSHPORT) or (i['FromPort'] <= RDPPORT and i['ToPort'] >= RDPPORT):
+                print(i)
                 if len(i['IpRanges']) == 1 and i['IpRanges'][0]['CidrIp'] == '0.0.0.0/0':
                     security_groups.append(i['security_group']['GroupId'])
             else:
