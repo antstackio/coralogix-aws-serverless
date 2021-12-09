@@ -230,12 +230,12 @@ class Tester(interfaces.TesterInterface):
         test_name = "ec2_inbound_elasticsearch_access_restricted"
         results = []
         instances = []
-        instances_9200 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == 9200 and permission['ToPort'] == 9200 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        PORT9200 = 9200
+        PORT9300 = 9300
+        instances_9200 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= PORT9200 and permission['ToPort'] >= PORT9200 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
         instances.extend(instances_9200)
-        instances_9300 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == 9300 and permission['ToPort'] == 9300 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        instances_9300 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= PORT9300 and permission['ToPort'] >= PORT9300 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
         instances.extend(instances_9300)
-        instances_92_93_00 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == 9200 and permission['ToPort'] == 9300 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
-        instances.extend(instances_92_93_00)
 
         instances = set(instances)
 
