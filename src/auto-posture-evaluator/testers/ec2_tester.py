@@ -345,12 +345,14 @@ class Tester(interfaces.TesterInterface):
         test_name = "ec2_inbound_udp_netbios_access_restricted"
         result = []
         instances = []
-        instances_137_to_138 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == 137 and permission['ToPort'] == 138 and permission['IpProtocol'] == 'udp', all_inbound_permissions))))
-        instances.extend(instances_137_to_138)
-        instancse_137 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == 137 and permission['ToPort'] == 137 and permission['IpProtocol'] == 'udp', all_inbound_permissions))))
+        NAMERESPORT = 137
+        DATAGRAMPORT = 138
+        
+        instancse_137 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= NAMERESPORT and permission['ToPort'] >= NAMERESPORT and permission['IpProtocol'] == 'udp', all_inbound_permissions))))
         instances.extend(instancse_137)
-        instancse_138 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == 138 and permission['ToPort'] == 138 and permission['IpProtocol'] == 'udp', all_inbound_permissions))))
+        instancse_138 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= DATAGRAMPORT and permission['ToPort'] >= DATAGRAMPORT and permission['IpProtocol'] == 'udp', all_inbound_permissions))))
         instances.extend(instancse_138)
+        
         instances = set(instances)
 
         for i in instances:
