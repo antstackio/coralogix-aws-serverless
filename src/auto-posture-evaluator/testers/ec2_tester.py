@@ -308,12 +308,12 @@ class Tester(interfaces.TesterInterface):
         test_name = "ec2_inbound_ftp_access_restricted"
         result = []
         instances = []
-        instances_20 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == 20 and permission['ToPort'] == 20 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        DATAPORT = 20
+        COMMANDPORT = 21
+        instances_20 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= DATAPORT and permission['ToPort'] >= DATAPORT and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
         instances.extend(instances_20)
-        instances_21 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == 21 and permission['ToPort'] == 21 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        instances_21 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= COMMANDPORT and permission['ToPort'] >= COMMANDPORT and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
         instances.extend(instances_21)
-        instances_20_21 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] == 20 and permission['ToPort'] == 21 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
-        instances.extend(instances_20_21)
 
         instances = set(instances)
 
