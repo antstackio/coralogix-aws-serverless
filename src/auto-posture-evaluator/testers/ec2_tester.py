@@ -393,8 +393,9 @@ class Tester(interfaces.TesterInterface):
         security_groups = []
         effective_security_group = []
         for vpc in all_vpcs:
-            vpc = self.aws_ec2_resource.Vpc(vpc)
-            security_groups.extend(vpc.security_groups.all())
+            if vpc is not None:
+                vpc = self.aws_ec2_resource.Vpc(vpc)
+                security_groups.extend(vpc.security_groups.all())
 
         for security_group in security_groups:
             outbound_permissions = security_group.ip_permissions_egress
