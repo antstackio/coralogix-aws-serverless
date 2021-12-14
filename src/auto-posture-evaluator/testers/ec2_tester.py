@@ -22,6 +22,7 @@ class Tester(interfaces.TesterInterface):
 
     def run_tests(self) -> list:
         all_inbound_permissions = self._get_all_inbound_permissions_by_security_groups(self.security_groups)
+        all_outbound_permissions = self._get_all_outbound_permissions_by_security_groups(self.security_groups)
         all_vpcs = self._get_all_vpc_ids(self.vpcs)
         return \
             self.get_inbound_http_access(all_inbound_permissions) + \
@@ -43,7 +44,7 @@ class Tester(interfaces.TesterInterface):
             self.get_inbound_ftp_access(all_inbound_permissions) + \
             self.get_inbound_udp_netbios(all_inbound_permissions) + \
             self.get_inbound_cifs_access(all_inbound_permissions) + \
-            self.get_outbound_access_to_all_ports(all_vpcs) + \
+            self.get_outbound_access_to_all_ports(all_outbound_permissions) + \
             self.get_vpc_default_security_group_restrict_traffic(all_vpcs) + \
             self.get_inbound_oracle_access(all_inbound_permissions) 
     
@@ -403,29 +404,22 @@ class Tester(interfaces.TesterInterface):
     def _get_all_vpc_ids(self, vpcs):
         vpc_ids = []
 
-        for instance in instances:
-            vpc_ids.append(instance.vpc_id)
-        vpc_ids = set(vpc_ids)
+        # for instance in instances:
+        #     vpc_ids.append(instance.vpc_id)
+        # vpc_ids = set(vpc_ids)
         return vpc_ids
 
-    def get_outbound_access_to_all_ports(self, all_vpcs):
+    def get_outbound_access_to_all_ports(self, all_outbound_permissions):
         test_name = "ec2_outbound_access_to_all_ports_restricted"
         result = []
         security_groups = []
-        effective_security_group = []
-        for vpc in all_vpcs:
-            if vpc is not None:
-                vpc = self.aws_ec2_resource.Vpc(vpc)
-                security_groups.extend(vpc.security_groups.all())
-
-        for security_group in security_groups:
-            outbound_permissions = security_group.ip_permissions_egress
-            for outbound_permission in outbound_permissions:
-                if outbound_permission['IpProtocol'] == '-1':
-                    effective_security_group.append(security_group.id)
         
-        effective_security_group = set(effective_security_group)
-        for i in effective_security_group:
+        for outbound_permission in all_outbound_permissions:
+            if outbound_permission['IpProtocol'] == '-1':
+                security_groups.append(outbound_permission['security_group'].id)
+        
+        security_groups = set(security_groups)
+        for i in security_groups:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
@@ -571,7 +565,6 @@ class Tester(interfaces.TesterInterface):
             else:
                 continue
         security_groups = set(security_groups)
-        print(security_groups)
         if len(security_groups) == 0:
             result.append({
                 "user": self.user_id,
