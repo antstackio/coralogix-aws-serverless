@@ -12,6 +12,7 @@ class Tester(interfaces.TesterInterface):
         self.account_id = boto3.client('sts').get_caller_identity().get('Account')
         self.instances = self.aws_ec2_resource.instances.all()
         self.security_groups = self.aws_ec2_resource.security_groups.all()
+        self.vpcs = self.aws_ec2_client.describe_vpcs()['Vpcs']
 
     def declare_tested_service(self) -> str:
         return 'ec2'
@@ -21,7 +22,7 @@ class Tester(interfaces.TesterInterface):
 
     def run_tests(self) -> list:
         all_inbound_permissions = self._get_all_inbound_permissions_by_security_groups(self.security_groups)
-        all_vpcs = self._get_all_vpc_ids(self.instances)
+        all_vpcs = self._get_all_vpc_ids(self.vpcs)
         return \
             self.get_inbound_http_access(all_inbound_permissions) + \
             self.get_inbound_https_access(all_inbound_permissions) + \
@@ -33,19 +34,19 @@ class Tester(interfaces.TesterInterface):
             self.get_inbound_postgresql_access(all_inbound_permissions) + \
             self.get_inbound_dns_access(all_inbound_permissions) + \
             self.get_inbound_telnet_access(all_inbound_permissions) + \
-            self.get_inbound_icmp_access(all_inbound_permissions) 
-            # self.get_inbound_tcp_netbios_access(all_inbound_permissions) + \
-            # self.get_inbound_elasticsearch_access(all_inbound_permissions) + \
-            # self.get_inbound_smtp_access(all_inbound_permissions) + \
-            # self.get_inbound_rpc_access(all_inbound_permissions) + \
-            # self.get_inbound_ftp_access(all_inbound_permissions) + \
-            # self.get_inbound_udp_netbios(all_inbound_permissions) + \
-            # self.get_inbound_cifs_access(all_inbound_permissions) + \
-            # self.get_outbound_access_to_all_ports(all_vpcs) + \
-            # self.get_vpc_default_security_group_restrict_traffic(all_vpcs) + \
-            # self.get_inbound_oracle_access(all_inbound_permissions) + \
-            # self.get_security_group_allows_ingress_from_anywhere(all_inbound_permissions)
-
+            self.get_inbound_icmp_access(all_inbound_permissions) + \
+            self.get_security_group_allows_ingress_from_anywhere(all_inbound_permissions) + \
+            self.get_inbound_tcp_netbios_access(all_inbound_permissions) + \
+            self.get_inbound_elasticsearch_access(all_inbound_permissions) + \
+            self.get_inbound_smtp_access(all_inbound_permissions) + \
+            self.get_inbound_rpc_access(all_inbound_permissions) + \
+            self.get_inbound_ftp_access(all_inbound_permissions) + \
+            self.get_inbound_udp_netbios(all_inbound_permissions) + \
+            self.get_inbound_cifs_access(all_inbound_permissions) + \
+            self.get_outbound_access_to_all_ports(all_vpcs) + \
+            self.get_vpc_default_security_group_restrict_traffic(all_vpcs) + \
+            self.get_inbound_oracle_access(all_inbound_permissions) 
+    
     def _get_all_instance_ids(self, instances):
         return list(map(lambda i: i.id, list(instances)))
 
@@ -399,8 +400,9 @@ class Tester(interfaces.TesterInterface):
         
         return result
 
-    def _get_all_vpc_ids(self, instances):
+    def _get_all_vpc_ids(self, vpcs):
         vpc_ids = []
+
         for instance in instances:
             vpc_ids.append(instance.vpc_id)
         vpc_ids = set(vpc_ids)
@@ -560,12 +562,16 @@ class Tester(interfaces.TesterInterface):
         SSHPORT = 22
         RDPPORT = 3389
         for i in all_inbound_permissions:
-            if (i['FromPort'] <= SSHPORT and i['ToPort'] >= SSHPORT) or (i['FromPort'] <= RDPPORT and i['ToPort'] >= RDPPORT):
-                if len(i['IpRanges']) == 1 and i['IpRanges'][0]['CidrIp'] == '0.0.0.0/0':
-                    security_groups.append(i['security_group']['GroupId'])
+            if i['IpProtocol'] == "-1" and len(i['IpRanges']) == 0:
+                security_groups.append(i['security_group'].id)
+            elif (i['FromPort'] <= SSHPORT and i['ToPort'] >= SSHPORT) or (i['FromPort'] <= RDPPORT and i['ToPort'] >= RDPPORT):
+                for ip in i['IpRanges']:
+                    if ip['CidrIp'] == '0.0.0.0/0':
+                        security_groups.append(i['security_group'].id)
             else:
                 continue
-        
+        security_groups = set(security_groups)
+        print(security_groups)
         if len(security_groups) == 0:
             result.append({
                 "user": self.user_id,
@@ -589,4 +595,3 @@ class Tester(interfaces.TesterInterface):
                     "test_name": test_name
                 })
         return result
-
