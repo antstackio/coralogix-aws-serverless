@@ -45,9 +45,9 @@ class Tester(interfaces.TesterInterface):
             self.get_inbound_udp_netbios(all_inbound_permissions) + \
             self.get_inbound_cifs_access(all_inbound_permissions) + \
             self.get_outbound_access_to_all_ports(all_outbound_permissions) + \
-            self.get_vpc_default_security_group_restrict_traffic(all_vpcs) + \
-            self.get_inbound_oracle_access(all_inbound_permissions) 
-    
+            self.get_inbound_oracle_access(all_inbound_permissions)
+            # self.get_vpc_default_security_group_restrict_traffic(all_vpcs) + \
+            
     def _get_all_instance_ids(self, instances):
         return list(map(lambda i: i.id, list(instances)))
 
@@ -145,9 +145,9 @@ class Tester(interfaces.TesterInterface):
         instances = []
         NAMERESPORT = 137
         SESSIONPORT = 139
-        instancse_137 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= NAMERESPORT and permission['ToPort'] >= NAMERESPORT and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        instancse_137 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= NAMERESPORT and permission['ToPort'] >= NAMERESPORT) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
         instances.extend(instancse_137)
-        instancse_139 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= SESSIONPORT and permission['ToPort'] >= SESSIONPORT and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        instancse_139 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= SESSIONPORT and permission['ToPort'] >= SESSIONPORT) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
         instances.extend(instancse_139)
         instances = set(instances)
 
@@ -158,7 +158,7 @@ class Tester(interfaces.TesterInterface):
                 "account": self.account_id,
                 "timestamp": time.time(),
                 "item": i,
-                "item_type": "ec2_instance",
+                "item_type": "ec2_security_group",
                 "test_name": test_name
             })
         if len(result) == 0:
@@ -168,7 +168,7 @@ class Tester(interfaces.TesterInterface):
                 "account": self.account_id,
                 "timestamp": time.time(),
                 "item": None,
-                "item_type": "ec2_instance",
+                "item_type": "ec2_security_group",
                 "test_name": test_name
             })
         
@@ -216,15 +216,15 @@ class Tester(interfaces.TesterInterface):
         PORT445 = 445
         PORT3020 = 3020
         
-        instancse_137 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= PORT137 and permission['ToPort'] >= PORT137 and permission['IpProtocol'] == 'udp', all_inbound_permissions))))
+        instancse_137 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= PORT137 and permission['ToPort'] >= PORT137) and permission['IpProtocol'] == 'udp'), all_inbound_permissions))))
         instances.extend(instancse_137)
-        instancse_138 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= PORT138 and permission['ToPort'] >= PORT138 and permission['IpProtocol'] == 'udp', all_inbound_permissions))))
+        instancse_138 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= PORT138 and permission['ToPort'] >= PORT138) and permission['IpProtocol'] == 'udp'), all_inbound_permissions))))
         instances.extend(instancse_138)
-        instancse_139 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= PORT139 and permission['ToPort'] >= PORT139 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        instancse_139 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= PORT139 and permission['ToPort'] >= PORT139) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
         instances.extend(instancse_139)
-        instancse_445 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= PORT445 and permission['ToPort'] >= PORT445 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        instancse_445 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= PORT445 and permission['ToPort'] >= PORT445) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
         instances.extend(instancse_445)
-        instancse_3020 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= PORT3020 and permission['ToPort'] >= PORT3020 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        instancse_3020 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= PORT3020 and permission['ToPort'] >= PORT3020) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
         instances.extend(instancse_3020)
 
         instances = set(instances)
@@ -236,7 +236,7 @@ class Tester(interfaces.TesterInterface):
                 "account": self.account_id,
                 "timestamp": time.time(),
                 "item": i,
-                "item_type": "ec2_instance",
+                "item_type": "ec2_security_group",
                 "test_name": test_name
             })
         
@@ -247,7 +247,7 @@ class Tester(interfaces.TesterInterface):
                 "account": self.account_id,
                 "timestamp": time.time(),
                 "item": None,
-                "item_type": "ec2_instance",
+                "item_type": "ec2_security_group",
                 "test_name": test_name
             })
         return result
@@ -258,9 +258,9 @@ class Tester(interfaces.TesterInterface):
         instances = []
         PORT9200 = 9200
         PORT9300 = 9300
-        instances_9200 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= PORT9200 and permission['ToPort'] >= PORT9200 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        instances_9200 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= PORT9200 and permission['ToPort'] >= PORT9200) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
         instances.extend(instances_9200)
-        instances_9300 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= PORT9300 and permission['ToPort'] >= PORT9300 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        instances_9300 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= PORT9300 and permission['ToPort'] >= PORT9300) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
         instances.extend(instances_9300)
 
         instances = set(instances)
@@ -272,7 +272,7 @@ class Tester(interfaces.TesterInterface):
                 "account": self.account_id,
                 "timestamp": time.time(),
                 "item": i,
-                "item_type": "ec2_instance",
+                "item_type": "ec2_security_group",
                 "test_name": test_name
             })
         
@@ -283,7 +283,7 @@ class Tester(interfaces.TesterInterface):
                 "account": self.account_id,
                 "timestamp": time.time(),
                 "item": None,
-                "item_type": "ec2_instance",
+                "item_type": "ec2_security_group",
                 "test_name": test_name
             })
     
@@ -295,9 +295,9 @@ class Tester(interfaces.TesterInterface):
         PORT25 = 25
         PORT587 = 587
         instances = []
-        instances_25 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= PORT25 and permission['ToPort'] >= PORT25 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        instances_25 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= PORT25 and permission['ToPort'] >= PORT25) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
         instances.extend(instances_25)
-        instances_587 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= PORT587 and permission['ToPort'] >= PORT587 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        instances_587 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= PORT587 and permission['ToPort'] >= PORT587) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
         instances.extend(instances_587)
         
         instances = set(instances)
@@ -309,7 +309,7 @@ class Tester(interfaces.TesterInterface):
                 "account": self.account_id,
                 "timestamp": time.time(),
                 "item": i,
-                "item_type": "ec2_instance",
+                "item_type": "ec2_security_group",
                 "test_name": test_name 
             })
         if len(result) == 0:
@@ -319,7 +319,7 @@ class Tester(interfaces.TesterInterface):
                 "account": self.account_id,
                 "timestamp": time.time(),
                 "item": None,
-                "item_type": "ec2_instance",
+                "item_type": "ec2_security_group",
                 "test_name": test_name
             })
         return result
@@ -334,9 +334,9 @@ class Tester(interfaces.TesterInterface):
         instances = []
         DATAPORT = 20
         COMMANDPORT = 21
-        instances_20 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= DATAPORT and permission['ToPort'] >= DATAPORT and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        instances_20 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= DATAPORT and permission['ToPort'] >= DATAPORT) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
         instances.extend(instances_20)
-        instances_21 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= COMMANDPORT and permission['ToPort'] >= COMMANDPORT and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        instances_21 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= COMMANDPORT and permission['ToPort'] >= COMMANDPORT) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
         instances.extend(instances_21)
 
         instances = set(instances)
@@ -348,7 +348,7 @@ class Tester(interfaces.TesterInterface):
                 "account": self.account_id,
                 "timestamp": time.time(),
                 "item": i,
-                "item_type": "ec2_instance",
+                "item_type": "ec2_security_group",
                 "test_name": test_name
             })
         
@@ -359,7 +359,7 @@ class Tester(interfaces.TesterInterface):
                 "account": self.account_id,
                 "timestamp": time.time(),
                 "item": None,
-                "item_type": "ec2_instance",
+                "item_type": "ec2_security_group",
                 "test_name": test_name
             })
         return result
@@ -371,9 +371,9 @@ class Tester(interfaces.TesterInterface):
         NAMERESPORT = 137
         DATAGRAMPORT = 138
         
-        instancse_137 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= NAMERESPORT and permission['ToPort'] >= NAMERESPORT and permission['IpProtocol'] == 'udp', all_inbound_permissions))))
+        instancse_137 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= NAMERESPORT and permission['ToPort'] >= NAMERESPORT) and permission['IpProtocol'] == 'udp'), all_inbound_permissions))))
         instances.extend(instancse_137)
-        instancse_138 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= DATAGRAMPORT and permission['ToPort'] >= DATAGRAMPORT and permission['IpProtocol'] == 'udp', all_inbound_permissions))))
+        instancse_138 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= DATAGRAMPORT and permission['ToPort'] >= DATAGRAMPORT) and permission['IpProtocol'] == 'udp'), all_inbound_permissions))))
         instances.extend(instancse_138)
         
         instances = set(instances)
@@ -385,7 +385,7 @@ class Tester(interfaces.TesterInterface):
                 "account": self.account_id,
                 "timestamp": time.time(),
                 "item": i,
-                "item_type": "ec2_instance",
+                "item_type": "ec2_security_group",
                 "test_name": test_name
             })
         if len(result) == 0:
@@ -395,7 +395,7 @@ class Tester(interfaces.TesterInterface):
                 "account": self.account_id,
                 "timestamp": time.time(),
                 "item": None,
-                "item_type": "ec2_instance",
+                "item_type": "ec2_security_group",
                 "test_name": test_name
             })
         
@@ -413,7 +413,7 @@ class Tester(interfaces.TesterInterface):
         test_name = "ec2_outbound_access_to_all_ports_restricted"
         result = []
         security_groups = []
-        
+
         for outbound_permission in all_outbound_permissions:
             if outbound_permission['IpProtocol'] == '-1':
                 security_groups.append(outbound_permission['security_group'].id)
@@ -443,30 +443,13 @@ class Tester(interfaces.TesterInterface):
 
         return result 
 
-    def get_vpc_default_security_group_restrict_traffic(self, all_vpcs):
+    def get_vpc_default_security_group_restrict_traffic(self):
         test_name = "vpc_default_security_group_restrict_all_traffic"
         result = []
-
-        for vpc in all_vpcs:
-            vpc = self.aws_ec2_resource.Vpc(vpc)
-            security_groups = vpc.security_groups.all()
-
-            for security_group in security_groups:
-                if security_group.group_name == "default":
-                    inbound_permissions = security_group.ip_permissions
-                    outbound_permissions = security_group.ip_permissions_egress
-                    if (len(inbound_permissions) == 1 and len(outbound_permissions) == 1) and (inbound_permissions[0]['IpProtocol'] == '-1' and outbound_permissions[0]['IpProtocol'] == '-1'):
-                        result.append({
-                            "user": self.user_id,
-                            "account_arn": self.account_arn,
-                            "account": self.account_id,
-                            "timestamp": time.time(),
-                            "item": vpc.id,
-                            "item_type": "aws_vpc",
-                            "test_name": test_name
-                        })
-                else:
-                    continue
+        security_groups = self.security_groups
+        for security_group in security_groups:
+            if security_group.group_name == "default":
+                print(security_group)
         if len(result) == 0:
             result.append({
                 "user": self.user_id,
@@ -488,11 +471,11 @@ class Tester(interfaces.TesterInterface):
         result = []
         instances = []
 
-        instances_1521 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= PORT1521 and permission['ToPort'] >= PORT1521 and permission['IpProtocol'] == 'tcp', all_inbound_permissions))))
+        instances_1521 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] =='-1') or (permission['FromPort'] <= PORT1521 and permission['ToPort'] >= PORT1521 and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
         instances.extend(instances_1521)
-        instances_2483 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= PORT2483 and permission['ToPort'] >= PORT2483, all_inbound_permissions))))
+        instances_2483 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] =='-1') or (permission['FromPort'] <= PORT2483 and permission['ToPort'] >= PORT2483), all_inbound_permissions))))
         instances.extend(instances_2483)
-        instances_2484 = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= PORT2484 and permission['ToPort'] >= PORT2484, all_inbound_permissions))))
+        instances_2484 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] =='-1') or (permission['FromPort'] <= PORT2484 and permission['ToPort'] >= PORT2484), all_inbound_permissions))))
         instances.extend(instances_2484)
 
         instances = set(instances)
@@ -504,7 +487,7 @@ class Tester(interfaces.TesterInterface):
                 "account": self.account_id,
                 "timestamp": time.time(),
                 "item": i,
-                "item_type": "ec2_instance",
+                "item_type": "ec2_security_group",
                 "test_name": test_name
             })
 
@@ -515,7 +498,7 @@ class Tester(interfaces.TesterInterface):
                 "account": self.account_id,
                 "timestamp": time.time(),
                 "item": None,
-                "item_type": "ec2_instance",
+                "item_type": "ec2_security_group",
                 "test_name": test_name
             })
         
