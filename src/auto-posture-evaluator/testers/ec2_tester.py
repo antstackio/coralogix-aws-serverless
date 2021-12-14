@@ -11,6 +11,7 @@ class Tester(interfaces.TesterInterface):
         self.account_arn = boto3.client('sts').get_caller_identity().get('Arn')
         self.account_id = boto3.client('sts').get_caller_identity().get('Account')
         self.instances = self.aws_ec2_resource.instances.all()
+        self.security_groups = self.aws_ec2_resource.security_groups.all()
 
     def declare_tested_service(self) -> str:
         return 'ec2'
@@ -19,7 +20,7 @@ class Tester(interfaces.TesterInterface):
         return 'aws'
 
     def run_tests(self) -> list:
-        all_inbound_permissions = self._get_all_inbound_permissions(self.instances)
+        all_inbound_permissions = self._get_all_inbound_permissions_by_security_groups(self.security_groups)
         all_vpcs = self._get_all_vpc_ids(self.instances)
         return \
             self.get_inbound_http_access(all_inbound_permissions) + \
@@ -30,11 +31,11 @@ class Tester(interfaces.TesterInterface):
             self.get_inbound_ssh_access(all_inbound_permissions) + \
             self.get_inbound_rdp_access(all_inbound_permissions) + \
             self.get_inbound_postgresql_access(all_inbound_permissions) + \
-            self.get_inbound_tcp_netbios_access(all_inbound_permissions) + \
             self.get_inbound_dns_access(all_inbound_permissions) + \
+            self.get_inbound_telnet_access(all_inbound_permissions) + \
+            self.get_inbound_tcp_netbios_access(all_inbound_permissions) + \
             self.get_inbound_elasticsearch_access(all_inbound_permissions) + \
             self.get_inbound_smtp_access(all_inbound_permissions) + \
-            self.get_inbound_telnet_access(all_inbound_permissions) + \
             self.get_inbound_rpc_access(all_inbound_permissions) + \
             self.get_inbound_ftp_access(all_inbound_permissions) + \
             self.get_inbound_udp_netbios(all_inbound_permissions) + \
@@ -60,9 +61,27 @@ class Tester(interfaces.TesterInterface):
                     all_inbound_permissions.append(i)
         return all_inbound_permissions
 
+    def _get_all_inbound_permissions_by_security_groups(self, security_groups):
+        inbound_rules = []
+        for security_group in security_groups:
+            rules = security_group.ip_permissions
+            for rule in rules:
+                rule['security_group'] = security_group
+                inbound_rules.append(rule)
+        return inbound_rules
+    
+    def _get_all_outbound_permissions_by_security_groups(self, security_groups):
+        outbound_rules = []
+        for security_group in security_groups:
+            rules = security_group.ip_permissions_egress
+            for rule in rules:
+                rule['security_group'] = security_group
+                outbound_rules.append(rule)
+        return outbound_rules
+
     def _get_inbound_port_access(self, all_inbound_permissions, target_port, test_name, protocol="tcp"):
         result = []
-        instances = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= target_port and permission['ToPort'] >= target_port and permission['IpProtocol'] == protocol, all_inbound_permissions))))
+        instances = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == "-1") or ((permission['FromPort'] <= target_port and permission['ToPort'] >= target_port) and permission['IpProtocol'] == protocol), all_inbound_permissions))))
         instances = set(instances)
         for i in instances:
             result.append({
@@ -71,7 +90,7 @@ class Tester(interfaces.TesterInterface):
                 "account": self.account_id,
                 "timestamp": time.time(),
                 "item": i,
-                "item_type": "ec2_instance",
+                "item_type": "ec2_security_group",
                 "test_name": test_name 
             })
         if len(result) == 0:
@@ -81,7 +100,7 @@ class Tester(interfaces.TesterInterface):
                 "account": self.account_id,
                 "timestamp": time.time(),
                 "item": None,
-                "item_type": "ec2_instance",
+                "item_type": "ec2_security_group",
                 "test_name": test_name
             })
         return result
@@ -157,7 +176,7 @@ class Tester(interfaces.TesterInterface):
         test_name = "ec2_inbound_dns_access_restricted"
         result = []
         target_port = 53
-        instances = list(map(lambda i: i['instance'].id, list(filter(lambda permission: permission['FromPort'] <= target_port and permission['ToPort'] >= target_port and (permission['IpProtocol'] == "tcp" or permission['IpProtocol'] == "udp"), all_inbound_permissions))))
+        instances = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == "-1") or ((permission['FromPort'] <= target_port and permission['ToPort'] >= target_port) and (permission['IpProtocol'] == "tcp" or permission['IpProtocol'] == "udp")), all_inbound_permissions))))
         instances = set(instances)
         for i in instances:
             result.append({
@@ -166,7 +185,7 @@ class Tester(interfaces.TesterInterface):
                 "account": self.account_id,
                 "timestamp": time.time(),
                 "item": i,
-                "item_type": "ec2_instance",
+                "item_type": "ec2_security_group",
                 "test_name": test_name 
             })
         if len(result) == 0:
@@ -176,7 +195,7 @@ class Tester(interfaces.TesterInterface):
                 "account": self.account_id,
                 "timestamp": time.time(),
                 "item": None,
-                "item_type": "ec2_instance",
+                "item_type": "ec2_security_group",
                 "test_name": test_name
             })
         return result
