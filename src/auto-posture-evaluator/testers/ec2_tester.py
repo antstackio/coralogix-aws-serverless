@@ -45,8 +45,8 @@ class Tester(interfaces.TesterInterface):
             self.get_inbound_udp_netbios(all_inbound_permissions) + \
             self.get_inbound_cifs_access(all_inbound_permissions) + \
             self.get_outbound_access_to_all_ports(all_outbound_permissions) + \
-            self.get_inbound_oracle_access(all_inbound_permissions)
-            # self.get_vpc_default_security_group_restrict_traffic(all_vpcs) + \
+            self.get_inbound_oracle_access(all_inbound_permissions) + \
+            self.get_vpc_default_security_group_restrict_traffic(all_vpcs)
             
     def _get_all_instance_ids(self, instances):
         return list(map(lambda i: i.id, list(instances)))
@@ -449,7 +449,21 @@ class Tester(interfaces.TesterInterface):
         security_groups = self.security_groups
         for security_group in security_groups:
             if security_group.group_name == "default":
-                print(security_group)
+                ingress_rules = security_group.ip_permissions
+                egress_rules = security_group.ip_permissions_egress
+                ingress_results = list(filter(lambda rule: (rule['IpProtocol'] == "-1") or (rule['FromPort'] >= 0 and rule['ToPort'] <= 65535), ingress_rules))
+                egress_results = list(filter(lambda rule: (rule['IpProtocol'] == "-1") or (rule['FromPort'] >= 0 and rule['ToPort'] <= 65535), egress_rules))
+
+                if len(ingress_results) != 0 or len(egress_results) != 0:
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": security_group.vpc_id,
+                        "item_type": "aws_vpc",
+                        "test_name": test_name
+                    })
         if len(result) == 0:
             result.append({
                 "user": self.user_id,
@@ -571,3 +585,5 @@ class Tester(interfaces.TesterInterface):
                     "test_name": test_name
                 })
         return result
+
+print(Tester().run_tests())
