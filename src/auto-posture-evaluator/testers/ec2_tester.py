@@ -10,7 +10,6 @@ class Tester(interfaces.TesterInterface):
         self.user_id = boto3.client('sts').get_caller_identity().get('UserId')
         self.account_arn = boto3.client('sts').get_caller_identity().get('Arn')
         self.account_id = boto3.client('sts').get_caller_identity().get('Account')
-        self.instances = self.aws_ec2_resource.instances.all()
         self.security_groups = self.aws_ec2_resource.security_groups.all()
         self.vpcs = self.aws_ec2_client.describe_vpcs()['Vpcs']
 
@@ -23,7 +22,6 @@ class Tester(interfaces.TesterInterface):
     def run_tests(self) -> list:
         all_inbound_permissions = self._get_all_inbound_permissions_by_security_groups(self.security_groups)
         all_outbound_permissions = self._get_all_outbound_permissions_by_security_groups(self.security_groups)
-        all_vpcs = self._get_all_vpc_ids(self.vpcs)
         return \
             self.get_inbound_http_access(all_inbound_permissions) + \
             self.get_inbound_https_access(all_inbound_permissions) + \
@@ -46,7 +44,7 @@ class Tester(interfaces.TesterInterface):
             self.get_inbound_cifs_access(all_inbound_permissions) + \
             self.get_outbound_access_to_all_ports(all_outbound_permissions) + \
             self.get_inbound_oracle_access(all_inbound_permissions) + \
-            self.get_vpc_default_security_group_restrict_traffic(all_vpcs)
+            self.get_vpc_default_security_group_restrict_traffic()
             
     def _get_all_instance_ids(self, instances):
         return list(map(lambda i: i.id, list(instances)))
@@ -401,14 +399,6 @@ class Tester(interfaces.TesterInterface):
         
         return result
 
-    def _get_all_vpc_ids(self, vpcs):
-        vpc_ids = []
-
-        # for instance in instances:
-        #     vpc_ids.append(instance.vpc_id)
-        # vpc_ids = set(vpc_ids)
-        return vpc_ids
-
     def get_outbound_access_to_all_ports(self, all_outbound_permissions):
         test_name = "ec2_outbound_access_to_all_ports_restricted"
         result = []
@@ -585,5 +575,3 @@ class Tester(interfaces.TesterInterface):
                     "test_name": test_name
                 })
         return result
-
-print(Tester().run_tests())
