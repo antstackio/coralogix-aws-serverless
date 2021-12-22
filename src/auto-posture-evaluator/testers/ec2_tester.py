@@ -1,4 +1,5 @@
 import time
+from typing import List
 import boto3
 import botocore.exceptions
 import interfaces
@@ -12,6 +13,7 @@ class Tester(interfaces.TesterInterface):
         self.account_id = boto3.client('sts').get_caller_identity().get('Account')
         self.security_groups = self.aws_ec2_resource.security_groups.all()
         self.vpcs = self.aws_ec2_client.describe_vpcs()['Vpcs']
+        self.set_security_group = self._get_all_security_group_ids(self.security_groups)
 
     def declare_tested_service(self) -> str:
         return 'ec2'
@@ -22,32 +24,35 @@ class Tester(interfaces.TesterInterface):
     def run_tests(self) -> list:
         all_inbound_permissions = self._get_all_inbound_permissions_by_security_groups(self.security_groups)
         all_outbound_permissions = self._get_all_outbound_permissions_by_security_groups(self.security_groups)
+
+        # return \
+        #     self.get_inbound_http_access(all_inbound_permissions) + \
+        #     self.get_inbound_https_access(all_inbound_permissions) + \
+        #     self.get_inbound_mongodb_access(all_inbound_permissions) + \
+        #     self.get_inbound_mysql_access(all_inbound_permissions) + \
+        #     self.get_inbound_mssql_access(all_inbound_permissions) + \
+        #     self.get_inbound_ssh_access(all_inbound_permissions) + \
+        #     self.get_inbound_rdp_access(all_inbound_permissions) + \
+        #     self.get_inbound_postgresql_access(all_inbound_permissions) + \
+        #     self.get_inbound_dns_access(all_inbound_permissions) + \
+        #     self.get_inbound_telnet_access(all_inbound_permissions) + \
+        #     self.get_inbound_icmp_access(all_inbound_permissions) + \
+        #     self.get_security_group_allows_ingress_from_anywhere(all_inbound_permissions) + \
+        #     self.get_inbound_tcp_netbios_access(all_inbound_permissions) + \
+        #     self.get_inbound_elasticsearch_access(all_inbound_permissions) + \
+        #     self.get_inbound_smtp_access(all_inbound_permissions) + \
+        #     self.get_inbound_rpc_access(all_inbound_permissions) + \
+        #     self.get_inbound_ftp_access(all_inbound_permissions) + \
+        #     self.get_inbound_udp_netbios(all_inbound_permissions) + \
+        #     self.get_inbound_cifs_access(all_inbound_permissions) + \
+        #     self.get_outbound_access_to_all_ports(all_outbound_permissions) + \
+        #     self.get_inbound_oracle_access(all_inbound_permissions) + \
+        #     self.get_vpc_default_security_group_restrict_traffic()
         return \
-            self.get_inbound_http_access(all_inbound_permissions) + \
-            self.get_inbound_https_access(all_inbound_permissions) + \
-            self.get_inbound_mongodb_access(all_inbound_permissions) + \
-            self.get_inbound_mysql_access(all_inbound_permissions) + \
-            self.get_inbound_mssql_access(all_inbound_permissions) + \
-            self.get_inbound_ssh_access(all_inbound_permissions) + \
-            self.get_inbound_rdp_access(all_inbound_permissions) + \
-            self.get_inbound_postgresql_access(all_inbound_permissions) + \
-            self.get_inbound_dns_access(all_inbound_permissions) + \
-            self.get_inbound_telnet_access(all_inbound_permissions) + \
-            self.get_inbound_icmp_access(all_inbound_permissions) + \
-            self.get_security_group_allows_ingress_from_anywhere(all_inbound_permissions) + \
-            self.get_inbound_tcp_netbios_access(all_inbound_permissions) + \
-            self.get_inbound_elasticsearch_access(all_inbound_permissions) + \
-            self.get_inbound_smtp_access(all_inbound_permissions) + \
-            self.get_inbound_rpc_access(all_inbound_permissions) + \
-            self.get_inbound_ftp_access(all_inbound_permissions) + \
-            self.get_inbound_udp_netbios(all_inbound_permissions) + \
-            self.get_inbound_cifs_access(all_inbound_permissions) + \
-            self.get_outbound_access_to_all_ports(all_outbound_permissions) + \
-            self.get_inbound_oracle_access(all_inbound_permissions) + \
-            self.get_vpc_default_security_group_restrict_traffic()
+            self.get_inbound_http_access(all_inbound_permissions)
             
-    def _get_all_instance_ids(self, instances):
-        return list(map(lambda i: i.id, list(instances)))
+    def _get_all_security_group_ids(self, instances) -> set:
+        return set(list(map(lambda i: i.id, list(instances))))
 
     def _get_all_inbound_permissions(self, instances):
         all_inbound_permissions = []
@@ -61,7 +66,7 @@ class Tester(interfaces.TesterInterface):
                     all_inbound_permissions.append(i)
         return all_inbound_permissions
 
-    def _get_all_inbound_permissions_by_security_groups(self, security_groups):
+    def _get_all_inbound_permissions_by_security_groups(self, security_groups) -> list:
         inbound_rules = []
         for security_group in security_groups:
             rules = security_group.ip_permissions
@@ -70,7 +75,7 @@ class Tester(interfaces.TesterInterface):
                 inbound_rules.append(rule)
         return inbound_rules
     
-    def _get_all_outbound_permissions_by_security_groups(self, security_groups):
+    def _get_all_outbound_permissions_by_security_groups(self, security_groups) -> list:
         outbound_rules = []
         for security_group in security_groups:
             rules = security_group.ip_permissions_egress
@@ -82,8 +87,10 @@ class Tester(interfaces.TesterInterface):
     def _get_inbound_port_access(self, all_inbound_permissions, target_port, test_name, protocol="tcp"):
         result = []
         instances = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == "-1") or ((permission['FromPort'] <= target_port and permission['ToPort'] >= target_port) and permission['IpProtocol'] == protocol), all_inbound_permissions))))
-        instances = set(instances)
-        for i in instances:
+        instances_with_issue = set(instances)
+        instances_with_no_issue = self.set_security_group.difference(instances_with_issue)
+
+        for i in instances_with_issue:
             result.append({
                "user": self.user_id,
                 "account_arn": self.account_arn,
@@ -91,17 +98,20 @@ class Tester(interfaces.TesterInterface):
                 "timestamp": time.time(),
                 "item": i,
                 "item_type": "ec2_security_group",
-                "test_name": test_name 
-            })
-        if len(result) == 0:
+                "test_name": test_name,
+                "test_result": "issue_found"
+                })
+        
+        for i in instances_with_no_issue:
             result.append({
-                "user": self.user_id,
+               "user": self.user_id,
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
-                "item": None,
+                "item": i,
                 "item_type": "ec2_security_group",
-                "test_name": test_name
+                "test_name": test_name,
+                "test_result": "no_issue_found"
             })
         return result
 
@@ -575,3 +585,5 @@ class Tester(interfaces.TesterInterface):
                     "test_name": test_name
                 })
         return result
+
+print(Tester().run_tests())
