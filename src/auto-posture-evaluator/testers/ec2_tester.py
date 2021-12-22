@@ -32,7 +32,10 @@ class Tester(interfaces.TesterInterface):
             self.get_inbound_mysql_access(all_inbound_permissions) + \
             self.get_inbound_mssql_access(all_inbound_permissions) + \
             self.get_inbound_ssh_access(all_inbound_permissions) + \
-            self.get_inbound_rdp_access(all_inbound_permissions) 
+            self.get_inbound_rdp_access(all_inbound_permissions) + \
+            self.get_inbound_dns_access(all_inbound_permissions) + \
+            self.get_inbound_telnet_access(all_inbound_permissions) + \
+            self.get_inbound_rpc_access(all_inbound_permissions) 
             
     def _get_all_security_group_ids(self, instances) -> Set:
         return set(list(map(lambda i: i.id, list(instances))))
@@ -170,8 +173,9 @@ class Tester(interfaces.TesterInterface):
         result = []
         target_port = 53
         instances = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == "-1") or ((permission['FromPort'] <= target_port and permission['ToPort'] >= target_port) and (permission['IpProtocol'] == "tcp" or permission['IpProtocol'] == "udp")), all_inbound_permissions))))
-        instances = set(instances)
-        for i in instances:
+        instances_with_issue = set(instances)
+        instances_with_no_issue = self.set_security_group.difference(instances_with_issue)
+        for i in instances_with_issue:
             result.append({
                "user": self.user_id,
                 "account_arn": self.account_arn,
@@ -179,17 +183,20 @@ class Tester(interfaces.TesterInterface):
                 "timestamp": time.time(),
                 "item": i,
                 "item_type": "ec2_security_group",
-                "test_name": test_name 
+                "test_name": test_name,
+                "test_result": "issue_found"
             })
-        if len(result) == 0:
+
+        for i in instances_with_no_issue:    
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
-                "item": None,
+                "item": i,
                 "item_type": "ec2_security_group",
-                "test_name": test_name
+                "test_name": test_name,
+                "test_result": "no_issue_found"
             })
         return result
 
