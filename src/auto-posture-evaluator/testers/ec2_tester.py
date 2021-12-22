@@ -512,8 +512,9 @@ class Tester(interfaces.TesterInterface):
         test_name = "ec2_inbound_icmp_access_restricted"
         result = []
         instances = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: permission['IpProtocol'] == "icmp", all_inbound_permissions))))
-        instances = set(instances)
-        for i in instances:
+        instances_with_issue = set(instances)
+        instances_with_no_issue = self.set_security_group.difference(instances_with_issue)
+        for i in instances_with_issue:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
@@ -521,17 +522,19 @@ class Tester(interfaces.TesterInterface):
                 "timestamp": time.time(),
                 "item": i,
                 "item_type": "ec2_security_group",
-                "test_name": test_name
+                "test_name": test_name,
+                "test_result": "issue_found"
             })
-        if len(result) == 0:
+        for i in instances_with_no_issue:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
-                "item": None,
+                "item": i,
                 "item_type": "ec2_security_group",
-                "test_name": test_name
+                "test_name": test_name,
+                "test_result": "no_issue_found"
             })
 
         return result
