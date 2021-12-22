@@ -1,5 +1,5 @@
 import time
-from typing import List
+from typing import Dict, List, Set
 import boto3
 import botocore.exceptions
 import interfaces
@@ -25,33 +25,16 @@ class Tester(interfaces.TesterInterface):
         all_inbound_permissions = self._get_all_inbound_permissions_by_security_groups(self.security_groups)
         all_outbound_permissions = self._get_all_outbound_permissions_by_security_groups(self.security_groups)
 
-        # return \
-        #     self.get_inbound_http_access(all_inbound_permissions) + \
-        #     self.get_inbound_https_access(all_inbound_permissions) + \
-        #     self.get_inbound_mongodb_access(all_inbound_permissions) + \
-        #     self.get_inbound_mysql_access(all_inbound_permissions) + \
-        #     self.get_inbound_mssql_access(all_inbound_permissions) + \
-        #     self.get_inbound_ssh_access(all_inbound_permissions) + \
-        #     self.get_inbound_rdp_access(all_inbound_permissions) + \
-        #     self.get_inbound_postgresql_access(all_inbound_permissions) + \
-        #     self.get_inbound_dns_access(all_inbound_permissions) + \
-        #     self.get_inbound_telnet_access(all_inbound_permissions) + \
-        #     self.get_inbound_icmp_access(all_inbound_permissions) + \
-        #     self.get_security_group_allows_ingress_from_anywhere(all_inbound_permissions) + \
-        #     self.get_inbound_tcp_netbios_access(all_inbound_permissions) + \
-        #     self.get_inbound_elasticsearch_access(all_inbound_permissions) + \
-        #     self.get_inbound_smtp_access(all_inbound_permissions) + \
-        #     self.get_inbound_rpc_access(all_inbound_permissions) + \
-        #     self.get_inbound_ftp_access(all_inbound_permissions) + \
-        #     self.get_inbound_udp_netbios(all_inbound_permissions) + \
-        #     self.get_inbound_cifs_access(all_inbound_permissions) + \
-        #     self.get_outbound_access_to_all_ports(all_outbound_permissions) + \
-        #     self.get_inbound_oracle_access(all_inbound_permissions) + \
-        #     self.get_vpc_default_security_group_restrict_traffic()
         return \
-            self.get_inbound_http_access(all_inbound_permissions)
+            self.get_inbound_http_access(all_inbound_permissions) + \
+            self.get_inbound_https_access(all_inbound_permissions) + \
+            self.get_inbound_mongodb_access(all_inbound_permissions) + \
+            self.get_inbound_mysql_access(all_inbound_permissions) + \
+            self.get_inbound_mssql_access(all_inbound_permissions) + \
+            self.get_inbound_ssh_access(all_inbound_permissions) + \
+            self.get_inbound_rdp_access(all_inbound_permissions) 
             
-    def _get_all_security_group_ids(self, instances) -> set:
+    def _get_all_security_group_ids(self, instances) -> Set:
         return set(list(map(lambda i: i.id, list(instances))))
 
     def _get_all_inbound_permissions(self, instances):
@@ -66,7 +49,7 @@ class Tester(interfaces.TesterInterface):
                     all_inbound_permissions.append(i)
         return all_inbound_permissions
 
-    def _get_all_inbound_permissions_by_security_groups(self, security_groups) -> list:
+    def _get_all_inbound_permissions_by_security_groups(self, security_groups) -> List[Dict]:
         inbound_rules = []
         for security_group in security_groups:
             rules = security_group.ip_permissions
@@ -75,7 +58,7 @@ class Tester(interfaces.TesterInterface):
                 inbound_rules.append(rule)
         return inbound_rules
     
-    def _get_all_outbound_permissions_by_security_groups(self, security_groups) -> list:
+    def _get_all_outbound_permissions_by_security_groups(self, security_groups) -> List[Dict]:
         outbound_rules = []
         for security_group in security_groups:
             rules = security_group.ip_permissions_egress
@@ -84,7 +67,7 @@ class Tester(interfaces.TesterInterface):
                 outbound_rules.append(rule)
         return outbound_rules
 
-    def _get_inbound_port_access(self, all_inbound_permissions, target_port, test_name, protocol="tcp"):
+    def _get_inbound_port_access(self, all_inbound_permissions, target_port, test_name, protocol="tcp") -> List[Dict]:
         result = []
         instances = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == "-1") or ((permission['FromPort'] <= target_port and permission['ToPort'] >= target_port) and permission['IpProtocol'] == protocol), all_inbound_permissions))))
         instances_with_issue = set(instances)
@@ -115,35 +98,35 @@ class Tester(interfaces.TesterInterface):
             })
         return result
 
-    def get_inbound_http_access(self, all_inbound_permissions):
+    def get_inbound_http_access(self, all_inbound_permissions) -> List:
         test_name = "ec2_inbound_http_access_restricted"
         return self._get_inbound_port_access(all_inbound_permissions, 80, test_name)
 
-    def get_inbound_https_access(self, all_inbound_permissions):
+    def get_inbound_https_access(self, all_inbound_permissions) -> List:
         test_name = "ec2_inbound_https_access_restricted"
         return self._get_inbound_port_access(all_inbound_permissions, 443, test_name)
     
-    def get_inbound_mongodb_access(self, all_inbound_permissions):
+    def get_inbound_mongodb_access(self, all_inbound_permissions) -> List:
         test_name = "ec2_inbound_mongodb_access_restricted"
         return self._get_inbound_port_access(all_inbound_permissions, 27017, test_name)
     
-    def get_inbound_mysql_access(self, all_inbound_permissions):
+    def get_inbound_mysql_access(self, all_inbound_permissions) -> List:
         test_name = "ec2_inbound_mysql_access_restricted"
         return self._get_inbound_port_access(all_inbound_permissions, 3306, test_name)
     
-    def get_inbound_mssql_access(self, all_inbound_permissions):
+    def get_inbound_mssql_access(self, all_inbound_permissions) -> List:
         test_name = "ec2_inbound_mssql_access_restricted"
         return self._get_inbound_port_access(all_inbound_permissions, 1433, test_name)
 
-    def get_inbound_ssh_access(self, all_inbound_permissions):
+    def get_inbound_ssh_access(self, all_inbound_permissions) -> List:
         test_name = "ec2_inbound_ssh_access_restricted"
         return self._get_inbound_port_access(all_inbound_permissions, 22, test_name)
 
-    def get_inbound_rdp_access(self, all_inbound_permissions):
+    def get_inbound_rdp_access(self, all_inbound_permissions) -> List:
         test_name = "ec2_inbound_rdp_access_restricted"
         return self._get_inbound_port_access(all_inbound_permissions, 3389, test_name)
     
-    def get_inbound_postgresql_access(self, all_inbound_permissions):
+    def get_inbound_postgresql_access(self, all_inbound_permissions) -> List:
         test_name = "ec2_inbound_postgresql_access_restricted"
         return self._get_inbound_port_access(all_inbound_permissions, 5432, test_name)
 
@@ -585,5 +568,3 @@ class Tester(interfaces.TesterInterface):
                     "test_name": test_name
                 })
         return result
-
-print(Tester().run_tests())
