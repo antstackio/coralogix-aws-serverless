@@ -36,7 +36,8 @@ class Tester(interfaces.TesterInterface):
             self.get_inbound_dns_access(all_inbound_permissions) + \
             self.get_inbound_telnet_access(all_inbound_permissions) + \
             self.get_inbound_rpc_access(all_inbound_permissions) + \
-            self.get_inbound_icmp_access(all_inbound_permissions)
+            self.get_inbound_icmp_access(all_inbound_permissions) + \
+            self.get_security_group_allows_ingress_from_anywhere(all_inbound_permissions)
             
     def _get_all_security_group_ids(self, instances) -> Set:
         return set(list(map(lambda i: i.id, list(instances))))
@@ -555,27 +556,30 @@ class Tester(interfaces.TesterInterface):
                         security_groups.append(i['security_group'].id)
             else:
                 continue
-        security_groups = set(security_groups)
-        if len(security_groups) == 0:
+        security_groups_with_issue = set(security_groups)
+        security_groups_with_no_issue = self.set_security_group.difference(security_groups_with_issue)
+
+        for s in security_groups_with_issue:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
-                "item": None,
+                "item": s,
                 "item_type": "ec2_security_group",
-                "test_name": test_name
+                "test_name": test_name,
+                "test_result": "issue_found"
             })
-        else:
-            security_groups = set(security_groups)
-            for s in security_groups:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": s,
-                    "item_type": "ec2_security_group",
-                    "test_name": test_name
-                })
+        
+        for s in security_groups_with_no_issue:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": s,
+                "item_type": "ec2_security_group",
+                "test_name": test_name,
+                "test_result": "no_issue_found"
+            })
         return result
