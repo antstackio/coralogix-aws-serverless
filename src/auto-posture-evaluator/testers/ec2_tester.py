@@ -43,7 +43,9 @@ class Tester(interfaces.TesterInterface):
             self.get_inbound_oracle_access(all_inbound_permissions) + \
             self.get_inbound_ftp_access(all_inbound_permissions) + \
             self.get_inbound_smtp_access(all_inbound_permissions) + \
-            self.get_inbound_elasticsearch_access(all_inbound_permissions)
+            self.get_inbound_elasticsearch_access(all_inbound_permissions) + \
+            self.get_inbound_tcp_netbios_access(all_inbound_permissions) + \
+            self.get_inbound_udp_netbios(all_inbound_permissions)
             
     def _get_all_security_group_ids(self, instances) -> Set:
         return set(list(map(lambda i: i.id, list(instances))))
@@ -151,9 +153,11 @@ class Tester(interfaces.TesterInterface):
         instances.extend(instancse_137)
         instancse_139 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= SESSIONPORT and permission['ToPort'] >= SESSIONPORT) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
         instances.extend(instancse_139)
-        instances = set(instances)
+        
+        instances_with_issue = set(instances)
+        instances_with_no_issue = self.set_security_group.difference(instances_with_issue)
 
-        for i in instances:
+        for i in instances_with_issue:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
@@ -161,17 +165,20 @@ class Tester(interfaces.TesterInterface):
                 "timestamp": time.time(),
                 "item": i,
                 "item_type": "ec2_security_group",
-                "test_name": test_name
+                "test_name": test_name,
+                "test_result": "issue_found"
             })
-        if len(result) == 0:
+
+        for i in instances_with_no_issue:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
-                "item": None,
+                "item": i,
                 "item_type": "ec2_security_group",
-                "test_name": test_name
+                "test_name": test_name,
+                "test_result": "no_issue_found"
             })
         
         return result
@@ -394,9 +401,10 @@ class Tester(interfaces.TesterInterface):
         instancse_138 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= DATAGRAMPORT and permission['ToPort'] >= DATAGRAMPORT) and permission['IpProtocol'] == 'udp'), all_inbound_permissions))))
         instances.extend(instancse_138)
         
-        instances = set(instances)
+        instances_with_issue = set(instances)
+        instances_with_no_issue = self.set_security_group.difference(instances_with_issue)
 
-        for i in instances:
+        for i in instances_with_issue:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
@@ -404,17 +412,20 @@ class Tester(interfaces.TesterInterface):
                 "timestamp": time.time(),
                 "item": i,
                 "item_type": "ec2_security_group",
-                "test_name": test_name
+                "test_name": test_name,
+                "test_result": "issue_found"
             })
-        if len(result) == 0:
+        
+        for i in instances_with_no_issue:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
-                "item": None,
+                "item": i,
                 "item_type": "ec2_security_group",
-                "test_name": test_name
+                "test_name": test_name,
+                "test_result": "no_issue_found"
             })
         
         return result
