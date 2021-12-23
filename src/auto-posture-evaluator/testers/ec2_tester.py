@@ -37,7 +37,8 @@ class Tester(interfaces.TesterInterface):
             self.get_inbound_telnet_access(all_inbound_permissions) + \
             self.get_inbound_rpc_access(all_inbound_permissions) + \
             self.get_inbound_icmp_access(all_inbound_permissions) + \
-            self.get_security_group_allows_ingress_from_anywhere(all_inbound_permissions)
+            self.get_security_group_allows_ingress_from_anywhere(all_inbound_permissions) + \
+            self.get_vpc_default_security_group_restrict_traffic()
             
     def _get_all_security_group_ids(self, instances) -> Set:
         return set(list(map(lambda i: i.id, list(instances))))
@@ -438,6 +439,13 @@ class Tester(interfaces.TesterInterface):
     def get_vpc_default_security_group_restrict_traffic(self):
         test_name = "vpc_default_security_group_restrict_all_traffic"
         result = []
+        
+        all_vpcs = []
+        for vpc in self.vpcs:
+            all_vpcs.append(vpc['VpcId'])
+        all_vpcs = set(all_vpcs)
+
+        vpcs_with_issue = []
         security_groups = self.security_groups
         for security_group in security_groups:
             if security_group.group_name == "default":
@@ -447,24 +455,33 @@ class Tester(interfaces.TesterInterface):
                 egress_results = list(filter(lambda rule: (rule['IpProtocol'] == "-1") or (rule['FromPort'] >= 0 and rule['ToPort'] <= 65535), egress_rules))
 
                 if len(ingress_results) != 0 or len(egress_results) != 0:
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": security_group.vpc_id,
-                        "item_type": "aws_vpc",
-                        "test_name": test_name
-                    })
-        if len(result) == 0:
+                    vpcs_with_issue.append(security_group.vpc_id)
+        
+        vpcs_with_issue = set(vpcs_with_issue)
+        vpcs_with_no_issue = all_vpcs.difference(vpcs_with_issue)
+
+        for vpc in vpcs_with_issue:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
-                "item": None,
+                "item": vpc,
                 "item_type": "aws_vpc",
-                "test_name": test_name
+                "test_name": test_name,
+                "test_result": "issue_found"
+            })
+        
+        for vpc in vpcs_with_no_issue:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": vpc,
+                "item_type": "aws_vpc",
+                "test_name": test_name,
+                "test_result": "no_issue_found"
             })
         return result
     
