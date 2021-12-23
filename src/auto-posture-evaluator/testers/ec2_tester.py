@@ -38,7 +38,8 @@ class Tester(interfaces.TesterInterface):
             self.get_inbound_rpc_access(all_inbound_permissions) + \
             self.get_inbound_icmp_access(all_inbound_permissions) + \
             self.get_security_group_allows_ingress_from_anywhere(all_inbound_permissions) + \
-            self.get_vpc_default_security_group_restrict_traffic()
+            self.get_vpc_default_security_group_restrict_traffic() + \
+            self.get_outbound_access_to_all_ports(all_outbound_permissions)
             
     def _get_all_security_group_ids(self, instances) -> Set:
         return set(list(map(lambda i: i.id, list(instances))))
@@ -411,8 +412,9 @@ class Tester(interfaces.TesterInterface):
             if outbound_permission['IpProtocol'] == '-1':
                 security_groups.append(outbound_permission['security_group'].id)
         
-        security_groups = set(security_groups)
-        for i in security_groups:
+        security_groups_with_issues = set(security_groups)
+        security_groups_with_no_issues = self.set_security_group.difference(security_groups_with_issues)
+        for i in security_groups_with_issues:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
@@ -420,18 +422,20 @@ class Tester(interfaces.TesterInterface):
                 "timestamp": time.time(),
                 "item": i,
                 "item_type": "ec2_security_group",
-                "test_name": test_name
+                "test_name": test_name,
+                "test_result": "issue_found"
             })
-
-        if len(result) == 0:
+        
+        for i in security_groups_with_no_issues:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
-                "item": None,
+                "item": i,
                 "item_type": "ec2_security_group",
-                "test_name": test_name
+                "test_name": test_name,
+                "test_result": "no_issue_found"
             })
 
         return result 
