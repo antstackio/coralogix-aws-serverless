@@ -35,7 +35,8 @@ class Tester(interfaces.TesterInterface):
             self.get_inbound_rdp_access(all_inbound_permissions) + \
             self.get_inbound_dns_access(all_inbound_permissions) + \
             self.get_inbound_telnet_access(all_inbound_permissions) + \
-            self.get_inbound_rpc_access(all_inbound_permissions) 
+            self.get_inbound_rpc_access(all_inbound_permissions) + \
+            self.get_inbound_icmp_access(all_inbound_permissions)
             
     def _get_all_security_group_ids(self, instances) -> Set:
         return set(list(map(lambda i: i.id, list(instances))))
@@ -511,7 +512,7 @@ class Tester(interfaces.TesterInterface):
     def get_inbound_icmp_access(self, all_inbound_permissions):
         test_name = "ec2_inbound_icmp_access_restricted"
         result = []
-        instances = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: permission['IpProtocol'] == "icmp", all_inbound_permissions))))
+        instances = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: permission['IpProtocol'] == "icmp" or permission['IpProtocol'] == "-1", all_inbound_permissions))))
         instances_with_issue = set(instances)
         instances_with_no_issue = self.set_security_group.difference(instances_with_issue)
         for i in instances_with_issue:
