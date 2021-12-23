@@ -39,7 +39,8 @@ class Tester(interfaces.TesterInterface):
             self.get_inbound_icmp_access(all_inbound_permissions) + \
             self.get_security_group_allows_ingress_from_anywhere(all_inbound_permissions) + \
             self.get_vpc_default_security_group_restrict_traffic() + \
-            self.get_outbound_access_to_all_ports(all_outbound_permissions)
+            self.get_outbound_access_to_all_ports(all_outbound_permissions) + \
+            self.get_inbound_oracle_access(all_inbound_permissions)
             
     def _get_all_security_group_ids(self, instances) -> Set:
         return set(list(map(lambda i: i.id, list(instances))))
@@ -505,9 +506,10 @@ class Tester(interfaces.TesterInterface):
         instances_2484 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] =='-1') or (permission['FromPort'] <= PORT2484 and permission['ToPort'] >= PORT2484), all_inbound_permissions))))
         instances.extend(instances_2484)
 
-        instances = set(instances)
+        instances_with_issue = set(instances)
+        instances_with_no_issue = self.set_security_group.difference(instances_with_issue)
 
-        for i in instances:
+        for i in instances_with_issue:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
@@ -515,18 +517,20 @@ class Tester(interfaces.TesterInterface):
                 "timestamp": time.time(),
                 "item": i,
                 "item_type": "ec2_security_group",
-                "test_name": test_name
+                "test_name": test_name,
+                "test_result": "issue_found"
             })
 
-        if len(result) == 0:
+        for i in instances_with_no_issue:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
-                "item": None,
+                "item": i,
                 "item_type": "ec2_security_group",
-                "test_name": test_name
+                "test_name": test_name,
+                "test_result": "no_issue_found"
             })
         
         return result
