@@ -140,3 +140,126 @@ class Tester(interfaces.TesterInterface):
                 continue
         
         return result
+    
+    def get_elbv2_generating_access_log(self) -> List:
+        test_name = "elbv2_is_generating_access_logs"
+        result = []
+        elbs = self.elbsv2
+
+        for elb in elbs:
+            elb_arn = elb['LoadBalancerArn']
+            elb_attributes = self.aws_elbsv2_client.describe_load_balancer_attributes(LoadBalancerArn=elb_arn)
+
+            attributes = elb_attributes['Attributes']
+            for i in attributes:
+                if i['Key'] == 'access_logs.s3.enabled':
+                    if i['Value'] == 'false':
+                        result.append({
+                            "user": self.user_id,
+                            "account_arn": self.account_arn,
+                            "account": self.account_id,
+                            "timestamp": time.time(),
+                            "item": elb_arn,
+                            "item_type": "aws_elbv2",
+                            "test_name": test_name,
+                            "test_result": "issue_found"
+                        })
+                    else:
+                        result.append({
+                            "user": self.user_id,
+                            "account_arn": self.account_arn,
+                            "account": self.account_id,
+                            "timestamp": time.time(),
+                            "item": elb_arn,
+                            "item_type": "aws_elbv2",
+                            "test_name": test_name,
+                            "test_result": "no_issue_found"
+                        })
+                else:
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": elb_arn,
+                        "item_type": "aws_elbv2",
+                        "test_name": test_name,
+                        "test_result": "no_issue_found"
+                    })
+        return result
+
+    def get_elb_listeners_using_tls(self) -> List:
+        pass
+
+    def get_elb_listeners_securely_configured(self) -> List:
+        test_name = "elb_listeners_securely_configurd"
+        result = []
+
+        elbs = self.elbs
+
+        for elb in elbs:
+            listeners = elb['ListenerDescriptions']
+            loab_balancer_name = elb['LoadBalancerName']
+            for listener in listeners:
+                if listener['InstanceProtocol'] == 'HTTPS' and listener['Protocol'] == 'HTTPS':
+                    # secure
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": loab_balancer_name,
+                        "item_type": "aws_elb",
+                        "test_name": test_name,
+                        "test_result": "no_issue_found"
+                    })
+                elif listener['InstanceProtocol'] == 'SSL' and listener['Protocol'] == 'SSL':
+                    # secure
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": loab_balancer_name,
+                        "item_type": "aws_elb",
+                        "test_name": test_name,
+                        "test_result": "no_issue_found"
+                    })
+                elif listener['InstanceProtocol'] == 'HTTPS' and listener['Protocol'] == 'SSL':
+                    # secure
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": loab_balancer_name,
+                        "item_type": "aws_elb",
+                        "test_name": test_name,
+                        "test_result": "no_issue_found"
+                    })
+                elif listener['InstanceProtocol'] == 'SSL' and listener['Protocol'] == 'HTTPS':
+                    # secure
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": loab_balancer_name,
+                        "item_type": "aws_elb",
+                        "test_name": test_name,
+                        "test_result": "no_issue_found"
+                    })
+                else:
+                    # insecure
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": loab_balancer_name,
+                        "item_type": "aws_elb",
+                        "test_name": test_name,
+                        "test_result": "issue_found"
+                    })
+        
+        return result
