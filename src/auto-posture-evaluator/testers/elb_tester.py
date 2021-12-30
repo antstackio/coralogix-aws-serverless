@@ -21,16 +21,13 @@ class Tester(interfaces.TesterInterface):
 
     def run_tests(self) -> list:
         pass
-
-    def _get_all_elbv2(self) -> List:
-        return []
     
     def _get_all_elbv2(self) -> List:
-        elbs = self.aws_elbsv2.describe_load_balancers()
+        elbs = self.aws_elbsv2_client.describe_load_balancers()
         return elbs['LoadBalancers']
     
     def _get_all_elb(self) -> List:
-        elbs = self.aws_elbs.describe_load_balancers()
+        elbs = self.aws_elbs_client.describe_load_balancers()
         return elbs['LoadBalancerDescriptions']
     
     def get_elbv2_internet_facing(self) -> List: 
@@ -189,7 +186,56 @@ class Tester(interfaces.TesterInterface):
         return result
 
     def get_elb_listeners_using_tls(self) -> List:
-        pass
+        test_name = "elb_listeners_using_tls_v1.2"
+        result = []
+        elbs = self.elbs
+
+        for elb in elbs:
+            elb_name = elb['LoadBalancerName']
+            listeners = elb['ListenerDescriptions']
+            secure_listeners_count = 0
+            for listener in listeners:
+                policy_names = listener['PolicyNames']
+                
+                if len(policy_names) > 0:
+                    response = self.aws_elbs_client.describe_load_balancer_policies(PolicyNames=policy_names, LoadBalancerName=elb_name)
+                    policy_descriptions = response['PolicyDescriptions']
+                    found_tls_v12_count = 0
+                        # look into policy attrs
+                    for policy_description in policy_descriptions:
+                        policy_attrs = policy_description['PolicyAttributeDescriptions']
+                        for attr in policy_attrs:
+                            if attr['AttributeName'] == 'Protocol-TLSv1.2' and attr['AttributeValue'] == 'true':
+                                found_tls_v12_count += 1
+                                break
+                    if found_tls_v12_count == len(policy_descriptions):
+                        secure_listeners_count += 1
+                else: pass            
+            if secure_listeners_count == len(listeners):
+                # secure
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": elb_name,
+                    "item_type": "aws_elb",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
+                })
+            else:
+                # issue found
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": elb_name,
+                    "item_type": "aws_elb",
+                    "test_name": test_name,
+                    "test_result": "issue_found"
+                })
+        return result
 
     def get_elb_listeners_securely_configured(self) -> List:
         test_name = "elb_listeners_securely_configurd"
@@ -200,7 +246,8 @@ class Tester(interfaces.TesterInterface):
         for elb in elbs:
             listeners = elb['ListenerDescriptions']
             loab_balancer_name = elb['LoadBalancerName']
-            for listener in listeners:
+            for i in listeners:
+                listener = i['Listener']
                 if listener['InstanceProtocol'] == 'HTTPS' and listener['Protocol'] == 'HTTPS':
                     # secure
                     result.append({
@@ -263,3 +310,5 @@ class Tester(interfaces.TesterInterface):
                     })
         
         return result
+
+print(Tester().get_elb_listeners_using_tls())
