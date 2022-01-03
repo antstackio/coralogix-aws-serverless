@@ -20,7 +20,8 @@ class Tester(interfaces.TesterInterface):
 
     def run_tests(self) -> list:
         return \
-            self.get_lambda_publicly_accessible()
+            self.get_lambda_publicly_accessible() + \
+            self.get_lambda_has_access_to_vpc_resources()
 
     def _get_all_functions(self) -> List:
         paginator = self.aws_lambda_client.get_paginator('list_functions')
@@ -49,9 +50,8 @@ class Tester(interfaces.TesterInterface):
                 policy = self.aws_lambda_client.get_policy(FunctionName=Lambda['FunctionName'])
                 policy_json = json.loads(policy['Policy'])
                 policy_statements = policy_json['Statement']
-
                 for statement in policy_statements:
-                    if (statement['Principal'] == '*' or statement['Principal']['AWS'] == '*') and not statement.has_key('Condition'):
+                    if (statement['Principal'] == '*' or statement['Principal']['AWS'] == '*') and 'Condition' not in statement:
 
                         function_arn_with_issue.append(Lambda['FunctionArn'])
                     else:
@@ -76,7 +76,7 @@ class Tester(interfaces.TesterInterface):
                     "test_name": test_name,
                     "test_result": "no_issue_found"
                 })
-            
+        function_arn_with_issue = set(function_arn_with_issue) 
         for arn in function_arn_with_issue:
             result.append({
                 "user": self.user_id,
@@ -92,4 +92,48 @@ class Tester(interfaces.TesterInterface):
         return result
 
     def get_lambda_has_access_to_vpc_resources(self) -> List:
-        pass
+        test_name = "lambda_has_access_to_vpc_resources"
+        result = []
+        lambdas = self.functions
+
+        for i in lambdas:
+            if "VpcConfig" in i:
+                vpc_info = i['VpcConfig']
+                # check vpc id, subnet and security group
+                if (vpc_info['VpcId'] is not None or vpc_info['VpcId'] != '') and len(vpc_info['SubnetIds']) > 0 and len(vpc_info['SecurityGroupIds']) > 0:
+                    # has issue
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": i['FunctionArn'],
+                        "item_type": "aws_lambda",
+                        "test_name": test_name,
+                        "test_result": "issue_found"
+                    })
+                else:
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": i['FunctionArn'],
+                        "item_type": "aws_lambda",
+                        "test_name": test_name,
+                        "test_result": "no_issue_found"
+                    })
+            else:
+                # no issue
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": i['FunctionArn'],
+                    "item_type": "aws_lambda",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
+                })
+        
+        return result
