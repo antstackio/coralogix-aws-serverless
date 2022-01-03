@@ -98,20 +98,21 @@ class Tester(interfaces.TesterInterface):
     
     def get_alb_using_secure_listener(self) -> List:
         test_name = "alb_is_using_secure_listeners"
-        elbs = self.elbs
+        elbs = self.elbsv2
         result = []
 
         for elb in elbs:
             # check elbv2 type and only let ALB pass
             if elb['Type'] == "application":
                 load_balancer_arn = elb['LoadBalancerArn']
-                listeners = self.aws_elbsv2_client.describe_listeners(LoadBalancerArn=load_balancer_arn)
+                response = self.aws_elbsv2_client.describe_listeners(LoadBalancerArn=load_balancer_arn)
+                listeners = response['Listeners']
                 secure_listener_count = 0
                 for listener in listeners:
                     if listener['Protocol'] == "HTTPS":
                         secure_listener_count += 1
                 
-                if secure_listener_count == len(listener):
+                if secure_listener_count == len(listeners):
                     result.append({
                         "user": self.user_id,
                         "account_arn": self.account_arn,
@@ -145,13 +146,15 @@ class Tester(interfaces.TesterInterface):
 
         for elb in elbs:
             elb_arn = elb['LoadBalancerArn']
-            elb_attributes = self.aws_elbsv2_client.describe_load_balancer_attributes(LoadBalancerArn=elb_arn)
-
-            attributes = elb_attributes['Attributes']
-            for i in attributes:
-                if i['Key'] == 'access_logs.s3.enabled':
-                    if i['Value'] == 'false':
-                        result.append({
+    
+            elb_type = elb['Type']
+            if elb_type == 'application' or elb_type == 'network':
+                elb_attributes = self.aws_elbsv2_client.describe_load_balancer_attributes(LoadBalancerArn=elb_arn)
+                attributes = elb_attributes['Attributes']
+                for i in attributes:
+                    if i['Key'] == 'access_logs.s3.enabled':
+                        if i['Value'] == 'false':
+                            result.append({
                             "user": self.user_id,
                             "account_arn": self.account_arn,
                             "account": self.account_id,
@@ -160,9 +163,9 @@ class Tester(interfaces.TesterInterface):
                             "item_type": "aws_elbv2",
                             "test_name": test_name,
                             "test_result": "issue_found"
-                        })
-                    else:
-                        result.append({
+                            })
+                        else:
+                            result.append({
                             "user": self.user_id,
                             "account_arn": self.account_arn,
                             "account": self.account_id,
@@ -171,18 +174,10 @@ class Tester(interfaces.TesterInterface):
                             "item_type": "aws_elbv2",
                             "test_name": test_name,
                             "test_result": "no_issue_found"
-                        })
-                else:
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": elb_arn,
-                        "item_type": "aws_elbv2",
-                        "test_name": test_name,
-                        "test_result": "no_issue_found"
-                    })
+                            })
+                    else: pass
+            else:
+                pass
         return result
 
     def get_elb_listeners_using_tls(self) -> List:
@@ -200,6 +195,7 @@ class Tester(interfaces.TesterInterface):
                 if len(policy_names) > 0:
                     response = self.aws_elbs_client.describe_load_balancer_policies(PolicyNames=policy_names, LoadBalancerName=elb_name)
                     policy_descriptions = response['PolicyDescriptions']
+                    print(policy_descriptions)
                     found_tls_v12_count = 0
                         # look into policy attrs
                     for policy_description in policy_descriptions:
@@ -310,5 +306,3 @@ class Tester(interfaces.TesterInterface):
                     })
         
         return result
-
-print(Tester().get_elb_listeners_using_tls())
