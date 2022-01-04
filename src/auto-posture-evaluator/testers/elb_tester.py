@@ -357,4 +357,15 @@ class Tester(interfaces.TesterInterface):
         pass
 
     def get_elbv2_using_latest_security_policy(self) -> List:
-        pass
+        elbv2 = self.elbsv2
+
+        for elb in elbv2:
+            response = self.aws_elbsv2_client.describe_listeners(LoadBalancerArn=elb['LoadBalancerArn'])
+            listeners = response['Listeners']
+
+            ssl_policies = []
+            for listener in listeners:
+                if 'SslPolicy' in listener:
+                    print(listener['SslPolicy'])
+        print(ssl_policies)
+Tester().get_elbv2_using_latest_security_policy()
