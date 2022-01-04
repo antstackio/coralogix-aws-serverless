@@ -168,5 +168,3 @@ class Tester(interfaces.TesterInterface):
                 })
         
         return result
-
-print(Tester().get_lambda_uses_latest_runtime())
