@@ -20,7 +20,13 @@ class Tester(interfaces.TesterInterface):
         return "aws"
 
     def run_tests(self) -> list:
-        pass
+        return \
+            self.get_elbv2_internet_facing() + \
+            self.get_elbv2_generating_access_log() + \
+            self.get_alb_using_secure_listener() + \
+            self.get_elb_generating_access_log() + \
+            self.get_elb_listeners_using_tls() + \
+            self.get_elb_listeners_securely_configured()
     
     def _get_all_elbv2(self) -> List:
         elbs = self.aws_elbsv2_client.describe_load_balancers()
@@ -177,7 +183,7 @@ class Tester(interfaces.TesterInterface):
                             })
                     else: pass
             else:
-                # access log for vpc flow logs
+                # access log / vpc flow logs
                 elb_arn = elb['LoadBalancerArn']
                 arn_split = elb_arn.split(':')
                 temp = arn_split[-1]
@@ -238,7 +244,7 @@ class Tester(interfaces.TesterInterface):
                 if len(policy_names) > 0:
                     response = self.aws_elbs_client.describe_load_balancer_policies(PolicyNames=policy_names, LoadBalancerName=elb_name)
                     policy_descriptions = response['PolicyDescriptions']
-                    print(policy_descriptions)
+
                     found_tls_v12_count = 0
                         # look into policy attrs
                     for policy_description in policy_descriptions:
@@ -368,4 +374,3 @@ class Tester(interfaces.TesterInterface):
                 if 'SslPolicy' in listener:
                     print(listener['SslPolicy'])
         print(ssl_policies)
-Tester().get_elbv2_using_latest_security_policy()
