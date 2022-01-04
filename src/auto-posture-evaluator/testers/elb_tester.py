@@ -177,7 +177,50 @@ class Tester(interfaces.TesterInterface):
                             })
                     else: pass
             else:
-                pass
+                # access log for vpc flow logs
+                elb_arn = elb['LoadBalancerArn']
+                arn_split = elb_arn.split(':')
+                temp = arn_split[-1]
+                description_temp = temp.split('loadbalancer/')
+                network_interface_description = 'ELB' + ' ' + description_temp[-1]
+                ec2_client = boto3.client('ec2')
+                response = ec2_client.describe_network_interfaces(Filters=[{'Name' : 'description', 'Values' : [network_interface_description]}])
+                network_interfaces = response['NetworkInterfaces']
+                interface_ids = []
+                for interface in network_interfaces:
+                    interface_ids.append(interface['NetworkInterfaceId'])
+
+                has_flow_logs = 0
+                for id in interface_ids:
+                    response = ec2_client.describe_flow_logs(Filters=[{'Name': 'resource-id', 'Values' : [id]}])
+                    flow_logs = response['FlowLogs']
+                    if len(flow_logs) > 0:
+                        has_flow_logs += 1
+                    
+                if len(interface_ids) == has_flow_logs:
+                    # no issue
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": elb_arn,
+                        "item_type": "aws_elbv2",
+                        "test_name": test_name,
+                        "test_result": "no_issue_found"
+                    })
+                else:
+                    # issue
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": elb_arn,
+                        "item_type": "aws_elbv2",
+                        "test_name": test_name,
+                        "test_result": "issue_found"
+                    })                
         return result
 
     def get_elb_listeners_using_tls(self) -> List:
@@ -306,3 +349,12 @@ class Tester(interfaces.TesterInterface):
                     })
         
         return result
+
+    def get_elb_security_policy_secure_ciphers(self) -> List:
+        pass
+
+    def get_elb_has_secure_ssl_protocol(self) -> List:
+        pass
+
+    def get_elbv2_using_latest_security_policy(self) -> List:
+        pass
