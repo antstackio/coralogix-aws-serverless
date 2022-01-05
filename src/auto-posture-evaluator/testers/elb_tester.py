@@ -1,7 +1,8 @@
 import time
-from typing import List
+from typing import Dict, List
 import interfaces
 import boto3
+import jmespath
 
 class Tester(interfaces.TesterInterface):
     def __init__(self) -> None:
@@ -12,6 +13,7 @@ class Tester(interfaces.TesterInterface):
         self.aws_elbsv2_client = boto3.client('elbv2')
         self.elbs = self._get_all_elb()
         self.elbsv2 = self._get_all_elbv2()
+        self.cipher_suites = self._get_cipher_suite_details()
 
     def declare_tested_service(self) -> str:
         return "elb"
@@ -20,6 +22,7 @@ class Tester(interfaces.TesterInterface):
         return "aws"
 
     def run_tests(self) -> list:
+        
         return \
             self.get_elbv2_internet_facing() + \
             self.get_elbv2_generating_access_log() + \
@@ -36,6 +39,16 @@ class Tester(interfaces.TesterInterface):
         elbs = self.aws_elbs_client.describe_load_balancers()
         return elbs['LoadBalancerDescriptions']
     
+    def _get_cipher_suite_details(self) -> Dict:
+        cipher_suites = { 
+            'AES128-GCM-SHA256' : 'weak', 'ECDHE-ECDSA-AES256-SHA': 'weak', 'ECDHE-ECDSA-AES256-GCM-SHA384': 'recommended', 'AES128-SHA': 'weak',
+            'ECDHE-RSA-AES128-SHA': 'weak', 'ECDHE-ECDSA-AES128-SHA256': 'weak', 'ECDHE-RSA-AES128-GCM-SHA256': 'secure', 'ECDHE-RSA-AES256-SHA384': 'weak',
+            'AES256-GCM-SHA384': 'weak', 'ECDHE-RSA-AES128-SHA256': 'weak', 'AES256-SHA256' : 'weak', 'ECDHE-ECDSA-AES256-SHA384': 'weak', 
+            'AES128-SHA256' : 'weak', 'ECDHE-RSA-AES256-GCM-SHA384': 'secure', 'ECDHE-ECDSA-AES128-SHA': 'weak', 'AES256-SHA': 'weak', ''
+            'ECDHE-ECDSA-AES128-GCM-SHA256': 'recommended', 'ECDHE-RSA-AES256-SHA': 'weak'
+            }
+        return cipher_suites
+
     def get_elbv2_internet_facing(self) -> List: 
         elbs = self.elbsv2
         test_name = "elbv2_is_not_internet_facing"
@@ -357,7 +370,63 @@ class Tester(interfaces.TesterInterface):
         return result
 
     def get_elb_security_policy_secure_ciphers(self) -> List:
-        pass
+        elbs = self.elbs
+        test_name = "elb_security_policy_does_not_contain_any_insecure_ciphers"
+        result = []
+        elb_with_issue = []
+        all_elbs = []
+        for elb in elbs:
+            # get policies 
+            load_balancer_name = elb['LoadBalancerName']
+            all_elbs.append(load_balancer_name)
+            # get policy details
+            response = self.aws_elbs_client.describe_load_balancer_policies(LoadBalancerName=load_balancer_name)
+            query_result = jmespath.search("PolicyDescriptions[].PolicyAttributeDescriptions[?AttributeValue=='true'].AttributeName", response)
+            all_attrs = []
+
+            for i in query_result:
+                all_attrs.extend(i)
+            
+            unique_set = list(set(all_attrs))
+            cipher_suites = self.cipher_suites
+            for i in unique_set:
+                if i.startswith('Protocol') or i.startswith('protocol'):
+                    pass
+                elif i == 'Server-Defined-Cipher-Order':
+                    pass
+                elif cipher_suites[i] == 'insecure':
+                    elb_with_issue.append(load_balancer_name)
+                    break
+                else: pass
+        
+        all_elbs_set = set(all_elbs)
+        elb_with_issue_set = set(elb_with_issue)
+        elb_with_no_issue_set = all_elbs_set.difference(elb_with_issue)
+
+        for i in elb_with_issue_set:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": i,
+                "item_type": "aws_elb",
+                "test_name": test_name,
+                "test_result": "issue_found"
+            })
+
+        for i in elb_with_no_issue_set:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": i,
+                "item_type": "aws_elb",
+                "test_name": test_name,
+                "test_result": "no_issue_found"
+            })
+        return result
 
     def get_elb_has_secure_ssl_protocol(self) -> List:
         pass
@@ -374,3 +443,5 @@ class Tester(interfaces.TesterInterface):
                 if 'SslPolicy' in listener:
                     print(listener['SslPolicy'])
         print(ssl_policies)
+
+print(Tester().get_elb_security_policy_secure_ciphers())
