@@ -14,6 +14,7 @@ class Tester(interfaces.TesterInterface):
         self.elbs = self._get_all_elb()
         self.elbsv2 = self._get_all_elbv2()
         self.cipher_suites = self._get_cipher_suite_details()
+        self.latest_security_policies = self._get_aws_latest_security_policies()
 
     def declare_tested_service(self) -> str:
         return "elb"
@@ -38,7 +39,10 @@ class Tester(interfaces.TesterInterface):
     def _get_all_elb(self) -> List:
         elbs = self.aws_elbs_client.describe_load_balancers()
         return elbs['LoadBalancerDescriptions']
-    
+    def _get_aws_latest_security_policies(self) -> List:
+        policies = ['ELBSecurityPolicy-2016-08', 'ELBSecurityPolicy-FS-2018-06']
+        return policies
+
     def _get_cipher_suite_details(self) -> Dict:
         cipher_suites = { 
             'AES128-GCM-SHA256' : 'weak', 'ECDHE-ECDSA-AES256-SHA': 'weak', 'ECDHE-ECDSA-AES256-GCM-SHA384': 'recommended', 'AES128-SHA': 'weak',
@@ -432,16 +436,55 @@ class Tester(interfaces.TesterInterface):
         pass
 
     def get_elbv2_using_latest_security_policy(self) -> List:
+        test_name = "elbv2_using_latest_security_policy"
         elbv2 = self.elbsv2
-
+        latest_security_policies = self.latest_security_policies
+        result = []
         for elb in elbv2:
             response = self.aws_elbsv2_client.describe_listeners(LoadBalancerArn=elb['LoadBalancerArn'])
             listeners = response['Listeners']
+            elb_arn = elb['LoadBalancerArn']
+            elb_type = elb['Type']
 
-            ssl_policies = []
-            for listener in listeners:
-                if 'SslPolicy' in listener:
-                    print(listener['SslPolicy'])
-        print(ssl_policies)
-
-print(Tester().get_elb_security_policy_secure_ciphers())
+            if elb_type == 'application' or elb_type == 'network':
+                secure_listeners = 0
+                for listener in listeners:
+                    ssl_policy = listener['SslPolicy']
+                    if ssl_policy in latest_security_policies:
+                        secure_listeners += 1
+                
+                if secure_listeners == len(listeners):
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": elb_arn,
+                        "item_type": "aws_elbv2",
+                        "test_name": test_name,
+                        "test_result": "no_issue_found"
+                    })
+                else:
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": elb_arn,
+                        "item_type": "aws_elbv2",
+                        "test_name": test_name,
+                        "test_result": "issue_found"
+                    })
+            else:
+                # GWLB 
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": elb_arn,
+                    "item_type": "aws_elbv2",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
+                })
+        return result
