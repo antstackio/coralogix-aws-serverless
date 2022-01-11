@@ -30,7 +30,10 @@ class Tester(interfaces.TesterInterface):
             self.get_alb_using_secure_listener() + \
             self.get_elb_generating_access_log() + \
             self.get_elb_listeners_using_tls() + \
-            self.get_elb_listeners_securely_configured()
+            self.get_elb_listeners_securely_configured() + \
+            self.get_elb_has_secure_ssl_protocol() + \
+            self.get_elb_security_policy_secure_ciphers() + \
+            self.get_elbv2_using_latest_security_policy()
     
     def _get_all_elbv2(self) -> List:
         elbs = self.aws_elbsv2_client.describe_load_balancers()
@@ -39,6 +42,7 @@ class Tester(interfaces.TesterInterface):
     def _get_all_elb(self) -> List:
         elbs = self.aws_elbs_client.describe_load_balancers()
         return elbs['LoadBalancerDescriptions']
+
     def _get_aws_latest_security_policies(self) -> List:
         policies = ['ELBSecurityPolicy-2016-08', 'ELBSecurityPolicy-FS-2018-06']
         return policies
@@ -433,7 +437,48 @@ class Tester(interfaces.TesterInterface):
         return result
 
     def get_elb_has_secure_ssl_protocol(self) -> List:
-        pass
+        test_name = "elb_has_secure_ssl_protocol"
+        elbs = self.elbs
+        result = []
+
+        for elb in elbs:
+            load_balancer_name = elb['LoadBalancerName']
+            ssl_policies_count = len(elb['Policies']['OtherPolicies'])
+            response = self.aws_elbs_client.describe_load_balancer_policies(LoadBalancerName=load_balancer_name)
+            query_result = jmespath.search("PolicyDescriptions[].PolicyAttributeDescriptions[?AttributeValue=='true'].AttributeName", response)
+            ssl_with_issue = 0
+            for attrs in query_result:
+                for attr in attrs:
+                    if attr.startswith('Protocol'): pass
+                    elif attr == 'Server-Defined-Cipher-Order': pass
+                    else:
+                        if self.cipher_suites[attr] == 'insecure':
+                            ssl_with_issue += 1
+                            break
+            if ssl_policies_count == ssl_with_issue:
+                # insecure
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": load_balancer_name,
+                    "item_type": "aws_elb",
+                    "test_name": test_name,
+                    "test_result": "issue_found"
+                })
+            else:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": load_balancer_name,
+                    "item_type": "aws_elb",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
+                })
+        return result
 
     def get_elbv2_using_latest_security_policy(self) -> List:
         test_name = "elbv2_using_latest_security_policy"
