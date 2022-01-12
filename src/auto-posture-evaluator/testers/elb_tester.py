@@ -263,7 +263,7 @@ class Tester(interfaces.TesterInterface):
             secure_listeners_count = 0
             for listener in listeners:
                 policy_names = listener['PolicyNames']
-                print(policy_names)
+
                 if len(policy_names) > 0:
                     response = self.aws_elbs_client.describe_load_balancer_policies(PolicyNames=policy_names, LoadBalancerName=elb_name)
                     policy_descriptions = response['PolicyDescriptions']
@@ -279,7 +279,7 @@ class Tester(interfaces.TesterInterface):
                     if found_tls_v12_count == len(policy_descriptions):
                         secure_listeners_count += 1
                 else: pass
-            print(f"Listeners - {len(listeners)} :: Secure listeners - {secure_listeners_count}")          
+          
             if secure_listeners_count == len(listeners):
                 # secure
                 result.append({
