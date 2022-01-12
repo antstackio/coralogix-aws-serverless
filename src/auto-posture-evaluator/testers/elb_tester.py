@@ -1,3 +1,4 @@
+from json import load
 import time
 from typing import Dict, List
 import interfaces
@@ -262,7 +263,7 @@ class Tester(interfaces.TesterInterface):
             secure_listeners_count = 0
             for listener in listeners:
                 policy_names = listener['PolicyNames']
-                
+                print(policy_names)
                 if len(policy_names) > 0:
                     response = self.aws_elbs_client.describe_load_balancer_policies(PolicyNames=policy_names, LoadBalancerName=elb_name)
                     policy_descriptions = response['PolicyDescriptions']
@@ -277,7 +278,8 @@ class Tester(interfaces.TesterInterface):
                                 break
                     if found_tls_v12_count == len(policy_descriptions):
                         secure_listeners_count += 1
-                else: pass            
+                else: pass
+            print(f"Listeners - {len(listeners)} :: Secure listeners - {secure_listeners_count}")          
             if secure_listeners_count == len(listeners):
                 # secure
                 result.append({
@@ -313,68 +315,44 @@ class Tester(interfaces.TesterInterface):
         for elb in elbs:
             listeners = elb['ListenerDescriptions']
             loab_balancer_name = elb['LoadBalancerName']
+            secure_listeners = 0
             for i in listeners:
                 listener = i['Listener']
                 if listener['InstanceProtocol'] == 'HTTPS' and listener['Protocol'] == 'HTTPS':
                     # secure
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": loab_balancer_name,
-                        "item_type": "aws_elb",
-                        "test_name": test_name,
-                        "test_result": "no_issue_found"
-                    })
+                    secure_listeners += 1
                 elif listener['InstanceProtocol'] == 'SSL' and listener['Protocol'] == 'SSL':
                     # secure
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": loab_balancer_name,
-                        "item_type": "aws_elb",
-                        "test_name": test_name,
-                        "test_result": "no_issue_found"
-                    })
+                    secure_listeners += 1
                 elif listener['InstanceProtocol'] == 'HTTPS' and listener['Protocol'] == 'SSL':
                     # secure
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": loab_balancer_name,
-                        "item_type": "aws_elb",
-                        "test_name": test_name,
-                        "test_result": "no_issue_found"
-                    })
+                    secure_listeners += 1
                 elif listener['InstanceProtocol'] == 'SSL' and listener['Protocol'] == 'HTTPS':
                     # secure
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": loab_balancer_name,
-                        "item_type": "aws_elb",
-                        "test_name": test_name,
-                        "test_result": "no_issue_found"
-                    })
-                else:
-                    # insecure
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": loab_balancer_name,
-                        "item_type": "aws_elb",
-                        "test_name": test_name,
-                        "test_result": "issue_found"
-                    })
+                    secure_listeners += 1
+                else: pass
+            if len(listeners) == secure_listeners:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": loab_balancer_name,
+                    "item_type": "aws_elb",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
+                })
+            else:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": loab_balancer_name,
+                    "item_type": "aws_elb",
+                    "test_name": test_name,
+                    "test_result": "issue_found"
+                })
         
         return result
 
