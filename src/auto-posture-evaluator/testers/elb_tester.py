@@ -517,5 +517,3 @@ class Tester(interfaces.TesterInterface):
                     "test_result": "no_issue_found"
                 })
         return result
-
-print(Tester().get_elb_security_policy_secure_ciphers())
