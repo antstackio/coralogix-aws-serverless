@@ -366,26 +366,31 @@ class Tester(interfaces.TesterInterface):
             # get policies 
             load_balancer_name = elb['LoadBalancerName']
             all_elbs.append(load_balancer_name)
-            # get policy details
-            response = self.aws_elbs_client.describe_load_balancer_policies(LoadBalancerName=load_balancer_name)
-            query_result = jmespath.search("PolicyDescriptions[].PolicyAttributeDescriptions[?AttributeValue=='true'].AttributeName", response)
-            all_attrs = []
 
-            for i in query_result:
-                all_attrs.extend(i)
+            listeners = elb['ListenerDescriptions']
+            listener_policies = []
+
+            for listener in listeners:
+                listener_policies.extend(listener['PolicyNames'])
             
-            unique_set = list(set(all_attrs))
-            cipher_suites = self.cipher_suites
-            for i in unique_set:
-                if i.startswith('Protocol') or i.startswith('protocol'):
-                    pass
-                elif i == 'Server-Defined-Cipher-Order':
-                    pass
-                elif cipher_suites[i] == 'insecure':
-                    elb_with_issue.append(load_balancer_name)
-                    break
-                else: pass
-        
+            if len(listener_policies) > 0:
+                response = self.aws_elbs_client.describe_load_balancer_policies(PolicyNames=listener_policies)
+                query_result = jmespath.search("PolicyDescriptions[].PolicyAttributeDescriptions[?AttributeValue=='true'].AttributeName", response)
+                all_attrs = []
+
+                for i in query_result:
+                    all_attrs.extend(i)
+                unique_set = list(set(all_attrs))
+                cipher_suites = self.cipher_suites
+                for i in unique_set:
+                    if i.startswith('Protocol') or i.startswith('protocol'): pass
+                    elif i == 'Server-Defined-Cipher-Order': pass
+                    elif cipher_suites[i] == 'insecure':
+                        elb_with_issue.append(load_balancer_name)
+                        break
+                    else: pass
+            else:
+                elb_with_issue.append(load_balancer_name)
         all_elbs_set = set(all_elbs)
         elb_with_issue_set = set(elb_with_issue)
         elb_with_no_issue_set = all_elbs_set.difference(elb_with_issue)
@@ -512,3 +517,5 @@ class Tester(interfaces.TesterInterface):
                     "test_result": "no_issue_found"
                 })
         return result
+
+print(Tester().get_elb_security_policy_secure_ciphers())
