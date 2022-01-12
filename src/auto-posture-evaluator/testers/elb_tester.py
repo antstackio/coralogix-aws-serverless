@@ -63,13 +63,14 @@ class Tester(interfaces.TesterInterface):
         result = []
 
         for elb in elbs:
+            load_balancer_arn = elb['LoadBalancerArn']
             if elb['Scheme'] == 'internet-facing':
                 result.append({
                     "user": self.user_id,
                     "account_arn": self.account_arn,
                     "account": self.account_id,
                     "timestamp": time.time(),
-                    "item": elb['LoadBalancerArn'],
+                    "item": load_balancer_arn,
                     "item_type": "aws_elbv2",
                     "test_name": test_name,
                     "test_result": "issue_found"
@@ -80,7 +81,7 @@ class Tester(interfaces.TesterInterface):
                     "account_arn": self.account_arn,
                     "account": self.account_id,
                     "timestamp": time.time(),
-                    "item": elb['LoadBalancerArn'],
+                    "item": load_balancer_arn,
                     "item_type": "aws_elbv2",
                     "test_name": test_name,
                     "test_result": "no_issue_found"
@@ -173,8 +174,8 @@ class Tester(interfaces.TesterInterface):
 
         for elb in elbs:
             elb_arn = elb['LoadBalancerArn']
-    
             elb_type = elb['Type']
+
             if elb_type == 'application' or elb_type == 'network':
                 elb_attributes = self.aws_elbsv2_client.describe_load_balancer_attributes(LoadBalancerArn=elb_arn)
                 attributes = elb_attributes['Attributes']
@@ -202,10 +203,10 @@ class Tester(interfaces.TesterInterface):
                             "test_name": test_name,
                             "test_result": "no_issue_found"
                             })
+                        break
                     else: pass
             else:
                 # access log / vpc flow logs
-                elb_arn = elb['LoadBalancerArn']
                 arn_split = elb_arn.split(':')
                 temp = arn_split[-1]
                 description_temp = temp.split('loadbalancer/')
@@ -494,7 +495,7 @@ class Tester(interfaces.TesterInterface):
             if elb_type == 'application' or elb_type == 'network':
                 secure_listeners = 0
                 for listener in listeners:
-                    ssl_policy = listener['SslPolicy']
+                    ssl_policy = listener.get('SslPolicy')
                     if ssl_policy in latest_security_policies:
                         secure_listeners += 1
                 
