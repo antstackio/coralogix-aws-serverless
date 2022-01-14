@@ -13,6 +13,7 @@ class Tester(interfaces.TesterInterface):
         self.account_arn = boto3.client('sts').get_caller_identity().get('Arn')
         self.account_id = boto3.client('sts').get_caller_identity().get('Account')
         self.functions = self._get_all_functions()
+        self.SUPPORTED_LAMBDA_RUNTIME = "https://cgx-s3-nsm-logshipper-config.s3.eu-west-1.amazonaws.com/acceptable-lambda-runtime-versions.json"
 
     def declare_tested_service(self) -> str:
         return 'lambda'
@@ -39,14 +40,14 @@ class Tester(interfaces.TesterInterface):
     def get_lambda_uses_latest_runtime(self) -> List:
         lambdas = self.functions
         test_name = "lambda_uses_latest_runtime"
-        response = requests.get("https://cgx-s3-nsm-logshipper-config.s3.eu-west-1.amazonaws.com/acceptable-lambda-runtime-versions.json")
-        supportd_versions_repo = response.json()
+        response = requests.get(self.SUPPORTED_LAMBDA_RUNTIME)
+        supported_versions_repo = response.json()
         result = []
         for Lambda in lambdas:
             runtime = Lambda['Runtime']
             language = re.split(r"\d+.\d+|\d+.\w", runtime)[0]
             version = runtime.split(language)[-1]
-            versions = supportd_versions_repo[language]
+            versions = supported_versions_repo[language]
             if version in versions:
                 result.append({
                     "user": self.user_id,
