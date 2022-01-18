@@ -36,6 +36,10 @@ class Tester(interfaces.TesterInterface):
                 "method": self.get_members_can_not_create_public_repos,
                 "result_item_type": "github_organization"
             },
+            "organization's_domains_are_not_verified": {
+                "method": self.get_org_domains_are_not_verified,
+                "result_item_type": "github_organization"
+            },
         }
         self.request_headers = {
             "Authorization": "token " + self.github_authorization_token,
@@ -160,5 +164,16 @@ class Tester(interfaces.TesterInterface):
             result.append({"item": organization, "issue": True})
         else:
             result.append({"item": organization, "issue": False})
+        
+        return result
+
+    def get_org_domains_are_not_verified(self, organization):
+        result = []
+        raw_api_response = requests.get(headers=self.request_headers, url='https://api.github.com/orgs/' + organization)
+        org_details =  raw_api_response.json()
+        if org_details['is_verified']:
+            result.append({"item": organization, "issue": False})
+        else:
+            result.append({"item": organization, "issue": True})
         
         return result
