@@ -40,6 +40,10 @@ class Tester(interfaces.TesterInterface):
                 "method": self.get_org_domains_are_not_verified,
                 "result_item_type": "github_organization"
             },
+            "github_pages_is_disabled": {
+                "method": self.get_github_pages_disabled,
+                "result_item_type": "github_repository"
+            }
         }
         self.request_headers = {
             "Authorization": "token " + self.github_authorization_token,
@@ -175,5 +179,20 @@ class Tester(interfaces.TesterInterface):
             result.append({"item": organization, "issue": False})
         else:
             result.append({"item": organization, "issue": True})
+        
+        return result
+
+    def get_github_pages_disabled(self, organization):
+        result = []
+        raw_api_response = requests.get(headers=self.request_headers, url="https://api.github.com/orgs/" + organization + "/repos")
+        repos_details = raw_api_response.json()
+        
+        for repo in repos_details:
+            repo_name = repo['name']
+            has_pages = repo['has_pages']
+            if has_pages:
+                result.append({"item": repo_name, "issue": True})
+            else:
+                result.append({"item": repo_name, "issue": False})
         
         return result
