@@ -56,7 +56,10 @@ class Tester(interfaces.TesterInterface):
                 "method": self.get_no_outside_collaborators_with_admin_permission,
                 "result_item_type": "github_repository"
             },
-
+            "pending_invitations_for_outside_collaborators_with_admin_permissions": {
+                "method": self.get_pending_invitation_with_admin_permissions,
+                "result_item_type": "github_repository"
+            },
         }
         self.request_headers = {
             "Authorization": "token " + self.github_authorization_token,
@@ -269,6 +272,34 @@ class Tester(interfaces.TesterInterface):
                     else: pass
                 
                 if admin_permission_count > 0:
+                    result.append({"item": repo_name, "issue": True})
+                else:
+                    result.append({"item": repo_name, "issue": False})
+            else:
+                result.append({"item": repo_name, "issue": False})
+
+        return result
+    
+    def get_pending_invitation_with_admin_permissions(self, organization):
+        result = []
+        all_invitations = []
+        raw_repos_details = requests.get(headers=self.request_headers, url="https://api.github.com/orgs/" + organization + "/repos")
+        repos_details = raw_repos_details.json()
+
+        for repo in repos_details:
+            repo_name = repo['name']
+            owner = repo['owner']['login']
+            raw_response = requests.get(headers=self.request_headers, url="https://api.github.com/repos/" + owner + "/" + repo_name + "/invitations")
+            invitations = raw_response.json()
+            
+            pending_invitation_admin_permission = 0
+            if len(invitations) > 0:
+                for invitation in invitations:
+                    if not invitation['expired'] and invitation['permissions'] == 'admin':
+                        pending_invitation_admin_permission += 1
+                    else: pass
+                
+                if pending_invitation_admin_permission > 0:
                     result.append({"item": repo_name, "issue": True})
                 else:
                     result.append({"item": repo_name, "issue": False})
