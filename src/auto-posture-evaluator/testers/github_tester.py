@@ -1,8 +1,11 @@
+import json
+from operator import le
 import os
 import time
+from urllib import response
 import requests
 import interfaces
-
+from datetime import date, datetime
 
 class Tester(interfaces.TesterInterface):
     def __init__(self):
@@ -20,7 +23,11 @@ class Tester(interfaces.TesterInterface):
             "too_many_admin_users_per_org": {
                 "method": self.check_for_too_many_admin_users,
                 "result_item_type": "github_organization"
-            }
+            },
+            "two_factor_authentication_is_enforced":{
+                "method": self.get_2fa_authentication_enforced,
+                "result_item_type": "github_organization"
+            },
         }
         self.request_headers = {
             "Authorization": "token " + self.github_authorization_token,
@@ -110,4 +117,16 @@ class Tester(interfaces.TesterInterface):
         else:
             result.append({"item": organization, "issue": False})
 
+        return result
+
+    def get_2fa_authentication_enforced(self, organization):
+        result = []
+        raw_api_response = requests.get(headers=self.request_headers, url='https://api.github.com/orgs/' + organization)
+        raw_api_response_obj = raw_api_response.json()
+
+        if raw_api_response_obj['two_factor_requirement_enabled']:
+            result.append({"item": organization, "issue": False})
+        else:
+            result.append({"item": organization, "issue": True})
+        
         return result
