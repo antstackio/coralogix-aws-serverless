@@ -52,6 +52,11 @@ class Tester(interfaces.TesterInterface):
                 "method": self.get_code_security_alerts_are_enabled,
                 "result_item_type": "github_repository"
             },
+            "no_outside_collaborators_with_admin_permission": {
+                "method": self.get_no_outside_collaborators_with_admin_permission,
+                "result_item_type": "github_repository"
+            },
+
         }
         self.request_headers = {
             "Authorization": "token " + self.github_authorization_token,
@@ -242,4 +247,32 @@ class Tester(interfaces.TesterInterface):
             else:
                 result.append({"item": repo_name, "issue": True})
         
+        return result
+
+    def get_no_outside_collaborators_with_admin_permission(self, organization):
+        result = []
+        
+        raw_repos_details = requests.get(headers=self.request_headers, url="https://api.github.com/orgs/" + organization + "/repos")
+        repos_details = raw_repos_details.json()
+        
+        for repo in repos_details:
+            repo_name = repo['name']
+            owner = repo['owner']['login']
+            response = requests.get(headers=self.request_headers, url="https://api.github.com/repos/" + owner + "/" + repo_name + '/collaborators?affiliation=outside')
+            collaborators = response.json()
+
+            admin_permission_count = 0
+            if len(collaborators) > 0:
+                for collaborator in collaborators:
+                    if collaborator['permissions']['admin']:
+                        admin_permission_count += 1
+                    else: pass
+                
+                if admin_permission_count > 0:
+                    result.append({"item": repo_name, "issue": True})
+                else:
+                    result.append({"item": repo_name, "issue": False})
+            else:
+                result.append({"item": repo_name, "issue": False})
+
         return result
