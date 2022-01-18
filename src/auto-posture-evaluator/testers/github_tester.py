@@ -28,6 +28,10 @@ class Tester(interfaces.TesterInterface):
                 "method": self.get_2fa_authentication_enforced,
                 "result_item_type": "github_organization"
             },
+            "base_permissions_not_set_to_admin":{
+                "method": self.get_base_permission_not_admin,
+                "result_item_type": "github_organization"
+            }
         }
         self.request_headers = {
             "Authorization": "token " + self.github_authorization_token,
@@ -128,5 +132,17 @@ class Tester(interfaces.TesterInterface):
             result.append({"item": organization, "issue": False})
         else:
             result.append({"item": organization, "issue": True})
+        
+        return result
+
+    def get_base_permission_not_admin(self, organization):
+        result = []
+        raw_api_response = requests.get(headers=self.request_headers, url='https://api.github.com/orgs/' + organization)
+        raw_api_response_obj = raw_api_response.json()
+
+        if raw_api_response_obj['default_repository_permission'].lower() == 'admin':
+            result.append({"item": organization, "issue": True})
+        else:
+            result.append({"item": organization, "issue": False})
         
         return result
