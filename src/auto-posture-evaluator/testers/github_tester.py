@@ -43,7 +43,11 @@ class Tester(interfaces.TesterInterface):
             "github_pages_is_disabled": {
                 "method": self.get_github_pages_disabled,
                 "result_item_type": "github_repository"
-            }
+            },
+            "members_without_signing_gpg_keys": {
+                "method": self.get_members_without_gpg_keys,
+                "result_item_type": "github_organization"
+            },
         }
         self.request_headers = {
             "Authorization": "token " + self.github_authorization_token,
@@ -195,4 +199,25 @@ class Tester(interfaces.TesterInterface):
             else:
                 result.append({"item": repo_name, "issue": False})
         
+        return result
+    
+    def get_members_without_gpg_keys(self, organization):
+        result = []
+        raw_api_response = requests.get(headers=self.request_headers, url='https://api.github.com/orgs/' + organization + '/members')
+        org_members = raw_api_response.json()
+        
+        members_with_gpg_keys_count = 0
+        for member in org_members:
+            username = member['login']
+            response = requests.get(headers=self.request_headers, url='http://api.github.com/users/' + username + '/gpg_keys')
+            user_gpg_keys = response.json()
+            if len(user_gpg_keys) > 0:
+                members_with_gpg_keys_count += 1
+            else: pass
+
+        if members_with_gpg_keys_count == len(org_members):
+            result.append({"item": organization, "issue": False})
+        else:
+            result.append({"item": organization, "issue": True})
+
         return result
