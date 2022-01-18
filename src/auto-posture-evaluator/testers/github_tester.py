@@ -48,6 +48,10 @@ class Tester(interfaces.TesterInterface):
                 "method": self.get_members_without_gpg_keys,
                 "result_item_type": "github_organization"
             },
+            "code_security_alerts_are_enabled": {
+                "method": self.get_code_security_alerts_are_enabled,
+                "result_item_type": "github_repository"
+            },
         }
         self.request_headers = {
             "Authorization": "token " + self.github_authorization_token,
@@ -220,4 +224,22 @@ class Tester(interfaces.TesterInterface):
         else:
             result.append({"item": organization, "issue": True})
 
+        return result
+    
+    def get_code_security_alerts_are_enabled(self, organization):
+        result = []
+        raw_api_response = requests.get(headers=self.request_headers, url="https://api.github.com/orgs/" + organization + "/repos")
+        repos_details = raw_api_response.json()
+
+        for repo in repos_details:
+            repo_name = repo['name']
+            owner = repo['owner']['login']
+            raw_response = requests.get(headers=self.request_headers, url="https://api.github.com/repos/" + owner + "/" + repo_name + "/vulnerability-alerts")
+            response_code = raw_response.status_code
+            
+            if response_code == 204:
+                result.append({"item": repo_name, "issue": False})
+            else:
+                result.append({"item": repo_name, "issue": True})
+        
         return result
