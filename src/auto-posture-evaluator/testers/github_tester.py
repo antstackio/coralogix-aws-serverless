@@ -31,7 +31,11 @@ class Tester(interfaces.TesterInterface):
             "base_permissions_not_set_to_admin":{
                 "method": self.get_base_permission_not_admin,
                 "result_item_type": "github_organization"
-            }
+            },
+            "members_can_not_create_public_repositories": {
+                "method": self.get_members_can_not_create_public_repos,
+                "result_item_type": "github_organization"
+            },
         }
         self.request_headers = {
             "Authorization": "token " + self.github_authorization_token,
@@ -141,6 +145,18 @@ class Tester(interfaces.TesterInterface):
         raw_api_response_obj = raw_api_response.json()
 
         if raw_api_response_obj['default_repository_permission'].lower() == 'admin':
+            result.append({"item": organization, "issue": True})
+        else:
+            result.append({"item": organization, "issue": False})
+        
+        return result
+
+    def get_members_can_not_create_public_repos(self, organization):
+        result = []
+        raw_api_response = requests.get(headers=self.request_headers, url='https://api.github.com/orgs/' + organization)
+        org_details = raw_api_response.json()
+
+        if org_details['members_can_create_public_repositories']:
             result.append({"item": organization, "issue": True})
         else:
             result.append({"item": organization, "issue": False})
