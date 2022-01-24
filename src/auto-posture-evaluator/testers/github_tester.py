@@ -64,7 +64,7 @@ class Tester(interfaces.TesterInterface):
                 "result_item_type": "github_repository"
             },
             "deploy_keys_are_fresh":{
-                "method": self.get_deploy_keys_are_freshe,
+                "method": self.get_deploy_keys_are_fresh,
                 "result_item_type": "github_repository"
             }
         }
@@ -339,7 +339,7 @@ class Tester(interfaces.TesterInterface):
 
         return result
 
-    def get_deploy_keys_are_freshe(self, organization):
+    def get_deploy_keys_are_fresh(self, organization):
         result = []
         raw_repos_details = requests.get(headers=self.request_headers, url=self.BASE_URL_ORGS + organization + "/repos")
         repos_details = raw_repos_details.json()
