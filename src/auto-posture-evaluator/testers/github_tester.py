@@ -9,6 +9,7 @@ class Tester(interfaces.TesterInterface):
     def __init__(self):
         self.github_authorization_token = os.environ.get('AUTOPOSTURE_GITHUB_TOKEN')
         self.github_organizations = os.environ.get('AUTOPOSTURE_GITHUB_ORGANIZATIONS')
+        self.deploy_keys_max_days_old = os.environ.get('AUTOPOSTURE_GITHUB_DEPLOY_KEYS_MAX_DAYS_OLD')
         self.BASE_URL_ORGS = "https://api.github.com/orgs/"
         self.BASE_URL_REPOS = "https://api.github.com/repos/"
         self.BASE_URL_USERS = "http://api.github.com/users/"
@@ -62,6 +63,10 @@ class Tester(interfaces.TesterInterface):
                 "method": self.get_pending_invitation_with_admin_permissions,
                 "result_item_type": "github_repository"
             },
+            "deploy_keys_are_fresh":{
+                "method": self.get_deploy_keys_are_freshe,
+                "result_item_type": "github_repository"
+            }
         }
         self.request_headers = {
             "Authorization": "token " + self.github_authorization_token,
@@ -332,4 +337,33 @@ class Tester(interfaces.TesterInterface):
             else:
                 result.append({"item": repo_name, "issue": False})
 
+        return result
+
+    def get_deploy_keys_are_freshe(self, organization):
+        result = []
+        raw_repos_details = requests.get(headers=self.request_headers, url=self.BASE_URL_ORGS + organization + "/repos")
+        repos_details = raw_repos_details.json()
+        freshness_threshold = self.deploy_keys_max_days_old if self.deploy_keys_max_days_old is not None else 30
+        for repo in repos_details:
+            repo_name = repo['name']
+            owner = repo['owner']['login']
+
+            raw_reponse = requests.get(headers=self.request_headers, url=self.BASE_URL_REPOS + owner + "/" + repo_name + "/keys")
+            deploy_keys = raw_reponse.json()
+
+            keys_with_issue = 0
+            for key in deploy_keys:
+                key_created_at = key['created_at']
+                key_created_at_obj = datetime.strptime(key_created_at, '%Y-%M-%dT%H:%m:%SZ')
+                current_datetime = datetime.now()
+                time_diff = (current_datetime - key_created_at_obj).days
+
+                if time_diff > freshness_threshold:
+                    keys_with_issue += 1
+                else: pass
+            if keys_with_issue > 0:
+                result.append({"item": repo_name, "issue": True})
+            else:
+                result.append({"item": repo_name, "issue": False})
+        
         return result
