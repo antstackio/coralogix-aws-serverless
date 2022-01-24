@@ -66,6 +66,10 @@ class Tester(interfaces.TesterInterface):
             "deploy_keys_are_fresh":{
                 "method": self.get_deploy_keys_are_fresh,
                 "result_item_type": "github_repository"
+            },
+            "sso_is_enabled":{
+                "method": self.get_sso_enabled_for_organization,
+                "result_item_type": "github_organization"
             }
         }
         self.request_headers = {
@@ -366,4 +370,15 @@ class Tester(interfaces.TesterInterface):
             else:
                 result.append({"item": repo_name, "issue": False})
         
+        return result
+
+    def get_sso_enabled_for_organization(self, organization):
+        result = []
+        raw_response = requests.get(headers=self.request_headers, url=self.BASE_URL_ORGS + organization + '/credential-authorizations')
+        org_auth_details = raw_response.json()
+
+        if len(org_auth_details) > 0:
+            result.append({"item": organization, "issue": False})
+        else:
+            result.append({"item": organization, "issue": True})
         return result
