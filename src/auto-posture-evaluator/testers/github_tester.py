@@ -1,16 +1,18 @@
-import json
-from operator import le
 import os
 import time
-from urllib import response
 import requests
 import interfaces
 from datetime import date, datetime
+
 
 class Tester(interfaces.TesterInterface):
     def __init__(self):
         self.github_authorization_token = os.environ.get('AUTOPOSTURE_GITHUB_TOKEN')
         self.github_organizations = os.environ.get('AUTOPOSTURE_GITHUB_ORGANIZATIONS')
+        self.BASE_URL_ORGS = "https://api.github.com/orgs/"
+        self.BASE_URL_REPOS = "https://api.github.com/repos/"
+        self.BASE_URL_USERS = "http://api.github.com/users/"
+
         self.tests = {
             "users_without_mfa": {
                 "method": self.get_users_without_mfa,
@@ -24,11 +26,11 @@ class Tester(interfaces.TesterInterface):
                 "method": self.check_for_too_many_admin_users,
                 "result_item_type": "github_organization"
             },
-            "two_factor_authentication_is_enforced":{
+            "two_factor_authentication_is_enforced": {
                 "method": self.get_2fa_authentication_enforced,
                 "result_item_type": "github_organization"
             },
-            "base_permissions_not_set_to_admin":{
+            "base_permissions_not_set_to_admin": {
                 "method": self.get_base_permission_not_admin,
                 "result_item_type": "github_organization"
             },
@@ -74,7 +76,8 @@ class Tester(interfaces.TesterInterface):
 
     def run_tests(self) -> list:
         results = []
-        organizations_list = self.get_organizations_list(self.github_organizations)
+        organizations_list = self.get_organizations_list(
+            self.github_organizations)
         for test_name in self.tests.keys():
             for organization in organizations_list:
                 raw_results = self.tests[test_name]["method"](organization)
@@ -104,7 +107,8 @@ class Tester(interfaces.TesterInterface):
         if organizations is not None:
             return str(organizations).split(',')
         else:
-            raw_results = requests.get(headers=self.request_headers, url='https://api.github.com/user/orgs')
+            raw_results = requests.get(
+                headers=self.request_headers, url='https://api.github.com/user/orgs')
             raw_results_obj = raw_results.json()
             result = []
             for organization in raw_results_obj:
@@ -113,21 +117,26 @@ class Tester(interfaces.TesterInterface):
 
     def get_users_without_mfa(self, organization):
         result = []
-        raw_api_result_all_users = requests.get(headers=self.request_headers, url='https://api.github.com/orgs/' + organization + '/members')
+        raw_api_result_all_users = requests.get(
+            headers=self.request_headers, url=self.BASE_URL_ORGS + organization + '/members')
         raw_api_result_all_users_obj = raw_api_result_all_users.json()
-        raw_api_result_2fa_disabled = requests.get(headers=self.request_headers, url='https://api.github.com/orgs/' + organization + '/members?filter=2fa_disabled')
+        raw_api_result_2fa_disabled = requests.get(
+            headers=self.request_headers, url=self.BASE_URL_ORGS + organization + '/members?filter=2fa_disabled')
         raw_api_result_2fa_disabled_obj = raw_api_result_2fa_disabled.json()
         for user in raw_api_result_all_users_obj:
             if user["login"] in [u.login for u in raw_api_result_2fa_disabled_obj]:
-                result.append({"item": user["login"] + "@@" + organization, "issue": True})
+                result.append(
+                    {"item": user["login"] + "@@" + organization, "issue": True})
             else:
-                result.append({"item": user["login"] + "@@" + organization, "issue": False})
+                result.append(
+                    {"item": user["login"] + "@@" + organization, "issue": False})
 
         return result
 
     def get_forkable_repositories(self, organization):
         result = []
-        raw_api_result = requests.get(headers=self.request_headers, url='https://api.github.com/orgs/' + organization + '/repos')
+        raw_api_result = requests.get(
+            headers=self.request_headers, url=self.BASE_URL_ORGS + organization + '/repos')
         raw_api_result_obj = raw_api_result.json()
         for repo in raw_api_result_obj:
             if repo["allow_forking"]:
@@ -140,7 +149,8 @@ class Tester(interfaces.TesterInterface):
     def check_for_too_many_admin_users(self, organization):
         result = []
         org_admins = []
-        raw_api_result = requests.get(headers=self.request_headers, url='https://api.github.com/orgs/' + organization + '/members?role=admin')
+        raw_api_result = requests.get(
+            headers=self.request_headers, url=self.BASE_URL_ORGS + organization + '/members?role=admin')
         raw_api_result_obj = raw_api_result.json()
         for user in raw_api_result_obj:
             org_admins.append(user["login"])
@@ -153,56 +163,61 @@ class Tester(interfaces.TesterInterface):
 
     def get_2fa_authentication_enforced(self, organization):
         result = []
-        raw_api_response = requests.get(headers=self.request_headers, url='https://api.github.com/orgs/' + organization)
+        raw_api_response = requests.get(
+            headers=self.request_headers, url=self.BASE_URL_ORGS + organization)
         raw_api_response_obj = raw_api_response.json()
 
         if raw_api_response_obj['two_factor_requirement_enabled']:
             result.append({"item": organization, "issue": False})
         else:
             result.append({"item": organization, "issue": True})
-        
+
         return result
 
     def get_base_permission_not_admin(self, organization):
         result = []
-        raw_api_response = requests.get(headers=self.request_headers, url='https://api.github.com/orgs/' + organization)
+        raw_api_response = requests.get(
+            headers=self.request_headers, url=self.BASE_URL_ORGS + organization)
         raw_api_response_obj = raw_api_response.json()
 
         if raw_api_response_obj['default_repository_permission'].lower() == 'admin':
             result.append({"item": organization, "issue": True})
         else:
             result.append({"item": organization, "issue": False})
-        
+
         return result
 
     def get_members_can_not_create_public_repos(self, organization):
         result = []
-        raw_api_response = requests.get(headers=self.request_headers, url='https://api.github.com/orgs/' + organization)
+        raw_api_response = requests.get(
+            headers=self.request_headers, url=self.BASE_URL_ORGS + organization)
         org_details = raw_api_response.json()
 
         if org_details['members_can_create_public_repositories']:
             result.append({"item": organization, "issue": True})
         else:
             result.append({"item": organization, "issue": False})
-        
+
         return result
 
     def get_org_domains_are_not_verified(self, organization):
         result = []
-        raw_api_response = requests.get(headers=self.request_headers, url='https://api.github.com/orgs/' + organization)
-        org_details =  raw_api_response.json()
+        raw_api_response = requests.get(
+            headers=self.request_headers, url=self.BASE_URL_ORGS + organization)
+        org_details = raw_api_response.json()
         if org_details['is_verified']:
             result.append({"item": organization, "issue": False})
         else:
             result.append({"item": organization, "issue": True})
-        
+
         return result
 
     def get_github_pages_disabled(self, organization):
         result = []
-        raw_api_response = requests.get(headers=self.request_headers, url="https://api.github.com/orgs/" + organization + "/repos")
+        raw_api_response = requests.get(
+            headers=self.request_headers, url=self.BASE_URL_ORGS + organization + "/repos")
         repos_details = raw_api_response.json()
-        
+
         for repo in repos_details:
             repo_name = repo['name']
             has_pages = repo['has_pages']
@@ -210,22 +225,25 @@ class Tester(interfaces.TesterInterface):
                 result.append({"item": repo_name, "issue": True})
             else:
                 result.append({"item": repo_name, "issue": False})
-        
+
         return result
-    
+
     def get_members_without_gpg_keys(self, organization):
         result = []
-        raw_api_response = requests.get(headers=self.request_headers, url='https://api.github.com/orgs/' + organization + '/members')
+        raw_api_response = requests.get(
+            headers=self.request_headers, url=self.BASE_URL_ORGS + organization + '/members')
         org_members = raw_api_response.json()
-        
+
         members_with_gpg_keys_count = 0
         for member in org_members:
             username = member['login']
-            response = requests.get(headers=self.request_headers, url='http://api.github.com/users/' + username + '/gpg_keys')
+            response = requests.get(
+                headers=self.request_headers, url=self.BASE_URL_USERS + username + '/gpg_keys')
             user_gpg_keys = response.json()
             if len(user_gpg_keys) > 0:
                 members_with_gpg_keys_count += 1
-            else: pass
+            else:
+                pass
 
         if members_with_gpg_keys_count == len(org_members):
             result.append({"item": organization, "issue": False})
@@ -233,35 +251,39 @@ class Tester(interfaces.TesterInterface):
             result.append({"item": organization, "issue": True})
 
         return result
-    
+
     def get_code_security_alerts_are_enabled(self, organization):
         result = []
-        raw_api_response = requests.get(headers=self.request_headers, url="https://api.github.com/orgs/" + organization + "/repos")
+        raw_api_response = requests.get(
+            headers=self.request_headers, url=self.BASE_URL_ORGS + organization + "/repos")
         repos_details = raw_api_response.json()
 
         for repo in repos_details:
             repo_name = repo['name']
             owner = repo['owner']['login']
-            raw_response = requests.get(headers=self.request_headers, url="https://api.github.com/repos/" + owner + "/" + repo_name + "/vulnerability-alerts")
+            raw_response = requests.get(
+                headers=self.request_headers, url=self.BASE_URL_REPOS + owner + "/" + repo_name + "/vulnerability-alerts")
             response_code = raw_response.status_code
-            
+
             if response_code == 204:
                 result.append({"item": repo_name, "issue": False})
             else:
                 result.append({"item": repo_name, "issue": True})
-        
+
         return result
 
     def get_no_outside_collaborators_with_admin_permission(self, organization):
         result = []
-        
-        raw_repos_details = requests.get(headers=self.request_headers, url="https://api.github.com/orgs/" + organization + "/repos")
+
+        raw_repos_details = requests.get(
+            headers=self.request_headers, url=self.BASE_URL_ORGS + organization + "/repos")
         repos_details = raw_repos_details.json()
-        
+
         for repo in repos_details:
             repo_name = repo['name']
             owner = repo['owner']['login']
-            response = requests.get(headers=self.request_headers, url="https://api.github.com/repos/" + owner + "/" + repo_name + '/collaborators?affiliation=outside')
+            response = requests.get(headers=self.request_headers, url=self.BASE_URL_REPOS +
+                                    owner + "/" + repo_name + '/collaborators?affiliation=outside')
             collaborators = response.json()
 
             admin_permission_count = 0
@@ -269,8 +291,9 @@ class Tester(interfaces.TesterInterface):
                 for collaborator in collaborators:
                     if collaborator['permissions']['admin']:
                         admin_permission_count += 1
-                    else: pass
-                
+                    else:
+                        pass
+
                 if admin_permission_count > 0:
                     result.append({"item": repo_name, "issue": True})
                 else:
@@ -279,26 +302,29 @@ class Tester(interfaces.TesterInterface):
                 result.append({"item": repo_name, "issue": False})
 
         return result
-    
+
     def get_pending_invitation_with_admin_permissions(self, organization):
         result = []
         all_invitations = []
-        raw_repos_details = requests.get(headers=self.request_headers, url="https://api.github.com/orgs/" + organization + "/repos")
+        raw_repos_details = requests.get(
+            headers=self.request_headers, url=self.BASE_URL_ORGS + organization + "/repos")
         repos_details = raw_repos_details.json()
 
         for repo in repos_details:
             repo_name = repo['name']
             owner = repo['owner']['login']
-            raw_response = requests.get(headers=self.request_headers, url="https://api.github.com/repos/" + owner + "/" + repo_name + "/invitations")
+            raw_response = requests.get(
+                headers=self.request_headers, url=self.BASE_URL_REPOS + owner + "/" + repo_name + "/invitations")
             invitations = raw_response.json()
-            
+
             pending_invitation_admin_permission = 0
             if len(invitations) > 0:
                 for invitation in invitations:
                     if not invitation['expired'] and invitation['permissions'] == 'admin':
                         pending_invitation_admin_permission += 1
-                    else: pass
-                
+                    else:
+                        pass
+
                 if pending_invitation_admin_permission > 0:
                     result.append({"item": repo_name, "issue": True})
                 else:
