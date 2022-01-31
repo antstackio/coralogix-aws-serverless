@@ -70,6 +70,10 @@ class Tester(interfaces.TesterInterface):
             "sso_is_enabled":{
                 "method": self.get_sso_enabled_for_organization,
                 "result_item_type": "github_organization"
+            },
+            "all_repositories_monitored_for_code_vulnerabilities": {
+                "method": self.get_all_repositories_monitored_for_code_vulnerabilities,
+                "result_item_type": "github_organization"
             }
         }
         self.request_headers = {
@@ -381,4 +385,23 @@ class Tester(interfaces.TesterInterface):
             result.append({"item": organization, "issue": False})
         else:
             result.append({"item": organization, "issue": True})
+        return result
+
+    def get_all_repositories_monitored_for_code_vulnerabilities(self, organization):
+        result = []
+        raw_response = requests.get(headers=self.request_headers, url=self.BASE_URL_ORGS + organization + '/repos')
+        repos_details = raw_response.json()
+        
+        for repo in repos_details:
+            repo_name = repo['name']
+            owner = repo['owner']['login']
+
+            raw_response = requests.get(headers=self.request_headers, url=self.BASE_URL_REPOS + owner + '/' + repo_name + '/vulnerability-alerts')
+            status = raw_response.status_code
+
+            if status != 204:
+                result.append({"item": repo_name, "issue": True})
+            else:
+                result.append({"item": repo_name, "issue": False})
+        
         return result
