@@ -1,5 +1,6 @@
 import os
 import time
+from unittest import result
 import requests
 import interfaces
 from datetime import date, datetime
@@ -73,6 +74,10 @@ class Tester(interfaces.TesterInterface):
             },
             "all_repositories_monitored_for_code_vulnerabilities": {
                 "method": self.get_all_repositories_monitored_for_code_vulnerabilities,
+                "result_item_type": "github_organization"
+            },
+            "outside_collaborators_dont_have_admin_permissions": {
+                "method": self.get_outside_collaborators_with_admin_permission,
                 "result_item_type": "github_organization"
             }
         }
@@ -401,6 +406,33 @@ class Tester(interfaces.TesterInterface):
 
             if status != 204:
                 result.append({"item": repo_name, "issue": True})
+            else:
+                result.append({"item": repo_name, "issue": False})
+        
+        return result
+
+    def get_outside_collaborators_with_admin_permission(self, organization):
+        result = []
+        raw_response = requests.get(headers=self.request_headers, url=self.BASE_URL_ORGS + organization + '/repos')
+        repos = raw_response.json()
+
+        for repo in repos:
+            repo_name = repo['name']
+            owner = repo['owner']['login']
+
+            raw_response = requests.get(headers=self.request_headers, url=self.BASE_URL_REPOS + owner + '/' + repo_name + '/collaborators?affiliation=outside')
+            collaborators = raw_response.json()
+            if len(collaborators) > 0:
+                outside_collab_with_admin = 0
+                for collaborator in collaborators:
+                    if collaborator['permissions']['admin']:
+                        outside_collab_with_admin += 1
+                    else: pass
+                
+                if outside_collab_with_admin > 0:
+                    result.append({"item": repo_name, "issue": True})
+                else:
+                    result.append({"item": repo_name, "issue": False})
             else:
                 result.append({"item": repo_name, "issue": False})
         
