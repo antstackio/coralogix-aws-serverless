@@ -79,6 +79,10 @@ class Tester(interfaces.TesterInterface):
             "outside_collaborators_dont_have_admin_permissions": {
                 "method": self.get_outside_collaborators_with_admin_permission,
                 "result_item_type": "github_organization"
+            },
+            "third_party_apps_with_pullrequest_write_permission": {
+                "method": self.get_third_party_apps_with_write_permission,
+                "result_item_type": "github_organization"
             }
         }
         self.request_headers = {
@@ -436,4 +440,30 @@ class Tester(interfaces.TesterInterface):
             else:
                 result.append({"item": repo_name, "issue": False})
         
+        return result
+
+    def get_third_party_apps_with_write_permission(self, organization):
+        result = []
+
+        raw_response = requests.get(headers=self.request_headers, url=self.BASE_URL_ORGS + organization + '/installations')
+        installations_details = raw_response.json()
+
+        installation_count = installations_details['total_count']
+        if installation_count > 0:
+            installations = installations_details['installations']
+            apps_with_access_count = 0
+            
+            for i in installations:
+                pullrequest = i['permissions'].get('pull_requests')
+
+                if pullrequest == 'write':
+                    apps_with_access_count += 1
+                else: pass
+            if apps_with_access_count > 0:
+                result.append({"item": organization, "issue": True})
+            else:
+                result.append({"item": organization, "issue": False})
+        else:
+            result.append({"item": organization, "issue": False})
+
         return result
