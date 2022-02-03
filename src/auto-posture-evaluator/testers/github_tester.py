@@ -468,4 +468,3 @@ class Tester(interfaces.TesterInterface):
             result.append({"item": organization, "issue": False})
 
         return result
-print(Tester().get_members_without_gpg_keys('b1tsandbytes'))
