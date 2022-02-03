@@ -256,21 +256,22 @@ class Tester(interfaces.TesterInterface):
             headers=self.request_headers, url=self.BASE_URL_ORGS + organization + '/members')
         org_members = raw_api_response.json()
 
-        members_with_gpg_keys_count = 0
+        members_without_gpg_keys_count = 0
         for member in org_members:
             username = member['login']
             response = requests.get(
                 headers=self.request_headers, url=self.BASE_URL_USERS + username + '/gpg_keys')
             user_gpg_keys = response.json()
-            if len(user_gpg_keys) > 0:
-                members_with_gpg_keys_count += 1
+            if len(user_gpg_keys) == 0:
+                members_without_gpg_keys_count += 1
+                break
             else:
                 pass
 
-        if members_with_gpg_keys_count == len(org_members):
-            result.append({"item": organization, "issue": False})
-        else:
+        if members_without_gpg_keys_count != 0:
             result.append({"item": organization, "issue": True})
+        else:
+            result.append({"item": organization, "issue": False})
 
         return result
 
@@ -467,3 +468,4 @@ class Tester(interfaces.TesterInterface):
             result.append({"item": organization, "issue": False})
 
         return result
+print(Tester().get_members_without_gpg_keys('b1tsandbytes'))
