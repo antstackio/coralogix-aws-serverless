@@ -10,9 +10,9 @@ class Tester(interfaces.TesterInterface):
         self.github_authorization_token = os.environ.get('AUTOPOSTURE_GITHUB_TOKEN')
         self.github_organizations = os.environ.get('AUTOPOSTURE_GITHUB_ORGANIZATIONS')
         self.deploy_keys_max_days_old = os.environ.get('AUTOPOSTURE_GITHUB_DEPLOY_KEYS_MAX_DAYS_OLD')
-        self.BASE_URL_ORGS = "https://api.github.com/orgs/"
-        self.BASE_URL_REPOS = "https://api.github.com/repos/"
-        self.BASE_URL_USERS = "http://api.github.com/users/"
+        self.BASE_URL_ORGS = "https://api.github.com/orgs"
+        self.BASE_URL_REPOS = "https://api.github.com/repos"
+        self.BASE_URL_USERS = "http://api.github.com/users"
 
         self.tests = {
             "users_without_mfa": {
@@ -318,10 +318,9 @@ class Tester(interfaces.TesterInterface):
     def get_no_outside_collaborators_with_admin_permission(self, organization):
         result = []
 
-        raw_repos_details = requests.get(
-            headers=self.request_headers, url=self.BASE_URL_ORGS + organization + "/outside_collaborators")
-        outside_collaborators = raw_repos_details.json()
-        
+        api = f"{self.BASE_URL_ORGS}/{organization}/outside_collaborators"
+        outside_collaborators = self._get_paginated_result(api)
+
         collaborator_with_site_admin = False
         if len(outside_collaborators) > 0:
             for collaborator in outside_collaborators:
