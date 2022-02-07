@@ -1,6 +1,5 @@
 import os
 import time
-from unittest import result
 import requests
 import interfaces
 from datetime import date, datetime
@@ -299,36 +298,27 @@ class Tester(interfaces.TesterInterface):
         result = []
 
         raw_repos_details = requests.get(
-            headers=self.request_headers, url=self.BASE_URL_ORGS + organization + "/repos")
-        repos_details = raw_repos_details.json()
-
-        for repo in repos_details:
-            repo_name = repo['name']
-            owner = repo['owner']['login']
-            response = requests.get(headers=self.request_headers, url=self.BASE_URL_REPOS +
-                                    owner + "/" + repo_name + '/collaborators?affiliation=outside')
-            collaborators = response.json()
-
-            admin_permission_count = 0
-            if len(collaborators) > 0:
-                for collaborator in collaborators:
-                    if collaborator['permissions']['admin']:
-                        admin_permission_count += 1
-                    else:
-                        pass
-
-                if admin_permission_count > 0:
-                    result.append({"item": repo_name, "issue": True})
-                else:
-                    result.append({"item": repo_name, "issue": False})
+            headers=self.request_headers, url=self.BASE_URL_ORGS + organization + "/outside_collaborators")
+        outside_collaborators = raw_repos_details.json()
+        
+        collaborator_with_site_admin = False
+        if len(outside_collaborators) > 0:
+            for collaborator in outside_collaborators:
+                if collaborator['site_admin']:
+                    collaborator_with_site_admin = True
+                    break
+                else: pass
+            if collaborator_with_site_admin:
+                result.append({"item": organization, "issue": True})
             else:
-                result.append({"item": repo_name, "issue": False})
-
+                result.append({"item": organization, "issue": False})
+        else:
+            result.append({"item": organization, "issue": False})
+        
         return result
 
     def get_pending_invitation_with_admin_permissions(self, organization):
         result = []
-        all_invitations = []
         raw_repos_details = requests.get(
             headers=self.request_headers, url=self.BASE_URL_ORGS + organization + "/repos")
         repos_details = raw_repos_details.json()
@@ -468,3 +458,4 @@ class Tester(interfaces.TesterInterface):
             result.append({"item": organization, "issue": False})
 
         return result
+print(Tester().get_no_outside_collaborators_with_admin_permission('b1tsandbytes'))
