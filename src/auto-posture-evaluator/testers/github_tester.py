@@ -182,6 +182,27 @@ class Tester(interfaces.TesterInterface):
 
         return result
 
+    def _get_paginated_result(self, api):
+        result = []
+        page = 1
+        has_page = True
+        while has_page:
+            raw_response = requests.get(headers=self.request_headers, url=f'{api}?page={page}&per_page=100')
+            response = raw_response.json()
+            response_headers = raw_response.headers
+            link = response_headers.get('Link')
+            result.extend(response)
+            
+            if link is not None:
+                if 'rel="next"' not in link:
+                    has_page = False
+                else:
+                    page += 1
+            else:
+                has_page = False 
+        
+        return result
+
     def get_2fa_authentication_enforced(self, organization):
         result = []
         raw_api_response = requests.get(
@@ -458,4 +479,3 @@ class Tester(interfaces.TesterInterface):
             result.append({"item": organization, "issue": False})
 
         return result
-print(Tester().get_no_outside_collaborators_with_admin_permission('b1tsandbytes'))
