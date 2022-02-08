@@ -445,8 +445,7 @@ class Tester(interfaces.TesterInterface):
     def get_outside_collaborators_with_admin_permission(self, organization):
         result = []
         api = f"{self.BASE_URL_ORGS}/{organization}/repos"
-        raw_response = requests.get(headers=self.request_headers, url=api)
-        repos = raw_response.json()
+        repos = self._get_paginated_result(api)
 
         for repo in repos:
             repo_name = repo['name']
@@ -454,14 +453,16 @@ class Tester(interfaces.TesterInterface):
             api = f"{self.BASE_URL_REPOS}/{owner}/{repo_name}/collaborators?affiliation=outside"
             raw_response = requests.get(headers=self.request_headers, url=api)
             collaborators = raw_response.json()
+            
             if len(collaborators) > 0:
-                outside_collab_with_admin = 0
+                outside_collab_with_admin = False
                 for collaborator in collaborators:
                     if collaborator['permissions']['admin']:
-                        outside_collab_with_admin += 1
+                        outside_collab_with_admin = True
+                        break
                     else: pass
                 
-                if outside_collab_with_admin > 0:
+                if outside_collab_with_admin:
                     result.append({"item": repo_name, "issue": True})
                 else:
                     result.append({"item": repo_name, "issue": False})
