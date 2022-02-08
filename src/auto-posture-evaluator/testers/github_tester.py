@@ -83,6 +83,10 @@ class Tester(interfaces.TesterInterface):
             "third_party_apps_with_pullrequest_write_permission": {
                 "method": self.get_third_party_apps_with_write_permission,
                 "result_item_type": "github_organization"
+            },
+            "the_evidence_repositories_list_is_public": {
+                "method": self.evidence_repositories_are_public,
+                "result_item_type": "github_repository"
             }
         }
         self.request_headers = {
@@ -508,4 +512,17 @@ class Tester(interfaces.TesterInterface):
         else:
             result.append({"item": organization, "issue": False})
 
+        return result
+
+    def evidence_repositories_are_public(self, organization):
+        result = []
+        api = f"{self.BASE_URL_ORGS}/{organization}/repos"
+        repos = self._get_paginated_result(api)
+        
+        for repo in repos:
+            repo_name = repo['name']
+            if not repo['private']:
+                result.append({"item": repo_name, "issue": True})
+            else:
+                result.append({"item": repo_name, "issue": False})
         return result
