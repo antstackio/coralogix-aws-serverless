@@ -264,9 +264,7 @@ class Tester(interfaces.TesterInterface):
     def get_github_pages_disabled(self, organization):
         result = []
         api = f"{self.BASE_URL_ORGS}/{organization}/repos"
-        raw_api_response = requests.get(
-            headers=self.request_headers, url=api)
-        repos_details = raw_api_response.json()
+        repos_details = self._get_paginated_result(api)
 
         for repo in repos_details:
             repo_name = repo['name']
