@@ -2,6 +2,7 @@ import os
 import time
 import requests
 import interfaces
+import json
 from datetime import date, datetime
 
 
@@ -156,8 +157,9 @@ class Tester(interfaces.TesterInterface):
 
     def get_forkable_repositories(self, organization):
         result = []
+        api = f"{self.BASE_URL_ORGS}/{organization}/repos"
         raw_api_result = requests.get(
-            headers=self.request_headers, url=self.BASE_URL_ORGS + organization + '/repos')
+            headers=self.request_headers, url=api)
         raw_api_result_obj = raw_api_result.json()
         for repo in raw_api_result_obj:
             if repo["allow_forking"]:
@@ -170,8 +172,9 @@ class Tester(interfaces.TesterInterface):
     def check_for_too_many_admin_users(self, organization):
         result = []
         org_admins = []
+        api = f"{self.BASE_URL_ORGS}/{organization}/members?role=admin"
         raw_api_result = requests.get(
-            headers=self.request_headers, url=self.BASE_URL_ORGS + organization + '/members?role=admin')
+            headers=self.request_headers, url=api)
         raw_api_result_obj = raw_api_result.json()
         for user in raw_api_result_obj:
             org_admins.append(user["login"])
@@ -205,8 +208,9 @@ class Tester(interfaces.TesterInterface):
 
     def get_2fa_authentication_enforced(self, organization):
         result = []
+        api = f"{self.BASE_URL_ORGS}/{organization}"
         raw_api_response = requests.get(
-            headers=self.request_headers, url=self.BASE_URL_ORGS + organization)
+            headers=self.request_headers, url=api)
         raw_api_response_obj = raw_api_response.json()
 
         if raw_api_response_obj['two_factor_requirement_enabled']:
@@ -218,8 +222,9 @@ class Tester(interfaces.TesterInterface):
 
     def get_base_permission_not_admin(self, organization):
         result = []
+        api = f"{self.BASE_URL_ORGS}/{organization}"
         raw_api_response = requests.get(
-            headers=self.request_headers, url=self.BASE_URL_ORGS + organization)
+            headers=self.request_headers, url=api)
         raw_api_response_obj = raw_api_response.json()
 
         if raw_api_response_obj['default_repository_permission'].lower() == 'admin':
@@ -231,8 +236,9 @@ class Tester(interfaces.TesterInterface):
 
     def get_members_can_not_create_public_repos(self, organization):
         result = []
+        api = f"{self.BASE_URL_ORGS}/{organization}"
         raw_api_response = requests.get(
-            headers=self.request_headers, url=self.BASE_URL_ORGS + organization)
+            headers=self.request_headers, url=api)
         org_details = raw_api_response.json()
 
         if org_details['members_can_create_public_repositories']:
@@ -244,8 +250,9 @@ class Tester(interfaces.TesterInterface):
 
     def get_org_domains_are_not_verified(self, organization):
         result = []
+        api = f"{self.BASE_URL_ORGS}/{organization}"
         raw_api_response = requests.get(
-            headers=self.request_headers, url=self.BASE_URL_ORGS + organization)
+            headers=self.request_headers, url=api)
         org_details = raw_api_response.json()
         if org_details['is_verified']:
             result.append({"item": organization, "issue": False})
@@ -256,8 +263,9 @@ class Tester(interfaces.TesterInterface):
 
     def get_github_pages_disabled(self, organization):
         result = []
+        api = f"{self.BASE_URL_ORGS}/{organization}/repos"
         raw_api_response = requests.get(
-            headers=self.request_headers, url=self.BASE_URL_ORGS + organization + "/repos")
+            headers=self.request_headers, url=api)
         repos_details = raw_api_response.json()
 
         for repo in repos_details:
@@ -272,15 +280,17 @@ class Tester(interfaces.TesterInterface):
 
     def get_members_without_gpg_keys(self, organization):
         result = []
+        api = f"{self.BASE_URL_ORGS}/{organization}/members"
         raw_api_response = requests.get(
-            headers=self.request_headers, url=self.BASE_URL_ORGS + organization + '/members')
+            headers=self.request_headers, url=api)
         org_members = raw_api_response.json()
 
         members_without_gpg_keys_count = 0
         for member in org_members:
             username = member['login']
+            api = f"{self.BASE_URL_USERS}/{username}/gpg_keys"
             response = requests.get(
-                headers=self.request_headers, url=self.BASE_URL_USERS + username + '/gpg_keys')
+                headers=self.request_headers, url=api)
             user_gpg_keys = response.json()
             if len(user_gpg_keys) == 0:
                 members_without_gpg_keys_count += 1
@@ -297,15 +307,17 @@ class Tester(interfaces.TesterInterface):
 
     def get_code_security_alerts_are_enabled(self, organization):
         result = []
+        api = f"{self.BASE_URL_ORGS}/{organization}/repos"
         raw_api_response = requests.get(
-            headers=self.request_headers, url=self.BASE_URL_ORGS + organization + "/repos")
+            headers=self.request_headers, url=api)
         repos_details = raw_api_response.json()
 
         for repo in repos_details:
             repo_name = repo['name']
             owner = repo['owner']['login']
+            api = f"{self.BASE_URL_REPOS}/{owner}/{repo_name}/vulnerability-alerts"
             raw_response = requests.get(
-                headers=self.request_headers, url=self.BASE_URL_REPOS + owner + "/" + repo_name + "/vulnerability-alerts")
+                headers=self.request_headers, url=api)
             response_code = raw_response.status_code
 
             if response_code == 204:
@@ -339,15 +351,17 @@ class Tester(interfaces.TesterInterface):
 
     def get_pending_invitation_with_admin_permissions(self, organization):
         result = []
+        api = f"{self.BASE_URL_ORGS}/{organization}/repos"
         raw_repos_details = requests.get(
-            headers=self.request_headers, url=self.BASE_URL_ORGS + organization + "/repos")
+            headers=self.request_headers, url=api)
         repos_details = raw_repos_details.json()
 
         for repo in repos_details:
             repo_name = repo['name']
             owner = repo['owner']['login']
+            api = f"{self.BASE_URL_REPOS}/{owner}/{repo_name}/invitations"
             raw_response = requests.get(
-                headers=self.request_headers, url=self.BASE_URL_REPOS + owner + "/" + repo_name + "/invitations")
+                headers=self.request_headers, url=api)
             invitations = raw_response.json()
 
             pending_invitation_admin_permission = 0
@@ -369,14 +383,16 @@ class Tester(interfaces.TesterInterface):
 
     def get_deploy_keys_are_fresh(self, organization):
         result = []
-        raw_repos_details = requests.get(headers=self.request_headers, url=self.BASE_URL_ORGS + organization + "/repos")
+        api = f"{self.BASE_URL_ORGS}/{organization}/repos"
+        raw_repos_details = requests.get(headers=self.request_headers, url=api)
         repos_details = raw_repos_details.json()
         freshness_threshold = self.deploy_keys_max_days_old if self.deploy_keys_max_days_old is not None else 30
+        
         for repo in repos_details:
             repo_name = repo['name']
             owner = repo['owner']['login']
-
-            raw_reponse = requests.get(headers=self.request_headers, url=self.BASE_URL_REPOS + owner + "/" + repo_name + "/keys")
+            api = f"{self.BASE_URL_REPOS}/{owner}/{repo_name}/keys"
+            raw_reponse = requests.get(headers=self.request_headers, url=api)
             deploy_keys = raw_reponse.json()
 
             keys_with_issue = 0
@@ -398,7 +414,8 @@ class Tester(interfaces.TesterInterface):
 
     def get_sso_enabled_for_organization(self, organization):
         result = []
-        raw_response = requests.get(headers=self.request_headers, url=self.BASE_URL_ORGS + organization + '/credential-authorizations')
+        api = f"{self.BASE_URL_ORGS}/{organization}/credential-authorizations"
+        raw_response = requests.get(headers=self.request_headers, url=api)
         org_auth_details = raw_response.json()
 
         if len(org_auth_details) > 0:
@@ -409,14 +426,15 @@ class Tester(interfaces.TesterInterface):
 
     def get_all_repositories_monitored_for_code_vulnerabilities(self, organization):
         result = []
-        raw_response = requests.get(headers=self.request_headers, url=self.BASE_URL_ORGS + organization + '/repos')
+        api = f"{self.BASE_URL_ORGS}/{organization}/repos"
+        raw_response = requests.get(headers=self.request_headers, url=api)
         repos_details = raw_response.json()
         
         for repo in repos_details:
             repo_name = repo['name']
             owner = repo['owner']['login']
-
-            raw_response = requests.get(headers=self.request_headers, url=self.BASE_URL_REPOS + owner + '/' + repo_name + '/vulnerability-alerts')
+            api = f"{self.BASE_URL_REPOS}/{owner}/{repo_name}/vulnerability-alerts"
+            raw_response = requests.get(headers=self.request_headers, url=api)
             status = raw_response.status_code
 
             if status != 204:
@@ -428,14 +446,15 @@ class Tester(interfaces.TesterInterface):
 
     def get_outside_collaborators_with_admin_permission(self, organization):
         result = []
-        raw_response = requests.get(headers=self.request_headers, url=self.BASE_URL_ORGS + organization + '/repos')
+        api = f"{self.BASE_URL_ORGS}/{organization}/repos"
+        raw_response = requests.get(headers=self.request_headers, url=api)
         repos = raw_response.json()
 
         for repo in repos:
             repo_name = repo['name']
             owner = repo['owner']['login']
-
-            raw_response = requests.get(headers=self.request_headers, url=self.BASE_URL_REPOS + owner + '/' + repo_name + '/collaborators?affiliation=outside')
+            api = f"{self.BASE_URL_REPOS}/{owner}/{repo_name}/collaborators?affiliation=outside"
+            raw_response = requests.get(headers=self.request_headers, url=api)
             collaborators = raw_response.json()
             if len(collaborators) > 0:
                 outside_collab_with_admin = 0
@@ -455,8 +474,8 @@ class Tester(interfaces.TesterInterface):
 
     def get_third_party_apps_with_write_permission(self, organization):
         result = []
-
-        raw_response = requests.get(headers=self.request_headers, url=self.BASE_URL_ORGS + organization + '/installations')
+        api = f"{self.BASE_URL_ORGS}/{organization}/installations"
+        raw_response = requests.get(headers=self.request_headers, url=api)
         installations_details = raw_response.json()
 
         installation_count = installations_details['total_count']
