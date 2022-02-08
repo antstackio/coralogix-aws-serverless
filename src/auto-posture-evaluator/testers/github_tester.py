@@ -279,10 +279,8 @@ class Tester(interfaces.TesterInterface):
     def get_members_without_gpg_keys(self, organization):
         result = []
         api = f"{self.BASE_URL_ORGS}/{organization}/members"
-        raw_api_response = requests.get(
-            headers=self.request_headers, url=api)
-        org_members = raw_api_response.json()
-
+        org_members = self._get_paginated_result(api)
+        
         members_without_gpg_keys_count = 0
         for member in org_members:
             username = member['login']
