@@ -473,22 +473,35 @@ class Tester(interfaces.TesterInterface):
 
     def get_third_party_apps_with_write_permission(self, organization):
         result = []
-        api = f"{self.BASE_URL_ORGS}/{organization}/installations"
-        raw_response = requests.get(headers=self.request_headers, url=api)
-        installations_details = raw_response.json()
+        app_installations = []
+        page = 1
+        has_page = True
+        while has_page:
+            api = f"{self.BASE_URL_ORGS}/{organization}/installations?page={page}&per_page=1"
+            raw_response = requests.get(headers=self.request_headers, url=api)
+            response = raw_response.json()
+            response_headers = raw_response.headers
+            app_installations.extend(response['installations'])
+            link = response_headers.get('Link')
 
-        installation_count = installations_details['total_count']
-        if installation_count > 0:
-            installations = installations_details['installations']
-            apps_with_access_count = 0
+            if link is not None:
+                if 'rel="next"' not in link:
+                    has_page = False
+                else:
+                    page += 1 
+            else: has_page = False
+
+        if len(app_installations) > 0:
+            apps_with_access_count = False
             
-            for i in installations:
+            for i in app_installations:
                 pullrequest = i['permissions'].get('pull_requests')
 
                 if pullrequest == 'write':
-                    apps_with_access_count += 1
+                    apps_with_access_count = True
+                    break
                 else: pass
-            if apps_with_access_count > 0:
+            if apps_with_access_count:
                 result.append({"item": organization, "issue": True})
             else:
                 result.append({"item": organization, "issue": False})
