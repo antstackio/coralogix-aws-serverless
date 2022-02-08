@@ -389,19 +389,22 @@ class Tester(interfaces.TesterInterface):
             api = f"{self.BASE_URL_REPOS}/{owner}/{repo_name}/keys"
             deploy_keys = self._get_paginated_result(api)
             
-            found_old_key = False
-            for key in deploy_keys:
-                key_created_at = key['created_at']
-                key_created_at_obj = datetime.strptime(key_created_at, '%Y-%M-%dT%H:%m:%SZ')
-                current_datetime = datetime.now()
-                time_diff = (current_datetime - key_created_at_obj).days
+            if len(deploy_keys) > 0:
+                found_old_key = False
+                for key in deploy_keys:
+                    key_created_at = key['created_at']
+                    key_created_at_obj = datetime.strptime(key_created_at, '%Y-%M-%dT%H:%m:%SZ')
+                    current_datetime = datetime.now()
+                    time_diff = (current_datetime - key_created_at_obj).days
 
-                if time_diff > freshness_threshold:
-                    found_old_key = True
-                    break
-                else: pass
-            if found_old_key:
-                result.append({"item": repo_name, "issue": True})
+                    if time_diff > freshness_threshold:
+                        found_old_key = True
+                        break
+                    else: pass
+                if found_old_key:
+                    result.append({"item": repo_name, "issue": True})
+                else:
+                    result.append({"item": repo_name, "issue": False})
             else:
                 result.append({"item": repo_name, "issue": False})
         
@@ -492,5 +495,3 @@ class Tester(interfaces.TesterInterface):
             result.append({"item": organization, "issue": False})
 
         return result
-
-Tester().get_deploy_keys_are_fresh('b1tsandbytes')
