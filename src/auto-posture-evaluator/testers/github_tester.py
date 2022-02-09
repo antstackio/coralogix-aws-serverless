@@ -87,6 +87,10 @@ class Tester(interfaces.TesterInterface):
             "the_evidence_repositories_list_is_public": {
                 "method": self.evidence_repositories_are_public,
                 "result_item_type": "github_repository"
+            },
+            "no_vulnerabilities_were_found_on_the_repositories": {
+                "method": self.get_vulnerabilities_found_on_repositories,
+                "result_item_type": "github_repository"
             }
         }
         self.request_headers = {
@@ -538,4 +542,30 @@ class Tester(interfaces.TesterInterface):
                 result.append({"item": repo_name, "issue": True})
             else:
                 result.append({"item": repo_name, "issue": False})
+        return result
+
+    def get_vulnerabilities_found_on_repositories(self, organization):
+        result = []
+        api = f"{self.BASE_URL_ORGS}/{organization}/repos"
+        repos = self._get_paginated_result(api)
+
+        for repo in repos:
+            repo_name = repo['name']
+            owner = repo['owner']['login']
+
+            api = f"{self.BASE_URL_REPOS}/{owner}/{repo_name}/code-scanning/alerts"
+            raw_response = requests.get(headers=self.request_headers, url=api)
+            status_code = raw_response.status_code
+            vulnerabilities_alerts = raw_response.json()
+
+            if status_code == 403:
+                result.append({"item": repo_name, "issue": True})
+            elif status_code == 404:
+                result.append({"item": repo_name, "issue": False})
+            elif status_code == 200:
+                result.append({"item": repo_name, "issue": True})
+            elif status_code == 304:
+                result.append({"item": repo_name, "issue": False})
+            else:
+                pass
         return result
