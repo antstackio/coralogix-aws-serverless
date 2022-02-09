@@ -289,9 +289,7 @@ class Tester(interfaces.TesterInterface):
         for member in org_members:
             username = member['login']
             api = f"{self.BASE_URL_USERS}/{username}/gpg_keys"
-            response = requests.get(
-                headers=self.request_headers, url=api)
-            user_gpg_keys = response.json()
+            user_gpg_keys = self._get_paginated_result(api)
             if len(user_gpg_keys) == 0:
                 members_without_gpg_keys_count += 1
                 break
