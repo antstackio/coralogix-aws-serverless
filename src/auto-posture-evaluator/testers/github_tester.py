@@ -413,21 +413,24 @@ class Tester(interfaces.TesterInterface):
     def get_all_repositories_monitored_for_code_vulnerabilities(self, organization):
         result = []
         api = f"{self.BASE_URL_ORGS}/{organization}/repos"
-        raw_response = requests.get(headers=self.request_headers, url=api)
-        repos_details = raw_response.json()
-        
-        for repo in repos_details:
+        repos = self._get_paginated_result(api)
+
+        for repo in repos:
             repo_name = repo['name']
             owner = repo['owner']['login']
-            api = f"{self.BASE_URL_REPOS}/{owner}/{repo_name}/vulnerability-alerts"
-            raw_response = requests.get(headers=self.request_headers, url=api)
-            status = raw_response.status_code
 
-            if status != 204:
-                result.append({"item": repo_name, "issue": True})
-            else:
+            api = f"{self.BASE_URL_REPOS}/{owner}/{repo_name}/code-scanning/analyses"
+            raw_response = requests.get(headers=self.request_headers, url=api)
+            status_code = raw_response.status_code
+
+            if status_code == 404:
                 result.append({"item": repo_name, "issue": False})
-        
+            elif status_code == 403:
+                result.append({"item": repo_name, "issue": True})
+            elif status_code == 200:
+                result.append({"item": repo_name, "issue": True})
+            else: pass
+
         return result
 
     def get_outside_collaborators_with_admin_permission(self, organization):
@@ -551,5 +554,3 @@ class Tester(interfaces.TesterInterface):
             else:
                 pass
         return result
-
-print(Tester().get_pending_invitation_with_admin_permissions('b1tsandbytes'))
