@@ -452,9 +452,24 @@ class Tester(interfaces.TesterInterface):
         for repo in repos:
             repo_name = repo['name']
             owner = repo['owner']['login']
-            api = f"{self.BASE_URL_REPOS}/{owner}/{repo_name}/collaborators?affiliation=outside"
-            raw_response = requests.get(headers=self.request_headers, url=api)
-            collaborators = raw_response.json()
+            collaborators = []
+            page = 1 
+            has_page = True
+            while has_page:
+                api = f"{self.BASE_URL_REPOS}/{owner}/{repo_name}/collaborators?affiliation=outside&page={page}"
+                raw_response = requests.get(headers=self.request_headers, url=api)
+                response = raw_response.json()
+                response_headers = raw_response.headers
+                collaborators.extend(response)
+                link = response_headers.get('Link')
+
+                if link is not None:
+                    if 'rel="next"' not in link:
+                        has_page = False
+                    else:
+                        page += 1
+                else:
+                    has_page = False
             
             if len(collaborators) > 0:
                 outside_collab_with_admin = False
