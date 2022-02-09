@@ -2,7 +2,7 @@ import os
 import time
 import requests
 import interfaces
-import json
+import jmespath
 from datetime import date, datetime
 
 
@@ -353,33 +353,15 @@ class Tester(interfaces.TesterInterface):
 
     def get_pending_invitation_with_admin_permissions(self, organization):
         result = []
-        api = f"{self.BASE_URL_ORGS}/{organization}/repos"
-        raw_repos_details = requests.get(
-            headers=self.request_headers, url=api)
-        repos_details = raw_repos_details.json()
-
-        for repo in repos_details:
-            repo_name = repo['name']
-            owner = repo['owner']['login']
-            api = f"{self.BASE_URL_REPOS}/{owner}/{repo_name}/invitations"
-            raw_response = requests.get(
-                headers=self.request_headers, url=api)
-            invitations = raw_response.json()
-
-            pending_invitation_admin_permission = 0
-            if len(invitations) > 0:
-                for invitation in invitations:
-                    if not invitation['expired'] and invitation['permissions'] == 'admin':
-                        pending_invitation_admin_permission += 1
-                    else:
-                        pass
-
-                if pending_invitation_admin_permission > 0:
-                    result.append({"item": repo_name, "issue": True})
-                else:
-                    result.append({"item": repo_name, "issue": False})
-            else:
-                result.append({"item": repo_name, "issue": False})
+        api = f"{self.BASE_URL_ORGS}/{organization}/invitations"
+        response = self._get_paginated_result(api)
+        invitations = {"result": response}
+        admin_invitation = jmespath.search("result[?role=='admin']", invitations)
+        
+        if len(admin_invitation) > 0:
+            result.append({"item": organization, "issue": True})
+        else:
+            result.append({"item": organization, "issue": False})
 
         return result
 
@@ -569,3 +551,5 @@ class Tester(interfaces.TesterInterface):
             else:
                 pass
         return result
+
+print(Tester().get_pending_invitation_with_admin_permissions('b1tsandbytes'))
