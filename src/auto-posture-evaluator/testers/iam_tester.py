@@ -20,7 +20,8 @@ class Tester(interfaces.TesterInterface):
         return \
             self.get_password_policy_has_14_or_more_char() + \
             self.get_hw_mfa_enabled_for_root_account() + \
-            self.get_mfa_enabled_for_root_account()
+            self.get_mfa_enabled_for_root_account() + \
+            self.get_policy_does_not_have_user_attached()
 
     def get_password_policy_has_14_or_more_char(self):
         result = []
@@ -91,7 +92,6 @@ class Tester(interfaces.TesterInterface):
 
         response = self.aws_iam_client.get_account_summary()
         account_summary = response['SummaryMap']
-
         if account_summary['AccountMFAEnabled']:
             result.append({
                 "user": self.user_id,
@@ -115,4 +115,50 @@ class Tester(interfaces.TesterInterface):
                 "test_result": "issue_found"
             })
         
+        return result
+    
+    def get_policy_does_not_have_user_attached(self):
+        result = []
+        test_name = "policy_does_not_have_a_user_attached_to_it"
+        policies = []
+        can_paginate = self.aws_iam_client.can_paginate('list_policies')
+        if can_paginate:
+            paginator = self.aws_iam_client.get_paginator('list_policies')
+            response_iterator = paginator.paginate(Scope='Local', PaginationConfig={'PageSize': 50})
+
+            for page in response_iterator:
+                policies.extend(page['Policies'])
+        else:
+            response = self.aws_iam_client.list_policies()
+            policies.extend(response['Policies'])
+
+        for policy in policies:
+            policy_id = policy['PolicyId']
+            policy_arn = policy['Arn']
+            response = self.aws_iam_client.list_entities_for_policy(PolicyArn=policy_arn,EntityFilter='User')
+            
+            attached_users = response['PolicyUsers']
+            if len(attached_users) > 0:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": policy_id,
+                    "item_type": "iam_policy",
+                    "test_name": test_name,
+                    "test_result": "issue_found"
+                })
+            else:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": policy_id,
+                    "item_type": "iam_policy",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
+                })
+
         return result
