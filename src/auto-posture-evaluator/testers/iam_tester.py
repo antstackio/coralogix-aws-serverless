@@ -19,7 +19,8 @@ class Tester(interfaces.TesterInterface):
     def run_tests(self) -> list:
         return \
             self.get_password_policy_has_14_or_more_char() + \
-            self.get_hw_mfa_enabled_for_root_account()
+            self.get_hw_mfa_enabled_for_root_account() + \
+            self.get_mfa_enabled_for_root_account()
 
     def get_password_policy_has_14_or_more_char(self):
         result = []
@@ -55,6 +56,38 @@ class Tester(interfaces.TesterInterface):
     def get_hw_mfa_enabled_for_root_account(self):
         result = []
         test_name = "hardware_mfa_enabled_for_root_account"
+
+        response = self.aws_iam_client.get_account_summary()
+        account_summary = response['SummaryMap']
+
+        if account_summary['AccountMFAEnabled']:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": "account_summary@@" + self.account_id,
+                "item_type": "account_summary_record",
+                "test_name": test_name,
+                "test_result": "no_issue_found"
+            })
+        else:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": "account_summary@@" + self.account_id,
+                "item_type": "account_summary_record",
+                "test_name": test_name,
+                "test_result": "issue_found"
+            })
+        
+        return result
+    
+    def get_mfa_enabled_for_root_account(self):
+        result = []
+        test_name = "mfa_is_enabled_for_root_account"
 
         response = self.aws_iam_client.get_account_summary()
         account_summary = response['SummaryMap']
