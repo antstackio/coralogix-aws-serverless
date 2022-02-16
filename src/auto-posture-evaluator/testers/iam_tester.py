@@ -1,7 +1,8 @@
 import time
 import interfaces
 import boto3
-
+import datetime as dt
+from datetime import datetime
 class Tester(interfaces.TesterInterface):
     def __init__(self) -> None:
         self.aws_iam_client = boto3.client('iam')
@@ -21,7 +22,8 @@ class Tester(interfaces.TesterInterface):
             self.get_password_policy_has_14_or_more_char() + \
             self.get_hw_mfa_enabled_for_root_account() + \
             self.get_mfa_enabled_for_root_account() + \
-            self.get_policy_does_not_have_user_attached()
+            self.get_policy_does_not_have_user_attached() + \
+            self.get_access_keys_rotated_every_90_days()
 
     def get_password_policy_has_14_or_more_char(self):
         result = []
@@ -161,4 +163,65 @@ class Tester(interfaces.TesterInterface):
                     "test_result": "no_issue_found"
                 })
 
+        return result
+
+    def get_access_keys_rotated_every_90_days(self):
+        result = []
+        test_name = "access_keys_are_rotated_every_90_days_or_less"
+
+        paginator = self.aws_iam_client.get_paginator('list_users')
+        response_iterator = paginator.paginate()
+        users = []
+        for page in response_iterator:
+            users.extend(page['Users'])
+        
+        if len(users) > 0:
+            for user in users:
+                user_name = user['UserName']
+                response = self.aws_iam_client.list_access_keys(UserName=user_name)
+                access_keys = response['AccessKeyMetadata']
+                old_access_keys = 0
+                
+                for key in access_keys:
+                    create_date = key['CreateDate']
+                    current_date = datetime.now(tz=dt.timezone.utc)
+                    time_diff = (current_date - create_date).days
+                    
+                    if time_diff > 90:
+                        old_access_keys += 1
+                    else: pass
+                if old_access_keys > 0:
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": user_name,
+                        "item_type": "iam_user",
+                        "test_name": test_name,
+                        "test_result": "issue_found"
+                    })
+                else:
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": user_name,
+                        "item_type": "iam_user",
+                        "test_name": test_name,
+                        "test_result": "no_issue_found"
+                    })
+        else:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": None,
+                "item_type": "iam_user",
+                "test_name": test_name,
+                "test_result": "no_issue_found"
+            })
+        
         return result
