@@ -26,7 +26,11 @@ class Tester(interfaces.TesterInterface):
             self.get_access_keys_rotated_every_90_days() + \
             self.get_server_certificate_will_expire() + \
             self.get_expired_ssl_tls_certtificate_removed() + \
-            self.get_password_expires_in_90_days()
+            self.get_password_expires_in_90_days() + \
+            self.get_password_policy_requires_lowercase() + \
+            self.get_password_policy_requires_uppercase() + \
+            self.get_password_policy_requires_symbols() + \
+            self.get_password_policy_requires_numbers()
 
     def get_password_policy_has_14_or_more_char(self):
         result = []
@@ -392,3 +396,128 @@ class Tester(interfaces.TesterInterface):
             })
         
         return result
+
+    def get_password_policy_requires_lowercase(self):
+        result = []
+        test_name = "password_requires_one_or_more_lowercase_characters"
+        response = self.aws_iam_client.get_account_password_policy()
+        password_policy = response['PasswordPolicy']
+
+        if password_policy['RequireLowercaseCharacters']:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": "password_policy@@" + self.account_id,
+                "item_type": "password_policy_record",
+                "test_name": test_name,
+                "test_result": "no_issue_found"
+            })
+        else:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": "password_policy@@" + self.account_id,
+                "item_type": "password_policy_record",
+                "test_name": test_name,
+                "test_result": "issue_found"
+            })
+        
+        return result
+
+    def get_password_policy_requires_uppercase(self):
+        result = []
+        test_name = "password_requires_one_or_more_uppercase_characters"
+        response = self.aws_iam_client.get_account_password_policy()
+        password_policy = response['PasswordPolicy']
+
+        if password_policy['RequireUppercaseCharacters']:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": "password_policy@@" + self.account_id,
+                "item_type": "password_policy_record",
+                "test_name": test_name,
+                "test_result": "no_issue_found"
+            })
+        else:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": "password_policy@@" + self.account_id,
+                "item_type": "password_policy_record",
+                "test_name": test_name,
+                "test_result": "issue_found"
+            })
+        
+        return result
+    
+    def get_password_policy_requires_symbols(self):
+        result = []
+        test_name = "password_requires_one_or_more_symbols"
+        response = self.aws_iam_client.get_account_password_policy()
+        password_policy = response['PasswordPolicy']
+
+        if password_policy['RequireUppercaseCharacters']:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": "password_policy@@" + self.account_id,
+                "item_type": "password_policy_record",
+                "test_name": test_name,
+                "test_result": "no_issue_found"
+            })
+        else:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": "password_policy@@" + self.account_id,
+                "item_type": "password_policy_record",
+                "test_name": test_name,
+                "test_result": "issue_found"
+            })
+        
+        return result
+
+    def get_password_policy_requires_numbers(self):
+        result = []
+        test_name = "password_requires_one_or_more_numbers"
+        response = self.aws_iam_client.get_account_password_policy()
+        password_policy = response['PasswordPolicy']
+
+        if password_policy['RequireNumbers']:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": "password_policy@@" + self.account_id,
+                "item_type": "password_policy_record",
+                "test_name": test_name,
+                "test_result": "no_issue_found"
+            })
+        else:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": "password_policy@@" + self.account_id,
+                "item_type": "password_policy_record",
+                "test_name": test_name,
+                "test_result": "issue_found"
+            })
+        
+        return result
+
