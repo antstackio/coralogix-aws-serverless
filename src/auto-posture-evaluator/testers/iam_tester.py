@@ -465,7 +465,7 @@ class Tester(interfaces.TesterInterface):
         response = self.aws_iam_client.get_account_password_policy()
         password_policy = response['PasswordPolicy']
 
-        if password_policy['RequireUppercaseCharacters']:
+        if password_policy['RequireSymbols']:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
