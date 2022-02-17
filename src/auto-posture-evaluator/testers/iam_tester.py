@@ -25,7 +25,8 @@ class Tester(interfaces.TesterInterface):
             self.get_policy_does_not_have_user_attached() + \
             self.get_access_keys_rotated_every_90_days() + \
             self.get_server_certificate_will_expire() + \
-            self.get_expired_ssl_tls_certtificate_removed()
+            self.get_expired_ssl_tls_certtificate_removed() + \
+            self.get_password_expires_in_90_days()
 
     def get_password_policy_has_14_or_more_char(self):
         result = []
@@ -344,4 +345,50 @@ class Tester(interfaces.TesterInterface):
                 "test_result": "no_issue_found"
             })
 
+        return result
+
+    def get_password_expires_in_90_days(self):
+        result = []
+        test_name = "policy_is_set_expire_passwords_within_90_days_or_less"
+
+        response = self.aws_iam_client.get_account_password_policy()
+        password_policy = response['PasswordPolicy']
+
+        expire_passwords = password_policy.get('ExpirePasswords')
+        if expire_passwords:
+            max_password_age = password_policy['MaxPasswordAge']
+            if max_password_age <= 90:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": "password_policy@@" + self.account_id,
+                    "item_type": "password_policy_record",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
+                })
+            else:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": "password_policy@@" + self.account_id,
+                    "item_type": "password_policy_record",
+                    "test_name": test_name,
+                    "test_result": "issue_found"
+                })
+        else:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": "password_policy@@" + self.account_id,
+                "item_type": "password_policy_record",
+                "test_name": test_name,
+                "test_result": "issue_found"
+            })
+        
         return result
