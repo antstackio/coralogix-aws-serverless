@@ -23,7 +23,8 @@ class Tester(interfaces.TesterInterface):
             self.get_hw_mfa_enabled_for_root_account() + \
             self.get_mfa_enabled_for_root_account() + \
             self.get_policy_does_not_have_user_attached() + \
-            self.get_access_keys_rotated_every_90_days()
+            self.get_access_keys_rotated_every_90_days() + \
+            self.get_server_certificate_will_expire()
 
     def get_password_policy_has_14_or_more_char(self):
         result = []
@@ -220,6 +221,71 @@ class Tester(interfaces.TesterInterface):
                 "timestamp": time.time(),
                 "item": None,
                 "item_type": "iam_user",
+                "test_name": test_name,
+                "test_result": "no_issue_found"
+            })
+        
+        return result
+
+    def get_server_certificate_will_expire(self):
+        result = []
+        test_name = "server_certificate_will_expire_within_30_days"
+
+        paginator = self.aws_iam_client.get_paginator('list_server_certificates')
+        response_iterator = paginator.paginate()
+        certificates = []
+        for page in response_iterator:
+            certificates.extend(page['ServerCertificateMetadataList'])
+
+        if len(certificates) > 0:
+            
+            for certificate in certificates:
+                certificate_id = certificate['ServerCertificateId']
+                expiration_date = certificate['Expiration']
+                current_date = datetime.date(datetime.now())
+                time_diff = (expiration_date - current_date).days
+
+                if time_diff < 0:
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": certificate_id,
+                        "item_type": "iam_server_certificate",
+                        "test_name": test_name,
+                        "test_result": "issue_found"
+                    })
+                elif time_diff <= 30:
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": certificate_id,
+                        "item_type": "iam_server_certificate",
+                        "test_name": test_name,
+                        "test_result": "issue_found"
+                    })
+                else:
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": certificate_id,
+                        "item_type": "iam_server_certificate",
+                        "test_name": test_name,
+                        "test_result": "no_issue_found"
+                    })
+        else:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": None,
+                "item_type": "iam_server_certificate",
                 "test_name": test_name,
                 "test_result": "no_issue_found"
             })
