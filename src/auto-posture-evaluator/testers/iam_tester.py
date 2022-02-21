@@ -34,7 +34,8 @@ class Tester(interfaces.TesterInterface):
             self.get_password_policy_requires_numbers() + \
             self.get_support_role_for_aws_support() + \
             self.get_priviledged_user_has_admin_permissions() + \
-            self.get_password_reuse_policy()
+            self.get_password_reuse_policy() + \
+            self.get_no_access_key_for_root_account()
 
     def get_password_policy_has_14_or_more_char(self):
         result = []
@@ -666,6 +667,38 @@ class Tester(interfaces.TesterInterface):
                 "item_type": "password_policy_record",
                 "test_name": test_name,
                 "test_result": "issue_found"
+            })
+        
+        return result
+
+    def get_no_access_key_for_root_account(self):
+        result = []
+        test_name = "no_root_account_access_key_exists"
+
+        response = self.aws_iam_client.get_account_summary()
+        root_access_key_present = response['SummaryMap']['AccountAccessKeysPresent']
+        
+        if root_access_key_present:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": "root_account@@" + self.account_id,
+                "item_type": "iam_root_account",
+                "test_name": test_name,
+                "test_result": "issue_found"
+            })
+        else:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": "root_account@@" + self.account_id,
+                "item_type": "iam_root_account",
+                "test_name": test_name,
+                "test_result": "no_issue_found"
             })
         
         return result
