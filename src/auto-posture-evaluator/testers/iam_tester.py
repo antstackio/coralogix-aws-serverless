@@ -33,7 +33,8 @@ class Tester(interfaces.TesterInterface):
             self.get_password_policy_requires_symbols() + \
             self.get_password_policy_requires_numbers() + \
             self.get_support_role_for_aws_support() + \
-            self.get_priviledged_user_has_admin_permissions()
+            self.get_priviledged_user_has_admin_permissions() + \
+            self.get_password_reuse_policy()
 
     def get_password_policy_has_14_or_more_char(self):
         result = []
@@ -631,6 +632,40 @@ class Tester(interfaces.TesterInterface):
                 "item_type": "iam_user",
                 "test_name": test_name,
                 "test_result": "no_issue_found"
+            })
+        
+        return result
+
+    def get_password_reuse_policy(self):
+        result = []
+        test_name = "password_policy_prevents_password_reuse"
+
+        response = self.aws_iam_client.get_account_password_policy()
+        password_policy = response['PasswordPolicy']
+        print(password_policy)
+        password_reuse_prevetion = password_policy.get('PasswordReusePrevention')
+
+        if password_reuse_prevetion is not None:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": "password_policy@@" + self.account_id,
+                "item_type": "password_policy_record",
+                "test_name": test_name,
+                "test_result": "no_issue_found"
+            })
+        else:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": "password_policy@@" + self.account_id,
+                "item_type": "password_policy_record",
+                "test_name": test_name,
+                "test_result": "issue_found"
             })
         
         return result
