@@ -32,7 +32,8 @@ class Tester(interfaces.TesterInterface):
             self.get_password_policy_requires_uppercase() + \
             self.get_password_policy_requires_symbols() + \
             self.get_password_policy_requires_numbers() + \
-            self.get_support_role_for_aws_support()
+            self.get_support_role_for_aws_support() + \
+            self.get_priviledged_user_has_admin_permissions()
 
     def get_password_policy_has_14_or_more_char(self):
         result = []
@@ -575,6 +576,61 @@ class Tester(interfaces.TesterInterface):
                 "item_type": "iam_support_role",
                 "test_name": test_name,
                 "test_result": "issue_found"
+            })
+        
+        return result
+
+    def get_priviledged_user_has_admin_permissions(self):
+        result = []
+        test_name = "priviledged_user_has_admin_permissions"
+
+        paginator = self.aws_iam_client.get_paginator('list_users')
+        response_iterator = paginator.paginate()
+        users = []
+        for page in response_iterator:
+            users.extend(page['Users'])
+        
+        if len(users) > 0:
+            for user in users:
+                user_name = user['UserName']
+                response = self.aws_iam_client.list_user_policies(UserName=user_name)
+                policy_names = response['PolicyNames']
+                admin_access = False
+                for policy in policy_names:
+                    if policy == 'AdministratorAccess':
+                        admin_access = True
+                        result.append({
+                            "user": self.user_id,
+                            "account_arn": self.account_arn,
+                            "account": self.account_id,
+                            "timestamp": time.time(),
+                            "item": user_name,
+                            "item_type": "iam_user",
+                            "test_name": test_name,
+                            "test_result": "issue_found"
+                        })
+                        break
+                if not admin_access:
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": user_name,
+                        "item_type": "iam_user",
+                        "test_name": test_name,
+                        "test_result": "no_issue_found"
+                    })
+        else:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": user_name,
+                "item_type": "iam_user",
+                "test_name": test_name,
+                "test_result": "no_issue_found"
             })
         
         return result
