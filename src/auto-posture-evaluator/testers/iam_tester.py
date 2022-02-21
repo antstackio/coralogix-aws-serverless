@@ -1,4 +1,5 @@
 import time
+import jmespath
 import interfaces
 import boto3
 import datetime as dt
@@ -30,7 +31,8 @@ class Tester(interfaces.TesterInterface):
             self.get_password_policy_requires_lowercase() + \
             self.get_password_policy_requires_uppercase() + \
             self.get_password_policy_requires_symbols() + \
-            self.get_password_policy_requires_numbers()
+            self.get_password_policy_requires_numbers() + \
+            self.get_support_role_for_aws_support()
 
     def get_password_policy_has_14_or_more_char(self):
         result = []
@@ -133,7 +135,7 @@ class Tester(interfaces.TesterInterface):
         can_paginate = self.aws_iam_client.can_paginate('list_policies')
         if can_paginate:
             paginator = self.aws_iam_client.get_paginator('list_policies')
-            response_iterator = paginator.paginate(Scope='Local', PaginationConfig={'PageSize': 50})
+            response_iterator = paginator.paginate(PaginationConfig={'PageSize': 50})
 
             for page in response_iterator:
                 policies.extend(page['Policies'])
@@ -521,3 +523,58 @@ class Tester(interfaces.TesterInterface):
         
         return result
 
+    def get_support_role_for_aws_support(self):
+        result = []
+        policies = []
+        test_name = "support_role_to_manage_incidents_with_AWS_support"
+
+        paginator = self.aws_iam_client.get_paginator('list_policies')
+        response_iterator = paginator.paginate(PaginationConfig={'PageSize': 50})
+
+        for page in response_iterator:
+            policies.extend(page['Policies'])
+
+        policy_dict =  { 'policies' : policies }
+        response = jmespath.search("policies[?PolicyName == 'AWSSupportAccess'].Arn[]", policy_dict)
+        policy_arn = response[0]
+        if len(response) > 0:
+            response = self.aws_iam_client.list_entities_for_policy(
+                PolicyArn=policy_arn,
+                EntityFilter='Role'
+            )
+            support_role =  response['PolicyRoles']
+            if len(support_role) > 0:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": "support_role@@" + self.account_id,
+                    "item_type": "iam_support_role",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
+                })
+            else:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": "support_role@@" + self.account_id,
+                    "item_type": "iam_support_role",
+                    "test_name": test_name,
+                    "test_result": "issue_found"
+                })
+        else:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": "support_role@@" + self.account_id,
+                "item_type": "iam_support_role",
+                "test_name": test_name,
+                "test_result": "issue_found"
+            })
+        
+        return result
