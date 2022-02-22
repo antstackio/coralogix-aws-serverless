@@ -35,7 +35,8 @@ class Tester(interfaces.TesterInterface):
             self.get_support_role_for_aws_support() + \
             self.get_priviledged_user_has_admin_permissions() + \
             self.get_password_reuse_policy() + \
-            self.get_no_access_key_for_root_account()
+            self.get_no_access_key_for_root_account() + \
+            self.get_mfa_enabled_for_all_iam_users()
 
     def get_password_policy_has_14_or_more_char(self):
         result = []
@@ -700,5 +701,50 @@ class Tester(interfaces.TesterInterface):
                 "test_name": test_name,
                 "test_result": "no_issue_found"
             })
+        
+        return result
+    
+    def get_mfa_enabled_for_all_iam_users(self):
+        result = []
+        users = []
+        test_name = "mfa_is_enabled_for_all_iam_users_with_console_password"
+
+        paginator = self.aws_iam_client.get_paginator('list_users')
+        response_paginator = paginator.paginate()
+        
+        for page in response_paginator:
+            users.extend(page['Users'])
+        
+        for user in users:
+            user_name = user['UserName']
+            paginator = self.aws_iam_client.get_paginator('list_mfa_devices')
+            response_paginator = paginator.paginate(UserName=user_name)
+            mfa_devices = []
+            
+            for page in response_paginator:
+                mfa_devices.extend(page['MFADevices'])
+            
+            if len(mfa_devices) > 0:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": user_name,
+                    "item_type": "iam_user",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
+                })
+            else: 
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": user_name,
+                    "item_type": "iam_user",
+                    "test_name": test_name,
+                    "test_result": "issue_found"
+                })
         
         return result
