@@ -37,7 +37,8 @@ class Tester(interfaces.TesterInterface):
             self.get_password_reuse_policy() + \
             self.get_no_access_key_for_root_account() + \
             self.get_mfa_enabled_for_all_iam_users() + \
-            self.get_role_uses_trused_principals()
+            self.get_role_uses_trused_principals() + \
+            self.get_access_keys_are_not_created_during_initial_setup()
 
     def get_password_policy_has_14_or_more_char(self):
         result = []
@@ -718,7 +719,7 @@ class Tester(interfaces.TesterInterface):
             })
         
         return result
-    
+
     def get_mfa_enabled_for_all_iam_users(self):
         result = []
         users = []
@@ -804,6 +805,74 @@ class Tester(interfaces.TesterInterface):
                     "item_type": "iam_policy",
                     "test_name": test_name,
                     "test_result": "issue_found"
+                })
+
+        return result
+
+    def get_access_keys_are_not_created_during_initial_setup(self):
+        result = []
+        test_name = "access_keys_are_not_created_for_IAM_user_during_initial_setup"
+        users = []
+        paginator = self.aws_iam_client.get_paginator('list_users')
+        response_iterator = paginator.paginate()
+
+        for page in response_iterator:
+            users.extend(page['Users'])
+            
+        for user in users:
+            user_name = user['UserName']
+            user_created_at = user['CreateDate']
+            response = self.aws_iam_client.list_access_keys(UserName = user_name)
+            access_key_metadata = response['AccessKeyMetadata']
+
+            if len(access_key_metadata) > 0:
+                for access_key in access_key_metadata:
+                    access_key_created_at = access_key['CreateDate']
+                    access_key_status = access_key['Status']
+                    
+                    issue_with_access_key = False
+                    if access_key_status == 'Active':
+                        user_created_at = datetime.strptime(datetime.strftime(user_created_at, '%Y-%m-%d %H:%M'), '%Y-%m-%d %H:%M')
+                        access_key_created_at = datetime.strptime(datetime.strftime(access_key_created_at, '%Y-%m-%d %H:%M'), '%Y-%m-%d %H:%M')
+                        
+                        if user_created_at == access_key_created_at:
+                            issue_with_access_key = True
+                            break
+                        else: pass
+                    else: pass
+
+                if issue_with_access_key:
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": user_name,
+                        "item_type": "iam_user",
+                        "test_name": test_name,
+                        "test_result": "issue_found"
+                    })
+                else:
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": user_name,
+                        "item_type": "iam_user",
+                        "test_name": test_name,
+                        "test_result": "no_issue_found"
+                    })
+            else:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": user_name,
+                    "item_type": "iam_user",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
                 })
 
         return result
