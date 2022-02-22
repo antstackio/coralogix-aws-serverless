@@ -74,20 +74,36 @@ class Tester(interfaces.TesterInterface):
         result = []
         test_name = "hardware_mfa_enabled_for_root_account"
 
-        response = self.aws_iam_client.get_account_summary()
-        account_summary = response['SummaryMap']
+        response = self.aws_iam_client.list_virtual_mfa_devices(AssignmentStatus='Assigned')
+        virtual_devices = response['VirtualMFADevices']
+        
+        if len(virtual_devices) > 0:
+            for device in virtual_devices:
+                serial_number = device['SerialNumber']
+                root_account_device = serial_number.split('/')[-1]
 
-        if account_summary['AccountMFAEnabled']:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": "account_summary@@" + self.account_id,
-                "item_type": "account_summary_record",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
+                if root_account_device == 'root-account-mfa-device':
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": "account_summary@@" + self.account_id,
+                        "item_type": "account_summary_record",
+                        "test_name": test_name,
+                        "test_result": "no_issue_found"
+                    })
+                else:
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": "account_summary@@" + self.account_id,
+                        "item_type": "account_summary_record",
+                        "test_name": test_name,
+                        "test_result": "issue_found"
+                    })
         else:
             result.append({
                 "user": self.user_id,
@@ -99,7 +115,6 @@ class Tester(interfaces.TesterInterface):
                 "test_name": test_name,
                 "test_result": "issue_found"
             })
-        
         return result
     
     def get_mfa_enabled_for_root_account(self):
