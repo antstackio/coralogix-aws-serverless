@@ -148,10 +148,10 @@ class Tester(interfaces.TesterInterface):
     def get_users_without_mfa(self, organization):
         result = []
         raw_api_result_all_users = requests.get(
-            headers=self.request_headers, url=self.BASE_URL_ORGS + organization + '/members')
+            headers=self.request_headers, url=f"{self.BASE_URL_ORGS}/{organization}/members")
         raw_api_result_all_users_obj = raw_api_result_all_users.json()
         raw_api_result_2fa_disabled = requests.get(
-            headers=self.request_headers, url=self.BASE_URL_ORGS + organization + '/members?filter=2fa_disabled')
+            headers=self.request_headers, url=f"{self.BASE_URL_ORGS}/{organization}/members?filter=2fa_disabled")
         raw_api_result_2fa_disabled_obj = raw_api_result_2fa_disabled.json()
         for user in raw_api_result_all_users_obj:
             if user["login"] in [u.login for u in raw_api_result_2fa_disabled_obj]:
