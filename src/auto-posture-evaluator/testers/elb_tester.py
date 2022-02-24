@@ -37,7 +37,8 @@ class Tester(interfaces.TesterInterface):
             self.get_elbv2_using_latest_security_policy() + \
             self.get_elbv2_has_deletion_protection() + \
             self.get_elbv2_allows_https_traffic_only() + \
-            self.get_alb_using_tls12_or_higher()
+            self.get_alb_using_tls12_or_higher() + \
+            self.get_nlb_using_tls12_or_higher()
     
     def _get_all_elbv2(self) -> List:
         elbs = self.aws_elbsv2_client.describe_load_balancers()
