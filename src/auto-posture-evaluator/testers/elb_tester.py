@@ -34,7 +34,8 @@ class Tester(interfaces.TesterInterface):
             self.get_elb_listeners_securely_configured() + \
             self.get_elb_has_secure_ssl_protocol() + \
             self.get_elb_security_policy_secure_ciphers() + \
-            self.get_elbv2_using_latest_security_policy()
+            self.get_elbv2_using_latest_security_policy() + \
+            self.get_elbv2_has_deletion_protection()
     
     def _get_all_elbv2(self) -> List:
         elbs = self.aws_elbsv2_client.describe_load_balancers()
@@ -517,3 +518,43 @@ class Tester(interfaces.TesterInterface):
                     "test_result": "no_issue_found"
                 })
         return result
+
+    def get_elbv2_has_deletion_protection(self) -> List:
+        result = []
+        test_name = "elbv2_has_deletion_protection_enabled"
+        elbs = self.elbsv2
+
+        for elb in elbs:
+            elb_arn = elb['LoadBalancerArn']
+            response = self.aws_elbsv2_client.describe_load_balancer_attributes(LoadBalancerArn=elb_arn)
+
+            attrs = response['Attributes']
+            
+            for attr in attrs:
+                if attr['Key'] == 'deletion_protection.enabled':
+                    if attr['Value'] == 'true':
+                        result.append({
+                            "user": self.user_id,
+                            "account_arn": self.account_arn,
+                            "account": self.account_id,
+                            "timestamp": time.time(),
+                            "item": elb_arn,
+                            "item_type": "aws_elbv2",
+                            "test_name": test_name,
+                            "test_result": "no_issue_found"
+                        })
+                    else:
+                        result.append({
+                            "user": self.user_id,
+                            "account_arn": self.account_arn,
+                            "account": self.account_id,
+                            "timestamp": time.time(),
+                            "item": elb_arn,
+                            "item_type": "aws_elbv2",
+                            "test_name": test_name,
+                            "test_result": "issue_found"
+                        })
+                    break
+                else: pass
+        
+        return result 
