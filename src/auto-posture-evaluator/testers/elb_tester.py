@@ -35,7 +35,8 @@ class Tester(interfaces.TesterInterface):
             self.get_elb_has_secure_ssl_protocol() + \
             self.get_elb_security_policy_secure_ciphers() + \
             self.get_elbv2_using_latest_security_policy() + \
-            self.get_elbv2_has_deletion_protection()
+            self.get_elbv2_has_deletion_protection() + \
+            self.get_elbv2_allows_https_traffic_only()
     
     def _get_all_elbv2(self) -> List:
         elbs = self.aws_elbsv2_client.describe_load_balancers()
@@ -558,3 +559,50 @@ class Tester(interfaces.TesterInterface):
                 else: pass
         
         return result 
+
+    def get_elbv2_allows_https_traffic_only(self) -> List:
+        result = []
+        test_name = "elbv2_should_allow_https_traffic_only"
+        elbs = self.elbsv2
+
+        for elb in elbs:
+            elb_arn = elb['LoadBalancerArn']
+            paginator = self.aws_elbsv2_client.get_paginator('describe_listeners')
+            response_iterator = paginator.paginate(LoadBalancerArn=elb_arn)
+            listerners = []
+            for page in response_iterator:
+                listerners.extend(page['Listeners'])
+            
+            for listerner in listerners:
+                protocol = listerner['Protocol']
+                listener_wo_https = False
+                
+                if protocol == 'HTTPS':
+                    pass
+                else:
+                    listener_wo_https = True
+                    break
+            if listener_wo_https:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": elb_arn,
+                    "item_type": "aws_elbv2",
+                    "test_name": test_name,
+                    "test_result": "issue_found"
+                })
+            else:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": elb_arn,
+                    "item_type": "aws_elbv2",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
+                })
+        
+        return result
