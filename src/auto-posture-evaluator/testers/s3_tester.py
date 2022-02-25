@@ -1,5 +1,6 @@
 import json
 import time
+from unittest import result
 import boto3
 import botocore.exceptions
 import interfaces
@@ -11,6 +12,8 @@ class Tester(interfaces.TesterInterface):
     def __init__(self):
         self.aws_s3_client = boto3.client('s3')
         self.aws_s3_resource = boto3.resource('s3')
+        self.aws_s3_control_client = boto3.client('s3control')
+        self.aws_kms_client = boto3.client('kms')
         self.cache = {}
         self.user_id = boto3.client('sts').get_caller_identity().get('UserId')
         self.account_arn = boto3.client('sts').get_caller_identity().get('Arn')
@@ -496,6 +499,36 @@ class Tester(interfaces.TesterInterface):
         protocol = "https"
         result = self._test_bucket_url_access(buckets_list, protocol, test_name)
 
+        return result
+
+    def detect_bucket_logging_disabled(self, buckets_list):
+        test_name = "bucket_logging_disabled"
+        result = []
+        for bucket in buckets_list["Buckets"]:
+            bucket_name = bucket["Name"]
+            logging = self.aws_s3_client.get_bucket_logging(Bucket=bucket_name)
+            if not logging.get("LoggingEnabled"):
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": bucket_name,
+                    "item_type": "s3_bucket",
+                    "test_name": test_name,
+                    "test_result": "issue_found"
+                })
+            else:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": bucket_name,
+                    "item_type": "s3_bucket",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
+                })
         return result
 
     def _test_bucket_url_access(self, buckets_list, protocol, test_name):
