@@ -531,6 +531,65 @@ class Tester(interfaces.TesterInterface):
                 })
         return result
 
+    def detect_bucket_not_encrypted_with_cmk(self, buckets_list):
+        test_name = "bucket_not_encrypted_with_cmk"
+        result = []
+        for bucket in buckets_list["Buckets"]:
+            issue_detected = False
+            bucket_name = bucket["Name"]
+            try:
+                encryption = self.aws_s3_client.get_bucket_encryption(Bucket=bucket_name)
+                for rule in encryption['ServerSideEncryptionConfiguration']['Rules']:
+                    if not rule['BucketKeyEnabled']: continue
+                    sse_algorithm = rule['ApplyServerSideEncryptionByDefault']['SSEAlgorithm']
+                    if sse_algorithm == 'AES256':
+                        issue_detected = True
+                        break
+                    else:
+                        if not rule['ApplyServerSideEncryptionByDefault'].get('KMSMasterKeyID'):
+                            issue_detected = True
+                            break
+                        key_id = rule['ApplyServerSideEncryptionByDefault']['KMSMasterKeyID']
+                        try:
+                            kms_response = self.aws_kms_client.list_aliases(KeyId=key_id)
+                        except:
+                            issue_detected = True
+                            break
+                        for alias in kms_response['Aliases']:
+                            if alias['AliasName'] == 'alias/aws/s3':
+                                issue_detected = True
+                                break
+            except botocore.exceptions.ClientError as ex:
+                if ex.response['Error']['Code'] == 'ServerSideEncryptionConfigurationNotFoundError':
+                    issue_detected = True
+                else:
+                    raise ex
+
+            if not issue_detected:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": bucket_name,
+                    "item_type": "s3_bucket",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
+                })
+            else:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": bucket_name,
+                    "item_type": "s3_bucket",
+                    "test_name": test_name,
+                    "test_result": "issue_found"
+                })
+
+        return result
+    
     def _test_bucket_url_access(self, buckets_list, protocol, test_name):
         result = []
         for bucket_meta in buckets_list["Buckets"]:
