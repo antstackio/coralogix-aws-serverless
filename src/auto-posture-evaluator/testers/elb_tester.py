@@ -634,7 +634,7 @@ class Tester(interfaces.TesterInterface):
 
                     if ssl_version_12 is None:
                         response = self.aws_elbsv2_client.describe_ssl_policies(
-                            Names= ssl_policy
+                            Names=[ssl_policy]
                         )
                         policy_details = response['SslPolicies'][0]
                         ssl_protocols = policy_details['SslProtocols']
