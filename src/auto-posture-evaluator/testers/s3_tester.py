@@ -626,6 +626,46 @@ class Tester(interfaces.TesterInterface):
             })
         return result
 
+    def detect_bucket_not_configured_with_block_public_access(self, buckets_list):
+        test_name = "bucket_not_configured_with_block_public_access"
+        result = []
+        for bucket in buckets_list["Buckets"]:
+            bucket_name = bucket["Name"]
+            issue_detected = False
+            try:
+                public_access = self.aws_s3_client.get_public_access_block(Bucket=bucket_name)
+                conf = public_access["PublicAccessBlockConfiguration"]
+                if not conf["BlockPublicAcls"] and not conf["IgnorePublicAcls"] and not conf["BlockPublicPolicy"] and not conf["RestrictPublicBuckets"]:
+                    issue_detected = True
+            except botocore.exceptions.ClientError as ex:
+                if ex.response['Error']['Code'] == 'NoSuchPublicAccessBlockConfiguration':
+                    issue_detected = True
+                else:
+                    raise ex
+            if issue_detected:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": bucket_name,
+                    "item_type": "s3_bucket",
+                    "test_name": test_name,
+                    "test_result": "issue_found"
+                })
+            else:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": bucket_name,
+                    "item_type": "s3_bucket",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
+                })
+        return result
+
     def _test_bucket_url_access(self, buckets_list, protocol, test_name):
         result = []
         for bucket_meta in buckets_list["Buckets"]:
