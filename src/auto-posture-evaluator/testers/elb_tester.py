@@ -579,7 +579,7 @@ class Tester(interfaces.TesterInterface):
                 protocol = listerner['Protocol']
                 listener_wo_https = False
                 
-                if protocol == 'HTTPS':
+                if protocol == 'HTTPS' or protocol == "TLS" or protocol == "GENEVE":
                     pass
                 else:
                     listener_wo_https = True
