@@ -590,6 +590,42 @@ class Tester(interfaces.TesterInterface):
 
         return result
     
+    def detect_block_public_access_setting_disabled(self):
+        test_name = "block_public_access_setting_disabled"
+        result = []
+        issue_detected = False
+        try:
+            public_access_setting = self.aws_s3_control_client.get_public_access_block(AccountId=self.account_id)
+            conf = public_access_setting["PublicAccessBlockConfiguration"]
+            if not conf["BlockPublicAcls"] and not conf["IgnorePublicAcls"] and not conf["BlockPublicPolicy"] and not conf["RestrictPublicBuckets"]:
+                issue_detected = True
+        except botocore.exceptions.ClientError as ex:
+            if ex.response['Error']['Code'] == 'NoSuchPublicAccessBlockConfiguration':
+                issue_detected = True
+            else:
+                raise ex
+        if issue_detected:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item_type": "s3_account",
+                "test_name": test_name,
+                "test_result": "issue_found"
+            })
+        else:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item_type": "s3_account",
+                "test_name": test_name,
+                "test_result": "no_issue_found"
+            })
+        return result
+
     def _test_bucket_url_access(self, buckets_list, protocol, test_name):
         result = []
         for bucket_meta in buckets_list["Buckets"]:
