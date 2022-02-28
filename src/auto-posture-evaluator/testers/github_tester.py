@@ -386,14 +386,19 @@ class Tester(interfaces.TesterInterface):
         result = []
         api = f"{self.BASE_URL_ORGS}/{organization}/invitations"
         response = self._get_paginated_result(api)
-        invitations = {"result": response}
-        admin_invitation = jmespath.search("result[?role=='admin']", invitations)
-        
-        if len(admin_invitation) > 0:
-            result.append({"item": organization, "issue": True})
-        else:
-            result.append({"item": organization, "issue": False})
+        status_code = response['status_code']
 
+        if status_code == 200:
+            result = response['result']
+            invitations = {"result": result}
+            admin_invitation = jmespath.search("result[?role=='admin']", invitations)
+        
+            if len(admin_invitation) > 0:
+                result.append({"item": organization, "issue": True})
+            else:
+                result.append({"item": organization, "issue": False})
+        else: result.append({"item": "not_found@@" + organization, "issue": True})
+        
         return result
 
     def get_deploy_keys_are_fresh(self, organization):
