@@ -566,14 +566,18 @@ class Tester(interfaces.TesterInterface):
     def evidence_repositories_are_public(self, organization):
         result = []
         api = f"{self.BASE_URL_ORGS}/{organization}/repos"
-        repos = self._get_paginated_result(api)
-        
-        for repo in repos:
-            repo_name = repo['name']
-            if not repo['private']:
-                result.append({"item": repo_name, "issue": True})
-            else:
-                result.append({"item": repo_name, "issue": False})
+        response = self._get_paginated_result(api)
+        status_code = response['status_code']
+
+        if status_code == 200:
+            repos = response['result']
+            for repo in repos:
+                repo_name = repo['name']
+                if not repo['private']:
+                    result.append({"item": repo_name, "issue": True})
+                else:
+                    result.append({"item": repo_name, "issue": False})
+        else: pass
         return result
 
     def get_vulnerabilities_found_on_repositories(self, organization):
