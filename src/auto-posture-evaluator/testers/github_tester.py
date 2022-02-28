@@ -204,20 +204,28 @@ class Tester(interfaces.TesterInterface):
         has_page = True
         while has_page:
             raw_response = requests.get(headers=self.request_headers, url=f'{api}?page={page}&per_page=100')
-            response = raw_response.json()
-            response_headers = raw_response.headers
-            link = response_headers.get('Link')
-            result.extend(response)
-            
-            if link is not None:
-                if 'rel="next"' not in link:
-                    has_page = False
-                else:
-                    page += 1
+            status_code = raw_response.status_code
+            response_obj = raw_response.json()
+
+            if status_code != 200:
+                result.append(response_obj)
+                break
             else:
-                has_page = False 
+                response_headers = raw_response.headers
+                link = response_headers.get('Link')
+                result.extend(response_obj)
+            
+                if link is not None:
+                    if 'rel="next"' not in link:
+                        has_page = False
+                    else:
+                        page += 1
+                else:
+                    has_page = False 
         
-        return result
+        response = {"status_code": status_code, "result": result}
+        
+        return response
 
     def get_2fa_authentication_enforced(self, organization):
         result = []
@@ -342,22 +350,25 @@ class Tester(interfaces.TesterInterface):
         result = []
 
         api = f"{self.BASE_URL_ORGS}/{organization}/outside_collaborators"
-        outside_collaborators = self._get_paginated_result(api)
+        response = self._get_paginated_result(api)
+        status_code = response['status_code']
 
-        collaborator_with_site_admin = False
-        if len(outside_collaborators) > 0:
-            for collaborator in outside_collaborators:
-                if collaborator['site_admin']:
-                    collaborator_with_site_admin = True
-                    break
-                else: pass
-            if collaborator_with_site_admin:
-                result.append({"item": organization, "issue": True})
+        if status_code == 200:
+            outside_collaborators = response['result']
+            collaborator_with_site_admin = False
+            if len(outside_collaborators) > 0:
+                for collaborator in outside_collaborators:
+                    if collaborator['site_admin']:
+                        collaborator_with_site_admin = True
+                        break
+                    else: pass
+                if collaborator_with_site_admin:
+                    result.append({"item": organization, "issue": True})
+                else:
+                    result.append({"item": organization, "issue": False})
             else:
                 result.append({"item": organization, "issue": False})
-        else:
-            result.append({"item": organization, "issue": False})
-        
+        else: result.append({"item": "not_owner@@" + organization , "issue": True})
         return result
 
     def get_pending_invitation_with_admin_permissions(self, organization):
