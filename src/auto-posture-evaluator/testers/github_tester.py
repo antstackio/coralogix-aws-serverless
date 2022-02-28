@@ -289,16 +289,19 @@ class Tester(interfaces.TesterInterface):
     def get_github_pages_disabled(self, organization):
         result = []
         api = f"{self.BASE_URL_ORGS}/{organization}/repos"
-        repos_details = self._get_paginated_result(api)
-
-        for repo in repos_details:
-            repo_name = repo['name']
-            has_pages = repo['has_pages']
-            if has_pages:
-                result.append({"item": repo_name, "issue": True})
-            else:
-                result.append({"item": repo_name, "issue": False})
-
+        respone = self._get_paginated_result(api)
+        status_code = respone['status_code']
+        
+        if status_code == 200:
+            repos_details = respone['result']
+            for repo in repos_details:
+                repo_name = repo['name']
+                has_pages = repo['has_pages']
+                if has_pages:
+                    result.append({"item": repo_name, "issue": True})
+                else:
+                    result.append({"item": repo_name, "issue": False})
+        else: pass
         return result
 
     def get_members_without_gpg_keys(self, organization):
