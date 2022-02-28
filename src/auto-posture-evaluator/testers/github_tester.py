@@ -1,5 +1,6 @@
 import os
 import time
+from urllib import response
 import requests
 import interfaces
 import jmespath
@@ -456,24 +457,27 @@ class Tester(interfaces.TesterInterface):
     def get_all_repositories_monitored_for_code_vulnerabilities(self, organization):
         result = []
         api = f"{self.BASE_URL_ORGS}/{organization}/repos"
-        repos = self._get_paginated_result(api)
+        response = self._get_paginated_result(api)
+        status_code = response['status_code']
 
-        for repo in repos:
-            repo_name = repo['name']
-            owner = repo['owner']['login']
+        if status_code == 200:
+            repos = response['result']
+            for repo in repos:
+                repo_name = repo['name']
+                owner = repo['owner']['login']
 
-            api = f"{self.BASE_URL_REPOS}/{owner}/{repo_name}/code-scanning/analyses"
-            raw_response = requests.get(headers=self.request_headers, url=api)
-            status_code = raw_response.status_code
+                api = f"{self.BASE_URL_REPOS}/{owner}/{repo_name}/code-scanning/analyses"
+                raw_response = requests.get(headers=self.request_headers, url=api)
+                status_code = raw_response.status_code
 
-            if status_code == 404:
-                result.append({"item": repo_name, "issue": False})
-            elif status_code == 403:
-                result.append({"item": repo_name, "issue": True})
-            elif status_code == 200:
-                result.append({"item": repo_name, "issue": True})
-            else: pass
-
+                if status_code == 404:
+                    result.append({"item": repo_name, "issue": False})
+                elif status_code == 403:
+                    result.append({"item": repo_name, "issue": True})
+                elif status_code == 200:
+                    result.append({"item": repo_name, "issue": True})
+                else: pass
+        else: pass
         return result
 
     def get_outside_collaborators_with_admin_permission(self, organization):
