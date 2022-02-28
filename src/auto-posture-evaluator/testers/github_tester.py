@@ -404,34 +404,41 @@ class Tester(interfaces.TesterInterface):
     def get_deploy_keys_are_fresh(self, organization):
         result = []
         api = f"{self.BASE_URL_ORGS}/{organization}/repos"
-        repos_details = self._get_paginated_result(api)
+        response = self._get_paginated_result(api)
+        status_code = response['status_code']
         freshness_threshold = self.deploy_keys_max_days_old if self.deploy_keys_max_days_old is not None else 30
         
-        for repo in repos_details:
-            repo_name = repo['name']
-            owner = repo['owner']['login']
-            api = f"{self.BASE_URL_REPOS}/{owner}/{repo_name}/keys"
-            deploy_keys = self._get_paginated_result(api)
-            
-            if len(deploy_keys) > 0:
-                found_old_key = False
-                for key in deploy_keys:
-                    key_created_at = key['created_at']
-                    key_created_at_obj = datetime.strptime(key_created_at, '%Y-%M-%dT%H:%m:%SZ')
-                    current_datetime = datetime.now()
-                    time_diff = (current_datetime - key_created_at_obj).days
+        if status_code == 200:
+            repos_details = response['result']
+            for repo in repos_details:
+                repo_name = repo['name']
+                owner = repo['owner']['login']
+                api = f"{self.BASE_URL_REPOS}/{owner}/{repo_name}/keys"
+                response = self._get_paginated_result(api)
+                status_code = response['status_code']
+                
+                if status_code == 200:
+                    deploy_keys = response['result']
+                    if len(deploy_keys) > 0:
+                        found_old_key = False
+                        for key in deploy_keys:
+                            key_created_at = key['created_at']
+                            key_created_at_obj = datetime.strptime(key_created_at, '%Y-%M-%dT%H:%m:%SZ')
+                            current_datetime = datetime.now()
+                            time_diff = (current_datetime - key_created_at_obj).days
 
-                    if time_diff > freshness_threshold:
-                        found_old_key = True
-                        break
-                    else: pass
-                if found_old_key:
-                    result.append({"item": repo_name, "issue": True})
-                else:
-                    result.append({"item": repo_name, "issue": False})
-            else:
-                result.append({"item": repo_name, "issue": False})
-        
+                            if time_diff > freshness_threshold:
+                                found_old_key = True
+                                break
+                            else: pass
+                        if found_old_key:
+                            result.append({"item": repo_name, "issue": True})
+                        else:
+                            result.append({"item": repo_name, "issue": False})
+                    else:
+                        result.append({"item": repo_name, "issue": False})
+                else: result.append({"item": repo_name + "@@" + "not_found", "issue": False})
+        else: pass
         return result
 
     def get_sso_enabled_for_organization(self, organization):
