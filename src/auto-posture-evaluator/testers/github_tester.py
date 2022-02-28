@@ -234,9 +234,13 @@ class Tester(interfaces.TesterInterface):
         raw_api_response = requests.get(
             headers=self.request_headers, url=api)
         raw_api_response_obj = raw_api_response.json()
+        default_repo_permission = raw_api_response_obj.get('default_repository_permission')
 
-        if raw_api_response_obj['default_repository_permission'].lower() == 'admin':
-            result.append({"item": organization, "issue": True})
+        if default_repo_permission is not None:
+            if default_repo_permission.lower() == "admin":
+                result.append({"item": organization, "issue": True})
+            else:
+                result.append({"item": organization, "issue": False})
         else:
             result.append({"item": organization, "issue": False})
 
