@@ -152,14 +152,19 @@ class Tester(interfaces.TesterInterface):
         raw_api_result_all_users_obj = raw_api_result_all_users.json()
         raw_api_result_2fa_disabled = requests.get(
             headers=self.request_headers, url=f"{self.BASE_URL_ORGS}/{organization}/members?filter=2fa_disabled")
-        raw_api_result_2fa_disabled_obj = raw_api_result_2fa_disabled.json()
-        for user in raw_api_result_all_users_obj:
-            if user["login"] in [u.login for u in raw_api_result_2fa_disabled_obj]:
-                result.append(
-                    {"item": user["login"] + "@@" + organization, "issue": True})
-            else:
-                result.append(
-                    {"item": user["login"] + "@@" + organization, "issue": False})
+        status_code = raw_api_result_2fa_disabled.status_code
+
+        if status_code == 200:
+            raw_api_result_2fa_disabled_obj = raw_api_result_2fa_disabled.json()
+            for user in raw_api_result_all_users_obj:
+                if user["login"] in [u.login for u in raw_api_result_2fa_disabled_obj]:
+                    result.append(
+                        {"item": user["login"] + "@@" + organization, "issue": True})
+                else:
+                    result.append(
+                        {"item": user["login"] + "@@" + organization, "issue": False})
+        else:
+            result.append({"item": "login@@" + organization, "issue": True})
 
         return result
 
