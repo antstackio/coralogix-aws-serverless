@@ -583,25 +583,29 @@ class Tester(interfaces.TesterInterface):
     def get_vulnerabilities_found_on_repositories(self, organization):
         result = []
         api = f"{self.BASE_URL_ORGS}/{organization}/repos"
-        repos = self._get_paginated_result(api)
+        response = self._get_paginated_result(api)
+        status_code = response['status_code']
 
-        for repo in repos:
-            repo_name = repo['name']
-            owner = repo['owner']['login']
+        if status_code == 200:
+            repos = response['result']
+            for repo in repos:
+                repo_name = repo['name']
+                owner = repo['owner']['login']
 
-            api = f"{self.BASE_URL_REPOS}/{owner}/{repo_name}/code-scanning/alerts"
-            raw_response = requests.get(headers=self.request_headers, url=api)
-            status_code = raw_response.status_code
-            vulnerabilities_alerts = raw_response.json()
-
-            if status_code == 403:
-                result.append({"item": repo_name, "issue": True})
-            elif status_code == 404:
-                result.append({"item": repo_name, "issue": False})
-            elif status_code == 200:
-                result.append({"item": repo_name, "issue": True})
-            elif status_code == 304:
-                result.append({"item": repo_name, "issue": False})
-            else:
-                pass
+                api = f"{self.BASE_URL_REPOS}/{owner}/{repo_name}/code-scanning/alerts"
+                raw_response = requests.get(headers=self.request_headers, url=api)
+                status_code = raw_response.status_code
+                vulnerabilities_alerts = raw_response.json()
+                
+                if status_code == 403:
+                   result.append({"item": repo_name, "issue": True})
+                elif status_code == 404:
+                    result.append({"item": repo_name, "issue": False})
+                elif status_code == 200:
+                    result.append({"item": repo_name, "issue": True})
+                elif status_code == 304:
+                    result.append({"item": repo_name, "issue": False})
+                else:
+                    pass
+        else: pass
         return result
