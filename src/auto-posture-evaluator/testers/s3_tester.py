@@ -42,7 +42,13 @@ class Tester(interfaces.TesterInterface):
             self.detect_bucket_content_writable_by_anonymous(self.s3_buckets) + \
             self.detect_buckets_without_logging_set(self.s3_buckets) + \
             self.detect_buckets_accessible_by_http_url(self.s3_buckets) + \
-            self.detect_buckets_accessible_by_https_url(self.s3_buckets)
+            self.detect_buckets_accessible_by_https_url(self.s3_buckets) + \
+            self.detect_bucket_logging_disabled(self.s3_buckets) + \
+            self.detect_bucket_not_encrypted_with_cmk(self.s3_buckets) + \
+            self.detect_block_public_access_setting_disabled() + \
+            self.detect_bucket_not_configured_with_block_public_access(self.s3_buckets) + \
+            self.detect_buckets_with_global_upload_and_delete_permission(self.s3_buckets) + \
+            self.detect_bucket_has_global_list_acl_permission_through_acl(self.s3_buckets)
 
     def detect_write_enabled_buckets(self, buckets_list):
         return self._detect_buckets_with_permissions_matching(buckets_list, "WRITE", "write_enabled_s3_buckets")
@@ -663,6 +669,74 @@ class Tester(interfaces.TesterInterface):
                     "item_type": "s3_bucket",
                     "test_name": test_name,
                     "test_result": "no_issue_found"
+                })
+        return result
+
+    def detect_buckets_with_global_upload_and_delete_permission(self, buckets_list):
+        test_name = "buckets_with_global_upload_and_delete_permission"
+        result = []
+        for bucket_meta in buckets_list["Buckets"]:
+            bucket_name = bucket_meta["Name"]
+            bucket_acl = self.aws_s3_client.get_bucket_acl(Bucket=bucket_name)
+            issue_found = False
+            for grant in bucket_acl["Grants"]:
+                if (grant["Permission"] == "WRITE" or grant["Permission"] == "READ") and grant["Grantee"].get("URI") == "http://acs.amazonaws.com/groups/global/AllUsers":
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": bucket_name,
+                        "item_type": "s3_bucket",
+                        "test_name": test_name,
+                        "test_result": "issue_found"
+                    })
+                    issue_found = True
+                    break
+            if not issue_found:
+                result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": bucket_name,
+                        "item_type": "s3_bucket",
+                        "test_name": test_name,
+                        "test_result": "no_issue_found"
+                })
+        return result
+             
+    def detect_bucket_has_global_list_acl_permission_through_acl(self, buckets_list):
+        test_name = "bucket_has_global_list_acl_permission_through_acl"
+        result = []
+        for bucket_meta in buckets_list["Buckets"]:
+            bucket_name = bucket_meta["Name"]
+            bucket_acl = self.aws_s3_client.get_bucket_acl(Bucket=bucket_name)
+            issue_found = False
+            for grant in bucket_acl["Grants"]:
+                if (grant["Permission"] == "WRITE_ACP" or grant["Permission"] == "READ_ACP") and grant["Grantee"].get("URI") == "http://acs.amazonaws.com/groups/global/AllUsers":
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": bucket_name,
+                        "item_type": "s3_bucket",
+                        "test_name": test_name,
+                        "test_result": "issue_found"
+                    })
+                    issue_found = True
+                    break
+            if not issue_found:
+                result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": bucket_name,
+                        "item_type": "s3_bucket",
+                        "test_name": test_name,
+                        "test_result": "no_issue_found"
                 })
         return result
 
