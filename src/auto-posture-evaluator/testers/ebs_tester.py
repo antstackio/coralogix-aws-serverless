@@ -146,7 +146,7 @@ class Tester(interfaces.TesterInterface):
                 create_date = snapshot['StartTime']
                 current_date = datetime.now(tz=dt.timezone.utc)
                 time_diff = (current_date - create_date).days
-                if time_diff<14:
+                if time_diff<7:
                     recent_snapshot_found = True
                     break
             if recent_snapshot_found:
@@ -232,4 +232,3 @@ class Tester(interfaces.TesterInterface):
                         "test_result": "issue_found"
                     })
         return result
-print(Tester().get_volume_not_encrypted_with_kms_customer_keys())
