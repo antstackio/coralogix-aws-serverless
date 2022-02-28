@@ -307,24 +307,32 @@ class Tester(interfaces.TesterInterface):
     def get_members_without_gpg_keys(self, organization):
         result = []
         api = f"{self.BASE_URL_ORGS}/{organization}/members"
-        org_members = self._get_paginated_result(api)
+        response = self._get_paginated_result(api)
+        status_code = response['status_code']
         
-        members_without_gpg_keys_count = 0
-        for member in org_members:
-            username = member['login']
-            api = f"{self.BASE_URL_USERS}/{username}/gpg_keys"
-            user_gpg_keys = self._get_paginated_result(api)
-            if len(user_gpg_keys) == 0:
-                members_without_gpg_keys_count += 1
-                break
+        if status_code == 200:
+            org_members = response['result']
+            members_without_gpg_keys_count = 0
+            for member in org_members:
+                username = member['login']
+                api = f"{self.BASE_URL_USERS}/{username}/gpg_keys"
+                response = self._get_paginated_result(api)
+                status_code = response['status_code']
+
+                if status_code == 200:
+                    user_gpg_keys = response['result']
+                    if len(user_gpg_keys) == 0:
+                        members_without_gpg_keys_count += 1
+                        break
+                    else: pass
+                else: pass
+            if members_without_gpg_keys_count != 0:
+                result.append({"item": organization, "issue": True})
             else:
-                pass
-
-        if members_without_gpg_keys_count != 0:
-            result.append({"item": organization, "issue": True})
-        else:
-            result.append({"item": organization, "issue": False})
-
+                result.append({"item": organization, "issue": False})
+        elif status_code == 302: result.append({"item": "not_member@@" + organization, "issue": True})
+        else: result.append({"item": "validation_failed@@" + organization, "issue": True})
+        
         return result
 
     def get_code_security_alerts_are_enabled(self, organization):
