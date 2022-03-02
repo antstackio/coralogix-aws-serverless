@@ -446,7 +446,7 @@ class Tester(interfaces.TesterInterface):
                     else:
                         result.append({"item": repo_name, "issue": False})
                 else: result.append({"item": repo_name + "@@" + "not_found", "issue": False})
-        else: pass
+        else: result.append({"item": "not_found@@" + organization, "issue": True})
         return result
 
     def get_sso_enabled_for_organization(self, organization):
