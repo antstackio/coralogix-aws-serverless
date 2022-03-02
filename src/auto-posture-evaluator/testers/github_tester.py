@@ -192,14 +192,17 @@ class Tester(interfaces.TesterInterface):
         api = f"{self.BASE_URL_ORGS}/{organization}/members?role=admin"
         raw_api_result = requests.get(
             headers=self.request_headers, url=api)
-        raw_api_result_obj = raw_api_result.json()
-        for user in raw_api_result_obj:
-            org_admins.append(user["login"])
-        if len(org_admins) > 15:
-            result.append({"item": organization, "issue": True})
-        else:
-            result.append({"item": organization, "issue": False})
+        status_code = raw_api_result.status_code
 
+        if status_code == 200:
+            raw_api_result_obj = raw_api_result.json()
+            for user in raw_api_result_obj:
+                org_admins.append(user["login"])
+            if len(org_admins) > 15:
+                result.append({"item": organization, "issue": True})
+            else:
+                result.append({"item": organization, "issue": False})
+        else: result.append({"item": "not_found@@" + organization, "issue": True})
         return result
 
     def _get_paginated_result(self, api):
