@@ -1,6 +1,7 @@
 import os
 import time
 import json
+from urllib import response
 import requests
 import interfaces
 import jmespath
@@ -172,15 +173,17 @@ class Tester(interfaces.TesterInterface):
     def get_forkable_repositories(self, organization):
         result = []
         api = f"{self.BASE_URL_ORGS}/{organization}/repos"
-        raw_api_result = requests.get(
-            headers=self.request_headers, url=api)
-        raw_api_result_obj = raw_api_result.json()
-        for repo in raw_api_result_obj:
-            if repo["allow_forking"]:
-                result.append({"item": repo["name"], "issue": True})
-            else:
-                result.append({"item": repo["name"], "issue": False})
+        response = self._get_paginated_result(api)
+        status_code = response['status_code']
 
+        if status_code == 200:
+            raw_api_result_obj = response['result']
+            for repo in raw_api_result_obj:
+                if repo["allow_forking"]:
+                    result.append({"item": repo["name"], "issue": True})
+                else:
+                    result.append({"item": repo["name"], "issue": False})
+        else: result.append({"item": "not_found@@" + organization, "issue": True})
         return result
 
     def check_for_too_many_admin_users(self, organization):
