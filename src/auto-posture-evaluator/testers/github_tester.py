@@ -483,44 +483,52 @@ class Tester(interfaces.TesterInterface):
     def get_outside_collaborators_with_admin_permission(self, organization):
         result = []
         api = f"{self.BASE_URL_ORGS}/{organization}/repos"
-        repos = self._get_paginated_result(api)
+        response = self._get_paginated_result(api)
+        status_code = response['status_code']
 
-        for repo in repos:
-            repo_name = repo['name']
-            owner = repo['owner']['login']
-            collaborators = []
-            page = 1 
-            has_page = True
-            while has_page:
-                api = f"{self.BASE_URL_REPOS}/{owner}/{repo_name}/collaborators?affiliation=outside&page={page}"
-                raw_response = requests.get(headers=self.request_headers, url=api)
-                response = raw_response.json()
-                response_headers = raw_response.headers
-                collaborators.extend(response)
-                link = response_headers.get('Link')
-
-                if link is not None:
-                    if 'rel="next"' not in link:
-                        has_page = False
+        if status_code == 200:
+            repos = response['result']
+            for repo in repos:
+                repo_name = repo['name']
+                owner = repo['owner']['login']
+                collaborators = []
+                page = 10
+                has_page = True
+                while has_page:
+                    api = f"{self.BASE_URL_REPOS}/{owner}/{repo_name}/collaborators?affiliation=outside&page={page}"
+                    raw_response = requests.get(headers=self.request_headers, url=api)
+                    pg_status_code = raw_response.status_code
+                    response = raw_response.json()
+                    response_headers = raw_response.headers
+                        
+                    if pg_status_code == 200: collaborators.extend(response)
+                    elif pg_status_code == 403: result.append({"item": "forbidden@@" + repo_name, "issue": True})
+                    else: result.append({"item": "not_found@@" + repo_name, "issue": True})
+                    
+                    link = response_headers.get('Link')
+                    if link is not None:
+                        if 'rel="next"' not in link:
+                            has_page = False
+                        else:
+                            page += 1
                     else:
-                        page += 1
-                else:
-                    has_page = False
-            
-            if len(collaborators) > 0:
-                outside_collab_with_admin = False
-                for collaborator in collaborators:
-                    if collaborator['permissions']['admin']:
-                        outside_collab_with_admin = True
-                        break
-                    else: pass
+                        has_page = False
+
+                if len(collaborators) > 0:
+                    outside_collab_with_admin = False
+                    for collaborator in collaborators:
+                        if collaborator['permissions']['admin']:
+                            outside_collab_with_admin = True
+                            break
+                        else: pass
                 
-                if outside_collab_with_admin:
-                    result.append({"item": repo_name, "issue": True})
+                    if outside_collab_with_admin:
+                        result.append({"item": repo_name, "issue": True})
+                    else:
+                        result.append({"item": repo_name, "issue": False})
                 else:
                     result.append({"item": repo_name, "issue": False})
-            else:
-                result.append({"item": repo_name, "issue": False})
+        else: result.append({"item": "not_found@@" + organization, "issue": True})  
         
         return result
 
