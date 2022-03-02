@@ -4,6 +4,7 @@ import boto3
 import interfaces
 import datetime as dt
 from datetime import datetime
+import os
 
 class Tester(interfaces.TesterInterface):
     def __init__(self) -> None:
@@ -146,7 +147,7 @@ class Tester(interfaces.TesterInterface):
                 create_date = snapshot['StartTime']
                 current_date = datetime.now(tz=dt.timezone.utc)
                 time_diff = (current_date - create_date).days
-                if time_diff<7:
+                if time_diff<os.environ.get('THRESHOLD', 7):
                     recent_snapshot_found = True
                     break
             if recent_snapshot_found:
