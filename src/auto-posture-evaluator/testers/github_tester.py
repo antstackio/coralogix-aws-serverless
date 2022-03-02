@@ -490,7 +490,7 @@ class Tester(interfaces.TesterInterface):
                 elif status_code == 200:
                     result.append({"item": repo_name, "issue": True})
                 else: pass
-        else: pass
+        else: result.append({"item": "not_found@@" + organization, "issue": True})
         return result
 
     def get_outside_collaborators_with_admin_permission(self, organization):
