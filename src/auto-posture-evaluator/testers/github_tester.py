@@ -453,12 +453,18 @@ class Tester(interfaces.TesterInterface):
         result = []
         api = f"{self.BASE_URL_ORGS}/{organization}/credential-authorizations"
         raw_response = requests.get(headers=self.request_headers, url=api)
-        org_auth_details = raw_response.json()
+        status_code = raw_response.status_code
 
-        if len(org_auth_details) > 0:
-            result.append({"item": organization, "issue": False})
+        if status_code == 200:
+            org_auth_details = raw_response.json()
+
+            if len(org_auth_details) > 0:
+                result.append({"item": organization, "issue": False})
+            else:
+                result.append({"item": organization, "issue": True})
         else:
-            result.append({"item": organization, "issue": True})
+            result.append({"item": "not_found@@" + organization, "issue": True})
+
         return result
 
     def get_all_repositories_monitored_for_code_vulnerabilities(self, organization):
