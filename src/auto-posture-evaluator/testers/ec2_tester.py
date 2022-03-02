@@ -1,4 +1,5 @@
 import time
+from urllib import response
 import boto3
 import botocore.exceptions
 import interfaces
@@ -44,7 +45,8 @@ class Tester(interfaces.TesterInterface):
             self.get_inbound_cifs_access(all_inbound_permissions) + \
             self.get_outbound_access_to_all_ports(all_outbound_permissions) + \
             self.get_inbound_oracle_access(all_inbound_permissions) + \
-            self.get_vpc_default_security_group_restrict_traffic()
+            self.get_vpc_default_security_group_restrict_traffic() + \
+            self.get_instance_uses_metadata_service_version_2()
             
     def _get_all_instance_ids(self, instances):
         return list(map(lambda i: i.id, list(instances)))
@@ -574,4 +576,49 @@ class Tester(interfaces.TesterInterface):
                     "item_type": "ec2_security_group",
                     "test_name": test_name
                 })
+        return result
+    
+    def get_instance_uses_metadata_service_version_2(self):
+        test_name = "instance_uses_metadata_service_version_2"
+        result = []
+        instances = []
+        can_paginate = self.aws_ec2_client.can_paginate('describe_instances')
+        if can_paginate:
+            reservations = []
+            paginator = self.aws_ec2_client.get_paginator('describe_instances')
+            response_iterator = paginator.paginate(PaginationConfig={'PageSize': 50})
+            for page in response_iterator:
+                reservations.extend(page['Reservations'])
+            for reservation in reservations:
+                instances.extend(reservation['Instances'])        
+        else:
+            response = self.aws_ec2_client.describe_instances()
+            for reservation in response['Reservations']:
+                instances.extend(reservation['Instances'])
+
+        for instance in instances:
+            instance_id = instance['InstanceId']
+            if instance['MetadataOptions']['HttpTokens'] == 'optional':
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": instance_id,
+                    "item_type": "ec2_instance",
+                    "test_name": test_name,
+                    "test_result": "issue_found"
+                })
+            else:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": instance_id,
+                    "item_type": "ec2_instance",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
+                })
+
         return result
