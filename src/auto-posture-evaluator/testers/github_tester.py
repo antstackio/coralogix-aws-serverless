@@ -233,13 +233,18 @@ class Tester(interfaces.TesterInterface):
         api = f"{self.BASE_URL_ORGS}/{organization}"
         raw_api_response = requests.get(
             headers=self.request_headers, url=api)
-        raw_api_response_obj = raw_api_response.json()
-
-        if raw_api_response_obj['two_factor_requirement_enabled']:
-            result.append({"item": organization, "issue": False})
-        else:
-            result.append({"item": organization, "issue": True})
-
+        status_code = raw_api_response.status_code
+        
+        if status_code == 200:
+            raw_api_response_obj = raw_api_response.json()
+            enforced_2fa = raw_api_response_obj['two_factor_requirement_enabled']
+            if enforced_2fa is not None:
+                if enforced_2fa:
+                    result.append({"item": organization, "issue": False})
+                else: result.append({"item": organization, "issue": True})
+            else:
+                result.append({"item": "not_owner@@" + organization, "issue": True})
+        else: result.append({"item": "not_found@@" + organization, "issue": True})
         return result
 
     def get_base_permission_not_admin(self, organization):
@@ -640,4 +645,3 @@ class Tester(interfaces.TesterInterface):
                     pass
         else: result.append({"item": "not_found@@" + organization, "issue": True})
         return result
-print(Tester().get_base_permission_not_admin('antstackio'))
