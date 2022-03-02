@@ -568,15 +568,22 @@ class Tester(interfaces.TesterInterface):
 
     def get_third_party_apps_with_write_permission(self, organization):
         result = []
-        app_installations = []
+        pg_result = []
         page = 1
         has_page = True
         while has_page:
             api = f"{self.BASE_URL_ORGS}/{organization}/installations?page={page}&per_page=1"
             raw_response = requests.get(headers=self.request_headers, url=api)
             response = raw_response.json()
+            status_code = raw_response.status_code
             response_headers = raw_response.headers
-            app_installations.extend(response['installations'])
+
+            if status_code == 200:
+                pg_result.extend(response['installations'])
+            else:
+                pg_result.append(response)
+                break
+
             link = response_headers.get('Link')
 
             if link is not None:
@@ -586,23 +593,27 @@ class Tester(interfaces.TesterInterface):
                     page += 1 
             else: has_page = False
 
-        if len(app_installations) > 0:
-            apps_with_access_count = False
+        app_info = {"status_code": status_code, "result": pg_result}
+        
+        if app_info['status_code'] == 200:
+            app_installations = app_info['result']
+            if len(app_installations) > 0:
+                apps_with_access_count = False
             
-            for i in app_installations:
-                pullrequest = i['permissions'].get('pull_requests')
+                for i in app_installations:
+                    pullrequest = i['permissions'].get('pull_requests')
 
-                if pullrequest == 'write':
-                    apps_with_access_count = True
-                    break
-                else: pass
-            if apps_with_access_count:
-                result.append({"item": organization, "issue": True})
+                    if pullrequest == 'write':
+                        apps_with_access_count = True
+                        break
+                    else: pass
+                if apps_with_access_count:
+                    result.append({"item": organization, "issue": True})
+                else:
+                    result.append({"item": organization, "issue": False})
             else:
                 result.append({"item": organization, "issue": False})
-        else:
-            result.append({"item": organization, "issue": False})
-
+        else: result.append({"item": "not_found@@" + organization, "issue": True})
         return result
 
     def evidence_repositories_are_public(self, organization):
