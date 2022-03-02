@@ -622,5 +622,5 @@ class Tester(interfaces.TesterInterface):
                     result.append({"item": repo_name, "issue": False})
                 else:
                     pass
-        else: pass
+        else: result.append({"item": "not_found@@" + organization, "issue": True})
         return result
