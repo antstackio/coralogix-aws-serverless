@@ -332,8 +332,8 @@ class Tester(interfaces.TesterInterface):
             else:
                 result.append({"item": organization, "issue": False})
         elif status_code == 302: result.append({"item": "not_member@@" + organization, "issue": True})
-        else: result.append({"item": "validation_failed@@" + organization, "issue": True})
-        
+        elif status_code == 422: result.append({"item": "validation_failed@@" + organization, "issue": True})
+        else: result.append({"item": "not_found@@" + organization, "issue": True})
         return result
 
     def get_code_security_alerts_are_enabled(self, organization):
