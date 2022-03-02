@@ -247,17 +247,20 @@ class Tester(interfaces.TesterInterface):
         api = f"{self.BASE_URL_ORGS}/{organization}"
         raw_api_response = requests.get(
             headers=self.request_headers, url=api)
-        raw_api_response_obj = raw_api_response.json()
-        default_repo_permission = raw_api_response_obj.get('default_repository_permission')
+        status_code = raw_api_response.status_code
+        
+        if status_code == 200:
+            raw_api_response_obj = raw_api_response.json()
+            default_repo_permission = raw_api_response_obj.get('default_repository_permission')
 
-        if default_repo_permission is not None:
-            if default_repo_permission.lower() == "admin":
-                result.append({"item": organization, "issue": True})
+            if default_repo_permission is not None:
+                if default_repo_permission.lower() == "admin":
+                    result.append({"item": organization, "issue": True})
+                else:
+                    result.append({"item": organization, "issue": False})
             else:
-                result.append({"item": organization, "issue": False})
-        else:
-            result.append({"item": organization, "issue": False})
-
+                result.append({"item": "not_owner@@" + organization, "issue": True})
+        else: result.append({"item": "not_found@@" + organization, "issue": True})
         return result
 
     def get_members_can_not_create_public_repos(self, organization):
@@ -637,3 +640,4 @@ class Tester(interfaces.TesterInterface):
                     pass
         else: result.append({"item": "not_found@@" + organization, "issue": True})
         return result
+print(Tester().get_base_permission_not_admin('antstackio'))
