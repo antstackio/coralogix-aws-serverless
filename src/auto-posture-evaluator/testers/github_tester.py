@@ -1,6 +1,6 @@
 import os
 import time
-from urllib import response
+import json
 import requests
 import interfaces
 import jmespath
@@ -339,23 +339,30 @@ class Tester(interfaces.TesterInterface):
     def get_code_security_alerts_are_enabled(self, organization):
         result = []
         api = f"{self.BASE_URL_ORGS}/{organization}/repos"
-        raw_api_response = requests.get(
-            headers=self.request_headers, url=api)
-        repos_details = raw_api_response.json()
+        response = self._get_paginated_result(api)
+        status_code = response['status_code']
+        
+        if status_code == 200:
+            repos_details = response['result']
 
-        for repo in repos_details:
-            repo_name = repo['name']
-            owner = repo['owner']['login']
-            api = f"{self.BASE_URL_REPOS}/{owner}/{repo_name}/vulnerability-alerts"
-            raw_response = requests.get(
-                headers=self.request_headers, url=api)
-            response_code = raw_response.status_code
-
-            if response_code == 204:
-                result.append({"item": repo_name, "issue": False})
-            else:
-                result.append({"item": repo_name, "issue": True})
-
+            for repo in repos_details:
+                repo_name = repo['name']
+                owner = repo['owner']['login']
+                api = f"{self.BASE_URL_REPOS}/{owner}/{repo_name}/vulnerability-alerts"
+                raw_response = requests.get(
+                    headers=self.request_headers, url=api)
+                response_code = raw_response.status_code
+                
+                if response_code == 204:
+                    result.append({"item": repo_name, "issue": False})
+                elif response_code == 404:
+                    response_obj = raw_response.json()
+                    message = response_obj['message']
+                    print(repo_name, message)
+                    if message == 'Not Found': result.append({"item": "not_found@@" + repo_name, "issue": True})
+                    else: result.append({"item": repo_name, "issue": True})
+        
+        else: result.append({"item": "not_found@@" + organization, "issue": True})
         return result
 
     def get_no_outside_collaborators_with_admin_permission(self, organization):
