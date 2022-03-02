@@ -265,12 +265,16 @@ class Tester(interfaces.TesterInterface):
         api = f"{self.BASE_URL_ORGS}/{organization}"
         raw_api_response = requests.get(
             headers=self.request_headers, url=api)
-        org_details = raw_api_response.json()
+        status_code = raw_api_response.status_code
 
-        if org_details['members_can_create_public_repositories']:
-            result.append({"item": organization, "issue": True})
-        else:
-            result.append({"item": organization, "issue": False})
+        if status_code == 200:
+            org_details = raw_api_response.json()
+
+            if org_details['members_can_create_public_repositories']:
+                result.append({"item": organization, "issue": True})
+            else:
+                result.append({"item": organization, "issue": False})
+        else: result.append({"item": "not_found@@" + organization, "issue": True})
 
         return result
 
