@@ -302,7 +302,7 @@ class Tester(interfaces.TesterInterface):
                     result.append({"item": repo_name, "issue": True})
                 else:
                     result.append({"item": repo_name, "issue": False})
-        else: pass
+        else: result.append({"item": "not_found@@" + organization, "issue": True})
         return result
 
     def get_members_without_gpg_keys(self, organization):
