@@ -279,12 +279,15 @@ class Tester(interfaces.TesterInterface):
         api = f"{self.BASE_URL_ORGS}/{organization}"
         raw_api_response = requests.get(
             headers=self.request_headers, url=api)
-        org_details = raw_api_response.json()
-        if org_details['is_verified']:
-            result.append({"item": organization, "issue": False})
-        else:
-            result.append({"item": organization, "issue": True})
+        status_code = raw_api_response.status_code
 
+        if status_code == 200:
+            org_details = raw_api_response.json()
+            if org_details['is_verified']:
+                result.append({"item": organization, "issue": False})
+            else:
+                result.append({"item": organization, "issue": True})
+        else: result.append({"item": "not_found@@" + organization, "issue": True})
         return result
 
     def get_github_pages_disabled(self, organization):
