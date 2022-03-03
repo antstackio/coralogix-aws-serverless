@@ -124,7 +124,7 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
-                "item": "account_summary@@" + self.account_id,
+                "item": "no_mfa_device@@" + self.account_id,
                 "item_type": "account_summary_record",
                 "test_name": test_name,
                 "test_result": "issue_found"
@@ -261,7 +261,7 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
-                "item": None,
+                "item": "no_iam_user@@" + self.account_id,
                 "item_type": "iam_user",
                 "test_name": test_name,
                 "test_result": "no_issue_found"
@@ -379,7 +379,7 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
-                "item": None,
+                "item": "no_server_certificate@@" + self.account_id,
                 "item_type": "iam_server_certificate",
                 "test_name": test_name,
                 "test_result": "no_issue_found"
@@ -718,7 +718,7 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
-                "item": user_name,
+                "item": "no_iam_user@@" + self.account_id,
                 "item_type": "iam_user",
                 "test_name": test_name,
                 "test_result": "no_issue_found"
@@ -813,38 +813,49 @@ class Tester(interfaces.TesterInterface):
         for page in response_paginator:
             users.extend(page['Users'])
         
-        for user in users:
-            user_name = user['UserName']
-            paginator = self.aws_iam_client.get_paginator('list_mfa_devices')
-            response_paginator = paginator.paginate(UserName=user_name)
-            mfa_devices = []
+        if len(users) > 0:
+            for user in users:
+                user_name = user['UserName']
+                paginator = self.aws_iam_client.get_paginator('list_mfa_devices')
+                response_paginator = paginator.paginate(UserName=user_name)
+                mfa_devices = []
             
-            for page in response_paginator:
-                mfa_devices.extend(page['MFADevices'])
+                for page in response_paginator:
+                    mfa_devices.extend(page['MFADevices'])
             
-            if len(mfa_devices) > 0:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": user_name,
-                    "item_type": "iam_user",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                })
-            else: 
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": user_name,
-                    "item_type": "iam_user",
-                    "test_name": test_name,
-                    "test_result": "issue_found"
-                })
-        
+                if len(mfa_devices) > 0:
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": user_name,
+                        "item_type": "iam_user",
+                        "test_name": test_name,
+                        "test_result": "no_issue_found"
+                    })
+                else: 
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": user_name,
+                        "item_type": "iam_user",
+                        "test_name": test_name,
+                        "test_result": "issue_found"
+                    })
+        else:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": "no_iam_user@@" + self.account_id,
+                "item_type": "iam_user",
+                "test_name": test_name,
+                "test_result": "no_issue_found"
+            })
         return result
 
     def get_role_uses_trused_principals(self):
@@ -900,40 +911,52 @@ class Tester(interfaces.TesterInterface):
 
         for page in response_iterator:
             users.extend(page['Users'])
-            
-        for user in users:
-            user_name = user['UserName']
-            user_created_at = user['CreateDate']
-            response = self.aws_iam_client.list_access_keys(UserName = user_name)
-            access_key_metadata = response['AccessKeyMetadata']
+        
+        if len(users) > 0:
+            for user in users:
+                user_name = user['UserName']
+                user_created_at = user['CreateDate']
+                response = self.aws_iam_client.list_access_keys(UserName = user_name)
+                access_key_metadata = response['AccessKeyMetadata']
 
-            if len(access_key_metadata) > 0:
-                for access_key in access_key_metadata:
-                    access_key_created_at = access_key['CreateDate']
-                    access_key_status = access_key['Status']
-                    
-                    issue_with_access_key = False
-                    if access_key_status == 'Active':
-                        user_created_at = datetime.strptime(datetime.strftime(user_created_at, '%Y-%m-%d %H:%M'), '%Y-%m-%d %H:%M')
-                        access_key_created_at = datetime.strptime(datetime.strftime(access_key_created_at, '%Y-%m-%d %H:%M'), '%Y-%m-%d %H:%M')
-                        
-                        if user_created_at == access_key_created_at:
-                            issue_with_access_key = True
-                            break
+                if len(access_key_metadata) > 0:
+                    for access_key in access_key_metadata:
+                        access_key_created_at = access_key['CreateDate']
+                        access_key_status = access_key['Status']
+
+                        issue_with_access_key = False
+                        if access_key_status == 'Active':
+                            user_created_at = datetime.strptime(datetime.strftime(user_created_at, '%Y-%m-%d %H:%M'), '%Y-%m-%d %H:%M')
+                            access_key_created_at = datetime.strptime(datetime.strftime(access_key_created_at, '%Y-%m-%d %H:%M'), '%Y-%m-%d %H:%M')
+
+                            if user_created_at == access_key_created_at:
+                                issue_with_access_key = True
+                                break
+                            else: pass
                         else: pass
-                    else: pass
 
-                if issue_with_access_key:
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": user_name,
-                        "item_type": "iam_user",
-                        "test_name": test_name,
-                        "test_result": "issue_found"
-                    })
+                    if issue_with_access_key:
+                        result.append({
+                            "user": self.user_id,
+                            "account_arn": self.account_arn,
+                            "account": self.account_id,
+                            "timestamp": time.time(),
+                            "item": user_name,
+                            "item_type": "iam_user",
+                            "test_name": test_name,
+                            "test_result": "issue_found"
+                        })
+                    else:
+                        result.append({
+                            "user": self.user_id,
+                            "account_arn": self.account_arn,
+                            "account": self.account_id,
+                            "timestamp": time.time(),
+                            "item": user_name,
+                            "item_type": "iam_user",
+                            "test_name": test_name,
+                            "test_result": "no_issue_found"
+                        })
                 else:
                     result.append({
                         "user": self.user_id,
@@ -945,18 +968,17 @@ class Tester(interfaces.TesterInterface):
                         "test_name": test_name,
                         "test_result": "no_issue_found"
                     })
-            else:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": user_name,
-                    "item_type": "iam_user",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                })
-
+        else:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": "no_iam_user@@" + self.account_id,
+                "item_type": "iam_user",
+                "test_name": test_name,
+                "test_result": "no_issue_found"
+            })
         return result
 
     def get_policy_with_admin_privilege_not_created(self):
