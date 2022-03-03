@@ -379,7 +379,6 @@ class Tester(interfaces.TesterInterface):
                 elif response_code == 404:
                     response_obj = raw_response.json()
                     message = response_obj['message']
-                    print(repo_name, message)
                     if message == 'Not Found': result.append({"item": "not_found@@" + repo_name, "issue": True})
                     else: result.append({"item": repo_name, "issue": True})
         
