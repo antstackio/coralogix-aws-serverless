@@ -391,22 +391,34 @@ class Tester(interfaces.TesterInterface):
         result = []
         test_name = "policy_is_set_expire_passwords_within_90_days_or_less"
 
-        response = self.aws_iam_client.get_account_password_policy()
-        password_policy = response['PasswordPolicy']
+        try:
+            response = self.aws_iam_client.get_account_password_policy()
+            password_policy = response['PasswordPolicy']
 
-        expire_passwords = password_policy.get('ExpirePasswords')
-        if expire_passwords:
-            max_password_age = password_policy['MaxPasswordAge']
-            if max_password_age <= 90:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": "password_policy@@" + self.account_id,
-                    "item_type": "password_policy_record",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
+            expire_passwords = password_policy.get('ExpirePasswords')
+            if expire_passwords:
+                max_password_age = password_policy['MaxPasswordAge']
+                if max_password_age <= 90:
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": "password_policy@@" + self.account_id,
+                        "item_type": "password_policy_record",
+                        "test_name": test_name,
+                        "test_result": "no_issue_found"
+                    })
+                else:
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": "password_policy@@" + self.account_id,
+                        "item_type": "password_policy_record",
+                        "test_name": test_name,
+                        "test_result": "issue_found"
                 })
             else:
                 result.append({
@@ -419,18 +431,17 @@ class Tester(interfaces.TesterInterface):
                     "test_name": test_name,
                     "test_result": "issue_found"
                 })
-        else:
+        except self.aws_iam_client.exceptions.NoSuchEntityException as e:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
-                "item": "password_policy@@" + self.account_id,
+                "item": "no_password_policy@@" + self.account_id,
                 "item_type": "password_policy_record",
                 "test_name": test_name,
                 "test_result": "issue_found"
             })
-        
         return result
 
     def get_password_policy_requires_lowercase(self):
@@ -936,4 +947,3 @@ class Tester(interfaces.TesterInterface):
                         "test_result": "no_issue_found"
                     })
         return result
-print(Tester().get_password_policy_has_14_or_more_char())
