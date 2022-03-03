@@ -2,6 +2,7 @@ import time
 import jmespath
 import interfaces
 import boto3
+import botocore
 import datetime as dt
 from datetime import datetime
 class Tester(interfaces.TesterInterface):
@@ -44,32 +45,43 @@ class Tester(interfaces.TesterInterface):
     def get_password_policy_has_14_or_more_char(self):
         result = []
         test_name = "password_has_14_or_more_characters"
-        response = self.aws_iam_client.get_account_password_policy()
-        password_policy = response['PasswordPolicy']
+        try:
+            response = self.aws_iam_client.get_account_password_policy()
+            password_policy = response['PasswordPolicy']
 
-        if password_policy['MinimumPasswordLength'] >= 14:
+            if password_policy['MinimumPasswordLength'] >= 14:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": "password_policy@@" + self.account_id,
+                    "item_type": "password_policy_record",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
+                })
+            else:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": "password_policy@@" + self.account_id,
+                    "item_type": "password_policy_record",
+                    "test_name": test_name,
+                    "test_result": "issue_found"
+                })
+        except self.aws_iam_client.exceptions.NoSuchEntityException as e:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
-                "item": "password_policy@@" + self.account_id,
-                "item_type": "password_policy_record",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
-        else:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": "password_policy@@" + self.account_id,
+                "item": "no_password_policy@@" + self.account_id,
                 "item_type": "password_policy_record",
                 "test_name": test_name,
                 "test_result": "issue_found"
             })
-        
         return result
     
     def get_hw_mfa_enabled_for_root_account(self):
@@ -924,3 +936,4 @@ class Tester(interfaces.TesterInterface):
                         "test_result": "no_issue_found"
                     })
         return result
+print(Tester().get_password_policy_has_14_or_more_char())
