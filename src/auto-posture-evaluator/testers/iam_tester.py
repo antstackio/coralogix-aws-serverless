@@ -490,32 +490,44 @@ class Tester(interfaces.TesterInterface):
     def get_password_policy_requires_uppercase(self):
         result = []
         test_name = "password_requires_one_or_more_uppercase_characters"
-        response = self.aws_iam_client.get_account_password_policy()
-        password_policy = response['PasswordPolicy']
 
-        if password_policy['RequireUppercaseCharacters']:
+        try:
+            response = self.aws_iam_client.get_account_password_policy()
+            password_policy = response['PasswordPolicy']
+
+            if password_policy['RequireUppercaseCharacters']:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": "password_policy@@" + self.account_id,
+                    "item_type": "password_policy_record",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
+                })
+            else:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": "password_policy@@" + self.account_id,
+                    "item_type": "password_policy_record",
+                    "test_name": test_name,
+                    "test_result": "issue_found"
+                })
+        except self.aws_iam_client.exceptions.NoSuchEntityException as e:
             result.append({
                 "user": self.user_id,
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
-                "item": "password_policy@@" + self.account_id,
-                "item_type": "password_policy_record",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
-        else:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": "password_policy@@" + self.account_id,
+                "item": "no_password_policy@@" + self.account_id,
                 "item_type": "password_policy_record",
                 "test_name": test_name,
                 "test_result": "issue_found"
             })
-        
         return result
     
     def get_password_policy_requires_symbols(self):
@@ -959,4 +971,3 @@ class Tester(interfaces.TesterInterface):
                         "test_result": "no_issue_found"
                     })
         return result
-print(Tester().get_password_policy_requires_lowercase())
