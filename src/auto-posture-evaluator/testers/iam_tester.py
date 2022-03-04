@@ -16,6 +16,7 @@ class Tester(interfaces.TesterInterface):
         self.iam_user_credentials_unuse_threshold = os.environ.get('AUTOPOSTURE_IAM_CREDENTIALS_UNUSE_THRESHOLD')
         self.password_maximum_age_policy = os.environ.get('AUTOPOSTURE_PASSWORD_MAX_AGE_POLICY')
         self.password_length_threshold_policy = os.environ.get('AUTOPOSTURE_PASSWORD_LENGTH_THRESHOLD_POLICY')
+        self.access_key_maximum_age = os.environ.get('AUTOPOSTURE_ACCESS_KEY_MAX_AGE')
 
     def declare_tested_provider(self) -> str:
         return 'aws'
@@ -224,7 +225,7 @@ class Tester(interfaces.TesterInterface):
         users = []
         for page in response_iterator:
             users.extend(page['Users'])
-        
+        access_keys_max_age = int(self.access_key_maximum_age) if self.access_key_maximum_age else 90
         if len(users) > 0:
             for user in users:
                 user_name = user['UserName']
@@ -237,7 +238,7 @@ class Tester(interfaces.TesterInterface):
                     current_date = datetime.now(tz=dt.timezone.utc)
                     time_diff = (current_date - create_date).days
                     
-                    if time_diff > 90:
+                    if time_diff > access_keys_max_age:
                         old_access_keys += 1
                     else: pass
                 if old_access_keys > 0:
