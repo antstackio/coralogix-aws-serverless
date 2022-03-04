@@ -1,3 +1,4 @@
+import os
 import time
 import jmespath
 import interfaces
@@ -11,7 +12,8 @@ class Tester(interfaces.TesterInterface):
         self.aws_iam_resource = boto3.resource('iam')
         self.user_id = boto3.client('sts').get_caller_identity().get('UserId')
         self.account_arn = boto3.client('sts').get_caller_identity().get('Arn')
-        self.account_id = boto3.client('sts').get_caller_identity().get('Account') 
+        self.account_id = boto3.client('sts').get_caller_identity().get('Account')
+        self.iam_user_credentials_unuse_threshold = os.environ.get('AUTOPOSTURE_IAM_CREDENTIALS_UNUSE_THRESHOLD')
 
     def declare_tested_provider(self) -> str:
         return 'aws'
@@ -40,7 +42,8 @@ class Tester(interfaces.TesterInterface):
             self.get_mfa_enabled_for_all_iam_users() + \
             self.get_role_uses_trused_principals() + \
             self.get_access_keys_are_not_created_during_initial_setup() + \
-            self.get_policy_with_admin_privilege_not_created()
+            self.get_policy_with_admin_privilege_not_created() + \
+            self.get_iam_user_credentials_unused_for_45_days()
 
     def get_password_policy_has_14_or_more_char(self):
         result = []
@@ -1026,4 +1029,71 @@ class Tester(interfaces.TesterInterface):
                         "test_name": test_name,
                         "test_result": "no_issue_found"
                     })
+        return result
+
+    def get_iam_user_credentials_unused_for_45_days(self):
+        result = []
+        users = []
+        test_name = "iam_user_credentials_unused_for_45_days_or_more"
+
+        paginator = self.aws_iam_client.get_paginator('list_users')
+        response_iterator = paginator.paginate()
+
+        for page in response_iterator:
+            users.extend(page['Users'])
+        
+        credentials_unuse_threshold = int(self.iam_user_credentials_unuse_threshold) if self.iam_user_credentials_unuse_threshold else 45
+        
+        if len(users) > 0:
+            for user in users:
+                user_name = user['UserName']
+                password_last_used = user.get('PasswordLastUsed')
+                if password_last_used is not None:
+                    current_date = datetime.now(tz=dt.timezone.utc)
+                    time_diff = (current_date - password_last_used).days
+                    if time_diff >= credentials_unuse_threshold:
+                        result.append({
+                           "user": self.user_id,
+                            "account_arn": self.account_arn,
+                            "account": self.account_id,
+                            "timestamp": time.time(),
+                            "item": user_name,
+                            "item_type": "iam_user",
+                            "test_name": test_name,
+                            "test_result": "issue_found" 
+                        })
+                    else:
+                        result.append({
+                            "user": self.user_id,
+                            "account_arn": self.account_arn,
+                            "account": self.account_id,
+                            "timestamp": time.time(),
+                            "item": user_name,
+                            "item_type": "iam_user",
+                            "test_name": test_name,
+                            "test_result": "no_issue_found"
+                        })
+                else:
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": user_name,
+                        "item_type": "iam_user",
+                        "test_name": test_name,
+                        "test_result": "no_issue_found" 
+                    })
+        else:
+            result.append({
+               "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": "no_iam_user@@" + self.account_id,
+                "item_type": "iam_user",
+                "test_name": test_name,
+                "test_result": "no_issue_found" 
+            })
+        
         return result
