@@ -38,7 +38,8 @@ class Tester(interfaces.TesterInterface):
             self.get_elbv2_has_deletion_protection() + \
             self.get_elbv2_allows_https_traffic_only() + \
             self.get_alb_using_tls12_or_higher() + \
-            self.get_nlb_using_tls12_or_higher()
+            self.get_nlb_using_tls12_or_higher() + \
+            self.get_elb_internet_facing()
     
     def _get_all_elbv2(self) -> List:
         elbs = self.aws_elbsv2_client.describe_load_balancers()
@@ -739,4 +740,47 @@ class Tester(interfaces.TesterInterface):
                     })
             else: pass
         
+        return result
+
+    def get_elb_internet_facing(self) -> List:
+        elbs = self.elbs
+        test_name = "internet_facing_elbv1"
+        result = []
+        
+        if len(elbs) > 0:
+            for elb in elbs:
+                load_balancere_name = elb['LoadBalancerName']
+                if elb['Scheme'] == 'internet-facing':
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": load_balancere_name,
+                        "item_type": "aws_elb",
+                        "test_name": test_name,
+                        "test_result": "issue_found"
+                    })
+                else:
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": load_balancere_name,
+                        "item_type": "aws_elb",
+                        "test_name": test_name,
+                        "test_result": "no_issue_found"
+                    })
+        else:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": "no_elb@@" + self.account_id,
+                "item_type": "aws_elb",
+                "test_name": test_name,
+                "test_result": "no_issue_found"
+            })
         return result
