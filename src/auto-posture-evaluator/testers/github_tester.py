@@ -434,7 +434,7 @@ class Tester(interfaces.TesterInterface):
         api = f"{self.BASE_URL_ORGS}/{organization}/repos"
         response = self._get_paginated_result(api)
         status_code = response['status_code']
-        freshness_threshold = self.deploy_keys_max_days_old if self.deploy_keys_max_days_old is not None else 30
+        freshness_threshold = int(self.deploy_keys_max_days_old) if self.deploy_keys_max_days_old is not None else 30
         
         if status_code == 200:
             repos_details = response['result']
