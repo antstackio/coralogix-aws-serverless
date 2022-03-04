@@ -14,6 +14,7 @@ class Tester(interfaces.TesterInterface):
         self.account_arn = boto3.client('sts').get_caller_identity().get('Arn')
         self.account_id = boto3.client('sts').get_caller_identity().get('Account')
         self.iam_user_credentials_unuse_threshold = os.environ.get('AUTOPOSTURE_IAM_CREDENTIALS_UNUSE_THRESHOLD')
+        self.password_maximum_age_policy = os.environ.get('AUTOPOSTURE_PASSWORD_MAX_AGE_POLICY')
 
     def declare_tested_provider(self) -> str:
         return 'aws'
@@ -397,11 +398,12 @@ class Tester(interfaces.TesterInterface):
         try:
             response = self.aws_iam_client.get_account_password_policy()
             password_policy = response['PasswordPolicy']
-
+            
+            password_maximum_age_policy = int(self.password_maximum_age_policy) if self.password_maximum_age_policy else 90
             expire_passwords = password_policy.get('ExpirePasswords')
             if expire_passwords:
                 max_password_age = password_policy['MaxPasswordAge']
-                if max_password_age <= 90:
+                if max_password_age <= password_maximum_age_policy:
                     result.append({
                         "user": self.user_id,
                         "account_arn": self.account_arn,
