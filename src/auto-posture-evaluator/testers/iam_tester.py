@@ -15,6 +15,7 @@ class Tester(interfaces.TesterInterface):
         self.account_id = boto3.client('sts').get_caller_identity().get('Account')
         self.iam_user_credentials_unuse_threshold = os.environ.get('AUTOPOSTURE_IAM_CREDENTIALS_UNUSE_THRESHOLD')
         self.password_maximum_age_policy = os.environ.get('AUTOPOSTURE_PASSWORD_MAX_AGE_POLICY')
+        self.password_length_threshold_policy = os.environ.get('AUTOPOSTURE_PASSWORD_LENGTH_THRESHOLD_POLICY')
 
     def declare_tested_provider(self) -> str:
         return 'aws'
@@ -53,7 +54,9 @@ class Tester(interfaces.TesterInterface):
             response = self.aws_iam_client.get_account_password_policy()
             password_policy = response['PasswordPolicy']
 
-            if password_policy['MinimumPasswordLength'] >= 14:
+            password_length_threshold = int(self.password_length_threshold_policy) if self.password_length_threshold_policy else 14
+            
+            if password_policy['MinimumPasswordLength'] >= password_length_threshold:
                 result.append({
                     "user": self.user_id,
                     "account_arn": self.account_arn,
