@@ -1,4 +1,5 @@
 from json import load
+from operator import le
 import time
 from typing import Dict, List
 import interfaces
@@ -39,7 +40,8 @@ class Tester(interfaces.TesterInterface):
             self.get_elbv2_allows_https_traffic_only() + \
             self.get_alb_using_tls12_or_higher() + \
             self.get_nlb_using_tls12_or_higher() + \
-            self.get_elb_internet_facing()
+            self.get_elb_internet_facing() + \
+            self.get_nlb_support_insecure_negotiation_policy()
     
     def _get_all_elbv2(self) -> List:
         elbs = self.aws_elbsv2_client.describe_load_balancers()
@@ -797,4 +799,112 @@ class Tester(interfaces.TesterInterface):
                 "test_name": test_name,
                 "test_result": "no_issue_found"
             })
+        return result
+    
+    def get_nlb_support_insecure_negotiation_policy(self) -> List:
+        test_name = "network_load_balancer_should_not_support_insecure_negotiation_policy"
+        result = []
+        elbs = self.elbsv2
+        hash_map = {}
+        elb_count = len(elbs)
+        if elb_count > 0:
+            for elb in elbs:
+                elb_arn = elb['LoadBalancerArn']
+                elb_type = elb['Type']
+                if elb_type == 'network':
+                    paginator = self.aws_elbsv2_client.get_paginator('describe_listeners')
+                    response_iterator = paginator.paginate(LoadBalancerArn=elb_arn)
+                    listerners = []
+                    
+                    for page in response_iterator:
+                        listerners.extend(page['Listeners'])
+                    
+                    for listener in listerners:
+                        ssl_policy = listener['SslPolicy'] if listener.get('SslPolicy') else 'no_ssl_policy'
+
+                        if ssl_policy != 'no_ssl_policy':
+                            ssl_version_11 = hash_map.get(ssl_policy, None)
+                            listener_with_issue = False
+
+                            if ssl_version_11 is None:
+                                response = self.aws_elbsv2_client.describe_ssl_policies(
+                                    Names=[ssl_policy]
+                                )
+                                policy_details = response['SslPolicies'][0]
+                                ssl_protocols = policy_details['SslProtocols']
+                                ssl_versions = list(map(lambda x: float(x), list(map(lambda x: x.split('v')[-1], ssl_protocols))))
+
+                                required_versions = list(filter(lambda x: x == 1.0 or x == 1.1, ssl_versions))
+
+                                if len(required_versions) == 0:
+                                    hash_map[ssl_policy] = False
+                                else:
+                                    listener_with_issue = True
+                                    hash_map[ssl_policy] = True
+                                    break
+
+                            elif ssl_version_11:
+                                listener_with_issue = True
+                                break
+                            else: pass
+                    
+                            if listener_with_issue:
+                                result.append({
+                                    "user": self.user_id,
+                                    "account_arn": self.account_arn,
+                                    "account": self.account_id,
+                                    "timestamp": time.time(),
+                                    "item": elb_arn,
+                                    "item_type": "aws_elbv2",
+                                    "test_name": test_name,
+                                    "test_result": "issue_found"
+                                })
+                            else:
+                                result.append({
+                                    "user": self.user_id,
+                                    "account_arn": self.account_arn,
+                                    "account": self.account_id,
+                                    "timestamp": time.time(),
+                                    "item": elb_arn,
+                                    "item_type": "aws_elbv2",
+                                    "test_name": test_name,
+                                    "test_result": "no_issue_found"
+                                })
+                        else: 
+                            result.append({
+                                "user": self.user_id,
+                                "account_arn": self.account_arn,
+                                "account": self.account_id,
+                                "timestamp": time.time(),
+                                "item": elb_arn,
+                                "item_type": "aws_elbv2",
+                                "test_name": test_name,
+                                "test_result": "issue_found"
+                            })
+                else: pass
+            
+            if len(result) == 0:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": "no_nlb@@" + self.account_id,
+                    "item_type": "aws_elbv2",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
+                })
+            else: pass
+        else:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": "no_elb@@" + self.account_id,
+                "item_type": "aws_elbv2",
+                "test_name": test_name,
+                "test_result": "no_issue_found"
+            })
+        
         return result
