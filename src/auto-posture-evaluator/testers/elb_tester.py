@@ -70,17 +70,31 @@ class Tester(interfaces.TesterInterface):
 
         for elb in elbs:
             load_balancer_arn = elb['LoadBalancerArn']
-            if elb['Scheme'] == 'internet-facing':
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": load_balancer_arn,
-                    "item_type": "aws_elbv2",
-                    "test_name": test_name,
-                    "test_result": "issue_found"
-                })
+            elb_type = elb['Type']
+
+            if elb_type == 'application' or elb_type == 'network':
+                if elb['Scheme'] == 'internet-facing':
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": load_balancer_arn,
+                        "item_type": "aws_elbv2",
+                        "test_name": test_name,
+                        "test_result": "issue_found"
+                    })
+                else:
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": load_balancer_arn,
+                        "item_type": "aws_elbv2",
+                        "test_name": test_name,
+                        "test_result": "no_issue_found"
+                    })
             else:
                 result.append({
                     "user": self.user_id,
