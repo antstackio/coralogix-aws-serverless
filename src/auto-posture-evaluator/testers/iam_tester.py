@@ -334,7 +334,7 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
-                "item": None,
+                "item": "no_iam_server_certificate@@" + self.account_id,
                 "item_type": "iam_server_certificate",
                 "test_name": test_name,
                 "test_result": "no_issue_found"
