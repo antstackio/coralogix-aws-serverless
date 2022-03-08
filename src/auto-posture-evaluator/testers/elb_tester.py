@@ -666,7 +666,7 @@ class Tester(interfaces.TesterInterface):
                                     listener_with_issue = True
                                     break
                                 else: hash_map[ssl_policy] = True
-                            elif ssl_version_12: print('Found in hash map and ', hash_map)
+                            elif ssl_version_12: listener_with_issue = False
                             else:
                                 listener_with_issue = True
                                 break
@@ -761,20 +761,47 @@ class Tester(interfaces.TesterInterface):
                                     listener_with_issue = True
                                     break
                                 else: hash_map[ssl_policy] = True
-                            elif ssl_version_12: pass
-                            else: pass
+                            elif ssl_version_12: listener_with_issue = False
+                            else:
+                                listener_with_issue = True
+                                break
                         else:
-                            result.append({
-                                "user": self.user_id,
-                                "account_arn": self.account_arn,
-                                "account": self.account_id,
-                                "timestamp": time.time(),
-                                "item": elb_arn,
-                                "item_type": "aws_elbv2",
-                                "test_name": test_name,
-                                "test_result": "issue_found"
-                            })
+                            listener_with_issue = True
+                            break
+                    if listener_with_issue:
+                        result.append({
+                            "user": self.user_id,
+                            "account_arn": self.account_arn,
+                            "account": self.account_id,
+                            "timestamp": time.time(),
+                            "item": elb_arn,
+                            "item_type": "aws_elbv2",
+                            "test_name": test_name,
+                            "test_result": "issue_found"
+                        })
+                    else:
+                        result.append({
+                            "user": self.user_id,
+                            "account_arn": self.account_arn,
+                            "account": self.account_id,
+                            "timestamp": time.time(),
+                            "item": elb_arn,
+                            "item_type": "aws_elbv2",
+                            "test_name": test_name,
+                            "test_result": "no_issue_found"
+                        })
                 else: pass
+            if len(result) == 0:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": "no_nlb_found@@" + self.account_id,
+                    "item_type": "aws_elbv2",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
+                })
         else:
             result.append({
                 "user": self.user_id,
