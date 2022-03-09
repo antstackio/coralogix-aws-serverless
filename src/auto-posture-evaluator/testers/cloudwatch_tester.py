@@ -31,7 +31,11 @@ class Tester(interfaces.TesterInterface):
             self.get_management_console_sign_in_without_mfa_not_monitored() + \
             self.get_cmk_configuration_change_not_monitored() + \
             self.get_network_gateway_changes_not_monitored() + \
-            self.get_security_group_changes_not_monitored()
+            self.get_security_group_changes_not_monitored() + \
+            self.get_network_acl_changes_not_monitored() + \
+            self.get_aws_config_configuration_changes_not_monitored() + \
+            self.get_iam_policy_changes_not_monitored() + \
+            self.get_enable_aws_cloudformation_stack_notifications()
 
     def get_unauthorized_api_calls_not_monitored(self):
         test_name = "unauthorized_api_calls_not_monitored"
@@ -435,4 +439,3 @@ class Tester(interfaces.TesterInterface):
                 })
 
         return result
-        
