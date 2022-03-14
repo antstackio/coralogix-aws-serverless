@@ -616,6 +616,7 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
+                "item": self.account_id,
                 "item_type": "s3_account",
                 "test_name": test_name,
                 "test_result": "issue_found"
@@ -626,6 +627,7 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
+                "item": self.account_id,
                 "item_type": "s3_account",
                 "test_name": test_name,
                 "test_result": "no_issue_found"
