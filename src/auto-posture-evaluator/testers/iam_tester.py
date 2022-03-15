@@ -46,7 +46,8 @@ class Tester(interfaces.TesterInterface):
             self.get_role_uses_trused_principals() + \
             self.get_access_keys_are_not_created_during_initial_setup() + \
             self.get_policy_with_admin_privilege_not_created() + \
-            self.get_iam_user_credentials_unused_for_45_days()
+            self.get_iam_user_credentials_unused_for_45_days() + \
+            self.get_more_than_one_active_access_key_for_a_single_user()
 
     def get_password_policy_has_14_or_more_char(self):
         result = []
@@ -1102,4 +1103,47 @@ class Tester(interfaces.TesterInterface):
                 "test_result": "no_issue_found" 
             })
         
+        return result
+
+    def get_more_than_one_active_access_key_for_a_single_user(self):
+        result = []
+        users = []
+        test_name = "more_than_one_active_access_key_for_a_single_user"
+
+        paginator = self.aws_iam_client.get_paginator('list_users')
+        response_iterator = paginator.paginate()
+
+        for page in response_iterator:
+            users.extend(page['Users'])
+
+        for user in users:
+            user_name = user['UserName']
+            user_id = user['UserId']
+            response = self.aws_iam_client.list_access_keys(UserName=user_name)
+
+            access_keys =  {'access_keys': response['AccessKeyMetadata']}
+            response = jmespath.search("access_keys[?Status=='Active'].AccessKeyId", access_keys)
+            
+            if len(response) > 1:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": user_id,
+                    "item_type": "iam_user",
+                    "test_name": test_name,
+                    "test_result": "issue_found"
+                })
+            else:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": user_id,
+                    "item_type": "iam_user",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
+                })
         return result
