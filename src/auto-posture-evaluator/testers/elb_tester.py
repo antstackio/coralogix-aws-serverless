@@ -45,7 +45,8 @@ class Tester(interfaces.TesterInterface):
             self.get_nlb_using_tls12_or_higher() + \
             self.get_elb_internet_facing() + \
             self.get_nlb_support_insecure_negotiation_policy() + \
-            self.get_alb_certificate_should_be_renewed()
+            self.get_alb_certificate_should_be_renewed() + \
+            self.get_elb_cross_zone_load_balancing_enabled()
     
     def _get_all_elbv2(self) -> List:
         elbs = self.aws_elbsv2_client.describe_load_balancers()
@@ -1057,4 +1058,41 @@ class Tester(interfaces.TesterInterface):
                 "test_name": test_name,
                 "test_result": "no_issue_found"
             })
+        return result
+
+    def get_elb_cross_zone_load_balancing_enabled(self):
+        result = []
+        test_name = "cross_zone_load_balancing_should_be_enabled"
+
+        elbs = self.elbs
+
+        for elb in elbs:
+            load_balancer_name = elb['LoadBalancerName']
+            response = self.aws_elbs_client.describe_load_balancer_attributes(LoadBalancerName=load_balancer_name)
+            attrs = response['LoadBalancerAttributes']
+
+            cross_zone_enabled = attrs['CrossZoneLoadBalancing']['Enabled']
+            if cross_zone_enabled:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": load_balancer_name,
+                    "item_type": "aws_elb",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
+                })
+            else:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": load_balancer_name,
+                    "item_type": "aws_elb",
+                    "test_name": test_name,
+                    "test_result": "issue_found"
+                })
+        
         return result
