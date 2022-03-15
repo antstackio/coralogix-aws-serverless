@@ -10,6 +10,7 @@ class Tester(interfaces.TesterInterface):
     def __init__(self) -> None:
         self.aws_iam_client = boto3.client('iam')
         self.aws_iam_resource = boto3.resource('iam')
+        self.aws_access_analyzer_client = boto3.client('accessanalyzer')
         self.user_id = boto3.client('sts').get_caller_identity().get('UserId')
         self.account_arn = boto3.client('sts').get_caller_identity().get('Arn')
         self.account_id = boto3.client('sts').get_caller_identity().get('Account')
@@ -47,7 +48,8 @@ class Tester(interfaces.TesterInterface):
             self.get_access_keys_are_not_created_during_initial_setup() + \
             self.get_policy_with_admin_privilege_not_created() + \
             self.get_iam_user_credentials_unused_for_45_days() + \
-            self.get_more_than_one_active_access_key_for_a_single_user()
+            self.get_more_than_one_active_access_key_for_a_single_user() + \
+            self.get_iam_access_analyzer_disabled()
 
     def get_password_policy_has_14_or_more_char(self):
         result = []
@@ -1146,4 +1148,37 @@ class Tester(interfaces.TesterInterface):
                     "test_name": test_name,
                     "test_result": "no_issue_found"
                 })
+        return result
+
+    def get_iam_access_analyzer_disabled(self):
+        result = []
+        test_name = "iam_access_analyzer_is_disabled"
+
+        response = self.aws_access_analyzer_client.list_analyzers()
+        analyzers = {"analyzer" : response['analyzers']}
+        
+        query_result = jmespath.search("analyzer[?status=='ACTIVE'].arn", analyzers)
+        if len(query_result) > 0:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": "access_analyzers@@" + self.account_id,
+                "item_type": "iam_user",
+                "test_name": test_name,
+                "test_result": "no_issue_found" 
+            })
+        else:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": "no_access_analyzers@@" + self.account_id,
+                "item_type": "iam_user",
+                "test_name": test_name,
+                "test_result": "issue_found"
+            })
+
         return result
