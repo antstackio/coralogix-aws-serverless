@@ -46,7 +46,8 @@ class Tester(interfaces.TesterInterface):
             self.get_elb_internet_facing() + \
             self.get_nlb_support_insecure_negotiation_policy() + \
             self.get_alb_certificate_should_be_renewed() + \
-            self.get_elb_cross_zone_load_balancing_enabled()
+            self.get_elb_cross_zone_load_balancing_enabled() + \
+            self.get_elb_connection_draining_enabled()
     
     def _get_all_elbv2(self) -> List:
         elbs = self.aws_elbsv2_client.describe_load_balancers()
@@ -1073,6 +1074,43 @@ class Tester(interfaces.TesterInterface):
 
             cross_zone_enabled = attrs['CrossZoneLoadBalancing']['Enabled']
             if cross_zone_enabled:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": load_balancer_name,
+                    "item_type": "aws_elb",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
+                })
+            else:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": load_balancer_name,
+                    "item_type": "aws_elb",
+                    "test_name": test_name,
+                    "test_result": "issue_found"
+                })
+        
+        return result
+
+    def get_elb_connection_draining_enabled(self):
+        result = []
+        test_name = "elbv1_connection_draining_enabled"
+
+        elbs = self.elbs
+
+        for elb in elbs:
+            load_balancer_name = elb['LoadBalancerName']
+            response = self.aws_elbs_client.describe_load_balancer_attributes(LoadBalancerName=load_balancer_name)
+            attrs = response['LoadBalancerAttributes']
+
+            connection_draining_enabled = attrs['ConnectionDraining']['Enabled']
+            if connection_draining_enabled:
                 result.append({
                     "user": self.user_id,
                     "account_arn": self.account_arn,
