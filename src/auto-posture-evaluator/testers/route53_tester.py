@@ -4,6 +4,8 @@ import re
 import ipaddress
 import botocore.exceptions
 import interfaces
+import datetime as dt
+from datetime import datetime
 
 
 class Tester(interfaces.TesterInterface):
@@ -14,6 +16,7 @@ class Tester(interfaces.TesterInterface):
         self.user_id = boto3.client('sts').get_caller_identity().get('UserId')
         self.account_arn = boto3.client('sts').get_caller_identity().get('Arn')
         self.account_id = boto3.client('sts').get_caller_identity().get('Account')
+        self.aws_route53_domain_client = boto3.client('route53domains')
 
     def declare_tested_service(self) -> str:
         return 'route53'
@@ -89,3 +92,44 @@ class Tester(interfaces.TesterInterface):
                     })
 
         return result
+
+    def route53_domain_expiry_in_7_days(self):
+        result = []
+        domains = []
+        test_name = "route53_domain_expiry_in_7_days"
+
+        paginator = self.aws_route53_domain_client.get_paginator('list_domains')
+        response_iterator = paginator.paginate()
+
+        for page in response_iterator:
+            domains.extend(page['Domains'])
+            
+        for domain in domains:
+            domain_name = domain['DomainName']
+            expiry_date = domain['Expiry']
+            current_date = datetime.now(tz=dt.timezone.utc)
+
+            time_diff = (expiry_date - current_date).days
+
+            if time_diff > 7:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "test_name": test_name,
+                    "item": domain_name,
+                    "item_type": "domain_name",
+                    "timestamp": time.time(),
+                    "test_result": "no_issue_found"
+                })
+            else:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "test_name": test_name,
+                    "item": domain_name,
+                    "item_type": "domain_name",
+                    "timestamp": time.time(),
+                    "test_result": "issue_found"
+                })
