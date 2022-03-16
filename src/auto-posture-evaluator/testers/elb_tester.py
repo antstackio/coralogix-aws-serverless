@@ -48,7 +48,8 @@ class Tester(interfaces.TesterInterface):
             self.get_alb_certificate_should_be_renewed() + \
             self.get_elb_cross_zone_load_balancing_enabled() + \
             self.get_elb_connection_draining_enabled() + \
-            self.get_no_registered_instances_in_an_elbv1()
+            self.get_no_registered_instances_in_an_elbv1() + \
+            self.get_elb_should_allow_tlsv12_or_higher()
     
     def _get_all_elbv2(self) -> List:
         elbs = self.aws_elbsv2_client.describe_load_balancers()
@@ -1166,6 +1167,54 @@ class Tester(interfaces.TesterInterface):
                     "item_type": "aws_elb",
                     "test_name": test_name,
                     "test_result": "issue_found"
+                })
+        
+        return result
+
+    def get_elb_should_allow_tlsv12_or_higher(self):
+        result = []
+        test_name = "elbv1_should_allow_tlsv1.2_or_higher"
+
+        elbs = self.elbs
+
+        for elb in elbs:
+            load_balancer_name = elb['LoadBalancerName']
+            response = self.aws_elbs_client.describe_load_balancer_policies(LoadBalancerName=load_balancer_name)
+            query_result = jmespath.search("PolicyDescriptions[].PolicyAttributeDescriptions[?AttributeValue=='true'].AttributeName", response)
+            
+            has_issue = False
+            
+            for attrs in query_result:
+                temp = list(filter(lambda x: x.startswith('Protocol'), attrs))
+                filtered_result = list(map(lambda x: x.split('-')[-1], temp))
+                result = list(filter(lambda x: x == 'SSLv3' or x == 'TLSv1.2', filtered_result))
+
+                if len(result) == 0:
+                    has_issue = True
+                    break
+                else: pass
+            
+            if has_issue:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": load_balancer_name,
+                    "item_type": "aws_elb",
+                    "test_name": test_name,
+                    "test_result": "issue_found"
+                })
+            else:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": load_balancer_name,
+                    "item_type": "aws_elb",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
                 })
         
         return result
