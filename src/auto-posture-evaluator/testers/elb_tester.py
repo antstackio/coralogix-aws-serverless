@@ -1002,15 +1002,24 @@ class Tester(interfaces.TesterInterface):
                                 expire_date = datetime.date(response['Certificate']['NotAfter'])
                                 current_date = datetime.date(datetime.now())
                                 time_diff = (expire_date - current_date).days
-                                
+
                                 if time_diff > ssl_certificate_age:
                                     elb_with_issue = False
                                 else:
                                     elb_with_issue = True
                                     break
                             else:
-                                pass
-                        else: 
+                                cert_name = cert_arn.split('/')[-1]
+                                response = self.aws_iam_client.get_server_certificate(ServerCertificateName=cert_name)
+                                expire_date = datetime.date(response['ServerCertificate']['ServerCertificateMetadata']['Expiration'])
+                                current_date = datetime.date(datetime.now())
+                                time_diff = (expire_date - current_date).days
+
+                                if time_diff > ssl_certificate_age:
+                                    elb_with_issue = False
+                                else:
+                                    elb_with_issue = True
+                        else:
                             elb_with_issue = True
                             break
 
