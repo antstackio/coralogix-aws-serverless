@@ -18,7 +18,8 @@ class Tester(interfaces.TesterInterface):
 
     def run_tests(self) -> list:
         return \
-            self.get_replication_instances_have_auto_minor_version_upgrade_enabled()
+            self.get_replication_instances_have_auto_minor_version_upgrade_enabled() + \
+            self.get_multi_az_is_enabled()
     
     def _get_dms_instances(self):
         dms_instances = []
@@ -56,4 +57,20 @@ class Tester(interfaces.TesterInterface):
             else:
                 result.append(self._append_ems_test_result(instance_identifier, "dms_replication_instance", test_name, "issue_found"))
 
+        return result
+
+    def get_multi_az_is_enabled(self):
+        test_name = "replication_instance_should_use_multi_AZ_deployment"
+        result = []
+
+        replication_instances = self.dms_instances
+        for instance in replication_instances:
+            instance_identifier = instance['ReplicationInstanceIdentifier']
+            multi_az = instance['MultiAZ']
+
+            if multi_az:
+                result.append(self._append_ems_test_result(instance_identifier, "dms_replication_instance", test_name, "no_issue_found"))
+            else:
+                result.append(self._append_ems_test_result(instance_identifier, "dms_replication_instance", test_name, "issue_found"))
+            
         return result
