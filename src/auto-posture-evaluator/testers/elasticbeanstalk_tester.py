@@ -51,8 +51,7 @@ class Tester(interfaces.TesterInterface):
             response = self.aws_elasticbeanstalk_client.describe_configuration_settings(ApplicationName=application_name, EnvironmentName=environment_name)
             configuration_settings = {"configuration_settings": response['ConfigurationSettings']}
             filtered_response = jmespath.search("configuration_settings[*].OptionSettings[?(OptionName==`AccessLogsS3Enabled`)].Value", configuration_settings)
-            access_logs_enabled = filtered_response[0]
-
+            access_logs_enabled = filtered_response[0][0]
             if access_logs_enabled == "true":
                 result.append({
                     "user": self.user_id,
