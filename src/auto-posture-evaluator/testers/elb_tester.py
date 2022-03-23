@@ -52,12 +52,24 @@ class Tester(interfaces.TesterInterface):
             self.get_elb_should_allow_tlsv12_or_higher()
     
     def _get_all_elbv2(self) -> List:
-        elbs = self.aws_elbsv2_client.describe_load_balancers()
-        return elbs['LoadBalancers']
+        elbs = []
+        paginator = self.aws_elbsv2_client.get_paginator('describe_load_balancers')
+        response_iterator = paginator.paginate()
+
+        for page in response_iterator:
+            elbs.extend(page['LoadBalancers'])
+        
+        return elbs
     
     def _get_all_elb(self) -> List:
-        elbs = self.aws_elbs_client.describe_load_balancers()
-        return elbs['LoadBalancerDescriptions']
+        elbs = []
+        paginator = self.aws_elbs_client.get_paginator('describe_load_balancers')
+        response_iterator = paginator.paginate()
+
+        for page in response_iterator:
+            elbs.extend(page['LoadBalancerDescriptions'])
+        
+        return elbs
 
     def _get_aws_latest_security_policies(self) -> List:
         policies = ['ELBSecurityPolicy-2016-08', 'ELBSecurityPolicy-FS-2018-06']
