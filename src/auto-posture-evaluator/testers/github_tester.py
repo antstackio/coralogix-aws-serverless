@@ -165,8 +165,7 @@ class Tester(interfaces.TesterInterface):
                 else:
                     result.append(
                         {"item": user["login"] + "@@" + organization, "issue": False})
-        else:
-            result.append({"item": "login@@" + organization, "issue": True})
+        else: pass
 
         return result
 
@@ -183,7 +182,7 @@ class Tester(interfaces.TesterInterface):
                     result.append({"item": repo["name"], "issue": True})
                 else:
                     result.append({"item": repo["name"], "issue": False})
-        else: result.append({"item": "not_found@@" + organization, "issue": True})
+        else: pass
         return result
 
     def check_for_too_many_admin_users(self, organization):
@@ -202,7 +201,7 @@ class Tester(interfaces.TesterInterface):
                 result.append({"item": organization, "issue": True})
             else:
                 result.append({"item": organization, "issue": False})
-        else: result.append({"item": "not_found@@" + organization, "issue": True})
+        else: pass
         return result
 
     def _get_paginated_result(self, api):
@@ -250,7 +249,7 @@ class Tester(interfaces.TesterInterface):
                 else: result.append({"item": organization, "issue": True})
             else:
                 result.append({"item": "not_owner@@" + organization, "issue": True})
-        else: result.append({"item": "not_found@@" + organization, "issue": True})
+        else: pass
         return result
 
     def get_base_permission_not_admin(self, organization):
@@ -271,7 +270,7 @@ class Tester(interfaces.TesterInterface):
                     result.append({"item": organization, "issue": False})
             else:
                 result.append({"item": "not_owner@@" + organization, "issue": True})
-        else: result.append({"item": "not_found@@" + organization, "issue": True})
+        else: pass
         return result
 
     def get_members_can_not_create_public_repos(self, organization):
@@ -288,7 +287,7 @@ class Tester(interfaces.TesterInterface):
                 result.append({"item": organization, "issue": True})
             else:
                 result.append({"item": organization, "issue": False})
-        else: result.append({"item": "not_found@@" + organization, "issue": True})
+        else: pass
 
         return result
 
@@ -305,7 +304,7 @@ class Tester(interfaces.TesterInterface):
                 result.append({"item": organization, "issue": False})
             else:
                 result.append({"item": organization, "issue": True})
-        else: result.append({"item": "not_found@@" + organization, "issue": True})
+        else: pass
         return result
 
     def get_github_pages_disabled(self, organization):
@@ -323,7 +322,7 @@ class Tester(interfaces.TesterInterface):
                     result.append({"item": repo_name, "issue": True})
                 else:
                     result.append({"item": repo_name, "issue": False})
-        else: result.append({"item": "not_found@@" + organization, "issue": True})
+        else: pass
         return result
 
     def get_members_without_gpg_keys(self, organization):
@@ -354,7 +353,7 @@ class Tester(interfaces.TesterInterface):
                 result.append({"item": organization, "issue": False})
         elif status_code == 302: result.append({"item": "not_member@@" + organization, "issue": True})
         elif status_code == 422: result.append({"item": "validation_failed@@" + organization, "issue": True})
-        else: result.append({"item": "not_found@@" + organization, "issue": True})
+        else: pass
         return result
 
     def get_code_security_alerts_are_enabled(self, organization):
@@ -379,10 +378,10 @@ class Tester(interfaces.TesterInterface):
                 elif response_code == 404:
                     response_obj = raw_response.json()
                     message = response_obj['message']
-                    if message == 'Not Found': result.append({"item": "not_found@@" + repo_name, "issue": True})
+                    if message == 'Not Found': pass
                     else: result.append({"item": repo_name, "issue": True})
         
-        else: result.append({"item": "not_found@@" + organization, "issue": True})
+        else: pass
         return result
 
     def get_no_outside_collaborators_with_admin_permission(self, organization):
@@ -425,7 +424,7 @@ class Tester(interfaces.TesterInterface):
                 result.append({"item": organization, "issue": True})
             else:
                 result.append({"item": organization, "issue": False})
-        else: result.append({"item": "not_found@@" + organization, "issue": True})
+        else: pass
         
         return result
 
@@ -465,8 +464,8 @@ class Tester(interfaces.TesterInterface):
                             result.append({"item": repo_name, "issue": False})
                     else:
                         result.append({"item": repo_name, "issue": False})
-                else: result.append({"item": "not_found@@" + repo_name, "issue": True})
-        else: result.append({"item": "not_found@@" + organization, "issue": True})
+                else: pass
+        else: pass
         return result
 
     def get_sso_enabled_for_organization(self, organization):
@@ -482,8 +481,7 @@ class Tester(interfaces.TesterInterface):
                 result.append({"item": organization, "issue": False})
             else:
                 result.append({"item": organization, "issue": True})
-        else:
-            result.append({"item": "not_found@@" + organization, "issue": True})
+        else: pass
 
         return result
 
@@ -510,7 +508,7 @@ class Tester(interfaces.TesterInterface):
                 elif status_code == 200:
                     result.append({"item": repo_name, "issue": True})
                 else: pass
-        else: result.append({"item": "not_found@@" + organization, "issue": True})
+        else: pass
         return result
 
     def get_outside_collaborators_with_admin_permission(self, organization):
@@ -536,7 +534,7 @@ class Tester(interfaces.TesterInterface):
                         
                     if pg_status_code == 200: collaborators.extend(response)
                     elif pg_status_code == 403: result.append({"item": "forbidden@@" + repo_name, "issue": True})
-                    else: result.append({"item": "not_found@@" + repo_name, "issue": True})
+                    else: pass
                     
                     link = response_headers.get('Link')
                     if link is not None:
@@ -561,7 +559,7 @@ class Tester(interfaces.TesterInterface):
                         result.append({"item": repo_name, "issue": False})
                 else:
                     result.append({"item": repo_name, "issue": False})
-        else: result.append({"item": "not_found@@" + organization, "issue": True})  
+        else: pass 
         
         return result
 
@@ -612,7 +610,7 @@ class Tester(interfaces.TesterInterface):
                     result.append({"item": organization, "issue": False})
             else:
                 result.append({"item": organization, "issue": False})
-        else: result.append({"item": "not_found@@" + organization, "issue": True})
+        else: pass
         return result
 
     def evidence_repositories_are_public(self, organization):
@@ -629,7 +627,7 @@ class Tester(interfaces.TesterInterface):
                     result.append({"item": repo_name, "issue": True})
                 else:
                     result.append({"item": repo_name, "issue": False})
-        else: result.append({"item": "not_found@@" + organization, "issue": True})
+        else: pass
         return result
 
     def get_vulnerabilities_found_on_repositories(self, organization):
@@ -659,5 +657,5 @@ class Tester(interfaces.TesterInterface):
                     result.append({"item": repo_name, "issue": False})
                 else:
                     pass
-        else: result.append({"item": "not_found@@" + organization, "issue": True})
+        else: pass
         return result
