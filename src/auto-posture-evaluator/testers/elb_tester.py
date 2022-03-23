@@ -20,6 +20,7 @@ class Tester(interfaces.TesterInterface):
         self.aws_acm_client = boto3.client('acm')
         self.aws_iam_client = boto3.client('iam')
         self.ssl_certificate_age = os.environ.get('AUTOPOSTURE_ALB_SSL_CERTIFICATE_AGE')
+        self.elb_ssl_certificate_expiry = os.environ.get('AUTOPOSTURE_ELB_SSL_CERTIFICATE_EXPIRY')
 
     def declare_tested_service(self) -> str:
         return "elb"
@@ -1146,7 +1147,7 @@ class Tester(interfaces.TesterInterface):
     def get_elb_ssl_certificate_expires_in_90_days(self):
         result = []
         test_name = "elbv1_ssl_certificate_expires_in_90_days"
-
+        elb_ssl_certificate_expiry = int(self.elb_ssl_certificate_expiry) if self.elb_ssl_certificate_expiry else 90
         elbs = self.elbs
 
         for elb in elbs:
@@ -1168,7 +1169,7 @@ class Tester(interfaces.TesterInterface):
                             current_date = datetime.date(datetime.now())
                             time_diff = (expire_date - current_date).days
                             
-                            if time_diff > 90:
+                            if time_diff > elb_ssl_certificate_expiry:
                                 elb_with_issue = False
                             else:
                                 elb_with_issue = True
@@ -1180,7 +1181,7 @@ class Tester(interfaces.TesterInterface):
                             current_date = datetime.date(datetime.now())
                             time_diff = (expire_date - current_date).days
 
-                            if time_diff > 90:
+                            if time_diff > elb_ssl_certificate_expiry:
                                 elb_with_issue = False
                             else:
                                 elb_with_issue = True
