@@ -129,17 +129,7 @@ class Tester(interfaces.TesterInterface):
                         "test_name": test_name,
                         "test_result": "issue_found"
                     })
-        else:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": "no_mfa_device@@" + self.account_id,
-                "item_type": "account_summary_record",
-                "test_name": test_name,
-                "test_result": "issue_found"
-            })
+        else: pass
         return result
     
     def get_mfa_enabled_for_root_account(self):
@@ -266,17 +256,7 @@ class Tester(interfaces.TesterInterface):
                         "test_name": test_name,
                         "test_result": "no_issue_found"
                     })
-        else:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": "no_iam_user@@" + self.account_id,
-                "item_type": "iam_user",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
+        else: pass
         
         return result
 
@@ -331,17 +311,7 @@ class Tester(interfaces.TesterInterface):
                         "test_name": test_name,
                         "test_result": "no_issue_found"
                     })
-        else:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": "no_iam_server_certificate@@" + self.account_id,
-                "item_type": "iam_server_certificate",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
+        else: pass
         
         return result
 
@@ -384,17 +354,7 @@ class Tester(interfaces.TesterInterface):
                         "test_name": test_name,
                         "test_result": "no_issue_found"
                     })
-        else:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": "no_server_certificate@@" + self.account_id,
-                "item_type": "iam_server_certificate",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
+        else: pass
 
         return result
 
@@ -669,17 +629,7 @@ class Tester(interfaces.TesterInterface):
                     "test_name": test_name,
                     "test_result": "issue_found"
                 })
-        else:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": "support_role@@" + self.account_id,
-                "item_type": "iam_support_role",
-                "test_name": test_name,
-                "test_result": "issue_found"
-            })
+        else: pass
         
         return result
 
@@ -724,17 +674,7 @@ class Tester(interfaces.TesterInterface):
                         "test_name": test_name,
                         "test_result": "no_issue_found"
                     })
-        else:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": "no_iam_user@@" + self.account_id,
-                "item_type": "iam_user",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
+        else: pass
         
         return result
 
@@ -857,17 +797,8 @@ class Tester(interfaces.TesterInterface):
                         "test_name": test_name,
                         "test_result": "issue_found"
                     })
-        else:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": "no_iam_user@@" + self.account_id,
-                "item_type": "iam_user",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
+        else: pass
+
         return result
 
     def get_role_uses_trused_principals(self):
@@ -980,17 +911,8 @@ class Tester(interfaces.TesterInterface):
                         "test_name": test_name,
                         "test_result": "no_issue_found"
                     })
-        else:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": "no_iam_user@@" + self.account_id,
-                "item_type": "iam_user",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
+        else: pass
+
         return result
 
     def get_policy_with_admin_privilege_not_created(self):
@@ -1093,17 +1015,7 @@ class Tester(interfaces.TesterInterface):
                         "test_name": test_name,
                         "test_result": "no_issue_found" 
                     })
-        else:
-            result.append({
-               "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": "no_iam_user@@" + self.account_id,
-                "item_type": "iam_user",
-                "test_name": test_name,
-                "test_result": "no_issue_found" 
-            })
+        else: pass
         
         return result
 
