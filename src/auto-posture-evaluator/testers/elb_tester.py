@@ -704,30 +704,9 @@ class Tester(interfaces.TesterInterface):
                             "test_result": "no_issue_found"
                         })
                 else: pass
-            
-            if len(result) == 0:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": "no_alb_found@@" + self.account_id,
-                    "item_type": "aws_elbv2",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                })
-            else: pass
-        else:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": "no_elb_found@@" + self.account_id,
-                "item_type": "aws_elbv2",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
+
+        else: pass
+
         return result
 
     def get_nlb_using_tls12_or_higher(self) -> List:
@@ -799,28 +778,7 @@ class Tester(interfaces.TesterInterface):
                             "test_result": "no_issue_found"
                         })
                 else: pass
-            if len(result) == 0:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": "no_nlb_found@@" + self.account_id,
-                    "item_type": "aws_elbv2",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                })
-        else:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": "no_nlb_found@@" + self.account_id,
-                "item_type": "aws_elbv2",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
+        else: pass
         return result
 
     def get_elb_internet_facing(self) -> List:
@@ -853,17 +811,7 @@ class Tester(interfaces.TesterInterface):
                         "test_name": test_name,
                         "test_result": "no_issue_found"
                     })
-        else:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": "no_elb@@" + self.account_id,
-                "item_type": "aws_elb",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
+        else: pass
         return result
     
     def get_nlb_support_insecure_negotiation_policy(self) -> List:
@@ -938,30 +886,7 @@ class Tester(interfaces.TesterInterface):
                             "test_result": "no_issue_found"
                         })
                 else: pass
-            
-            if len(result) == 0:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": "no_nlb@@" + self.account_id,
-                    "item_type": "aws_elbv2",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                })
-            else: pass
-        else:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": "no_elb@@" + self.account_id,
-                "item_type": "aws_elbv2",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
+        else: pass
         
         return result
 
@@ -1046,30 +971,7 @@ class Tester(interfaces.TesterInterface):
                             "test_result": "no_issue_found"
                         })
                 else: pass
-            
-            if len(result) == 0:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": "no_alb@@" + self.account_id,
-                    "item_type": "aws_elbv2",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                })
-            else: pass
-        else: 
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": "no_elb@@" + self.account_id,
-                "item_type": "aws_elbv2",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
+        else: pass
         return result
 
     def get_elb_cross_zone_load_balancing_enabled(self):
