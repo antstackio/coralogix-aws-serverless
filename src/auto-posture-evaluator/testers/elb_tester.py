@@ -21,6 +21,7 @@ class Tester(interfaces.TesterInterface):
         self.aws_iam_client = boto3.client('iam')
         self.ssl_certificate_age = os.environ.get('AUTOPOSTURE_ALB_SSL_CERTIFICATE_AGE')
         self.elb_ssl_certificate_expiry = os.environ.get('AUTOPOSTURE_ELB_SSL_CERTIFICATE_EXPIRY')
+        self.elb_ssl_certificate_renew = os.environ.get('AUTOPOSTURE_ELB_SSL_CERTIFICATE_ADVANCE_RENEW')
 
     def declare_tested_service(self) -> str:
         return "elb"
@@ -51,7 +52,8 @@ class Tester(interfaces.TesterInterface):
             self.get_elb_connection_draining_enabled() + \
             self.get_no_registered_instances_in_an_elbv1() + \
             self.get_elb_should_allow_tlsv12_or_higher() + \
-            self.get_elb_ssl_certificate_expires_in_90_days()
+            self.get_elb_ssl_certificate_expires_in_90_days() + \
+            self.get_elb_ssl_certificate_should_be_renewed_five_days_in_advance()
     
     def _get_all_elbv2(self) -> List:
         elbs = []
@@ -1212,5 +1214,73 @@ class Tester(interfaces.TesterInterface):
                         "test_result": "no_issue_found"
                     })
             else: pass
+        
+        return result
+
+    def get_elb_ssl_certificate_should_be_renewed_five_days_in_advance(self):
+        result = []
+        test_name = "elb_ssl_certificate_should_be_renewed_five_days_before_it_expires"
+        ssl_certificate_advance_renew = int(self.elb_ssl_certificate_renew) if self.elb_ssl_certificate_renew else 5
+        elbs = self.elbs
+
+        for elb in elbs:
+            load_balancer_name = elb['LoadBalancerName']
+            listeners = elb.get('ListenerDescriptions')
+            elb_with_issue = False
+
+            for listener in listeners:
+                listener_obj = listener['Listener']
+                ssl_certificate_id = listener_obj.get('SSLCertificateId')
+
+                if ssl_certificate_id is not None:
+                    filtered_result = list(filter(lambda x: x == "acm", ssl_certificate_id.split(":")))
+
+                    if len(filtered_result) > 0:
+                        response = self.aws_acm_client.describe_certificate(CertificateArn=ssl_certificate_id)
+                        expire_date = datetime.date(response['Certificate']['NotAfter'])
+                        current_date = datetime.date(datetime.now())
+                        time_diff = (expire_date - current_date).days
+
+                        if time_diff >= ssl_certificate_advance_renew:
+                            elb_with_issue = False
+                        else:
+                            elb_with_issue = True
+                            break
+                    else:
+                        cert_name = ssl_certificate_id.split('/')[-1]
+                        response = self.aws_iam_client.get_server_certificate(ServerCertificateName=cert_name)
+                        expire_date = datetime.date(response['ServerCertificate']['ServerCertificateMetadata']['Expiration'])
+                        current_date = datetime.date(datetime.now())
+                        time_diff = (expire_date - current_date).days
+
+                        if time_diff >= ssl_certificate_advance_renew:
+                            elb_with_issue = False
+                        else:
+                            elb_with_issue = True
+                            break
+                else: pass
+            
+            if elb_with_issue:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": load_balancer_name,
+                    "item_type": "aws_elb",
+                    "test_name": test_name,
+                    "test_result": "issue_found"
+                })
+            else:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": load_balancer_name,
+                    "item_type": "aws_elb",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
+                })
         
         return result
