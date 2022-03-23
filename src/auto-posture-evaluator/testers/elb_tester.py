@@ -958,6 +958,7 @@ class Tester(interfaces.TesterInterface):
                                     elb_with_issue = False
                                 else:
                                     elb_with_issue = True
+                                    break
                         else:
                             elb_with_issue = True
                             break
