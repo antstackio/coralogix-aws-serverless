@@ -53,7 +53,8 @@ class Tester(interfaces.TesterInterface):
             self.get_no_registered_instances_in_an_elbv1() + \
             self.get_elb_should_allow_tlsv12_or_higher() + \
             self.get_elb_ssl_certificate_expires_in_90_days() + \
-            self.get_elb_ssl_certificate_should_be_renewed_five_days_in_advance()
+            self.get_elb_ssl_certificate_should_be_renewed_five_days_in_advance() + \
+            self.get_elb_supports_vulnerable_negotiation_policy()
     
     def _get_all_elbv2(self) -> List:
         elbs = []
@@ -1259,6 +1260,58 @@ class Tester(interfaces.TesterInterface):
                             elb_with_issue = True
                             break
                 else: pass
+            
+            if elb_with_issue:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": load_balancer_name,
+                    "item_type": "aws_elb",
+                    "test_name": test_name,
+                    "test_result": "issue_found"
+                })
+            else:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": load_balancer_name,
+                    "item_type": "aws_elb",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
+                })
+        
+        return result
+
+    def get_elb_supports_vulnerable_negotiation_policy(self):
+        result = []
+        test_name = "elbv1_supports_vulnerable_negotiation_policy"
+
+        elbs = self.elbs
+        elb_with_issue = False
+        latest_security_policies = self.latest_security_policies
+        print(latest_security_policies)
+        for elb in elbs:
+            load_balancer_name = elb['LoadBalancerName']
+            listeners = elb.get('ListenerDescriptions')
+            policies = []
+            for listener in listeners:
+                policy_names = listener['PolicyNames']
+                print(load_balancer_name, policy_names)
+                if len(policy_names) > 0:
+                    policies.extend(policy_names)
+                else:
+                    policies.append(None)
+            
+            for policy in policies:
+                if policy in latest_security_policies:
+                    elb_with_issue = False
+                else:
+                    elb_with_issue = True
+                    break
             
             if elb_with_issue:
                 result.append({
