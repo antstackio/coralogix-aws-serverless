@@ -69,11 +69,13 @@ class Tester(interfaces.TesterInterface):
 
         for instance in db_clusters:
             identifier = instance['DBClusterIdentifier']
-            export_logs = instance['EnabledCloudwatchLogsExports']
-
-            if any([i.startswith("audit") for i in export_logs]):
-                result.append(self._append_neptune_cluster_test_result(identifier, "neptune_db_cluster", test_name, "no_issue_found"))
+            export_logs = instance.get('EnabledCloudwatchLogsExports')
+            
+            if export_logs is not None:
+                if any([i.startswith("audit") for i in export_logs]):
+                    result.append(self._append_neptune_cluster_test_result(identifier, "neptune_db_cluster", test_name, "no_issue_found"))
+                else:
+                    result.append(self._append_neptune_cluster_test_result(identifier, "neptune_db_cluster", test_name, "issue_found"))
             else:
                 result.append(self._append_neptune_cluster_test_result(identifier, "neptune_db_cluster", test_name, "issue_found"))
-        
         return result
