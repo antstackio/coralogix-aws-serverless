@@ -20,7 +20,8 @@ class Tester(interfaces.TesterInterface):
     def run_tests(self) -> list:
         return \
             self.detect_single_super_admin_account() + \
-            self.detect_2sv_verification_enforced()
+            self.detect_2step_verification_enforced() + \
+            self.detect_2step_verification_enforcement_for_all_users()
     
     def _get_user_id(self):
         credentials = service_account.Credentials.from_service_account_file(self.SERVICE_ACCOUNT)
@@ -60,7 +61,7 @@ class Tester(interfaces.TesterInterface):
         
         return result
 
-    def detect_2sv_verification_enforced(self):
+    def detect_2step_verification_enforced(self):
         result = []
         test_name = "two_step_verification_admin_enforcement"
 
@@ -76,5 +77,26 @@ class Tester(interfaces.TesterInterface):
             result.append(self._append_gsuite_test_result("user_2sv", "google_security", test_name, "no_issue_found"))
         else:
             result.append(self._append_gsuite_test_result("user_2sv", "google_security", test_name, "issue_found"))
+        
+        return result
+
+    def detect_2step_verification_enforcement_for_all_users(self):
+        result = []
+        test_name = "two_step_verification_enforcement_for_all_users"
+        
+        SCOPES = ['https://www.googleapis.com/auth/admin.directory.user']
+
+        credentials = service_account.Credentials.from_service_account_file(self.SERVICE_ACCOUNT, scopes=SCOPES, subject='admin@cparanoid.com')
+        service = build('admin', 'directory_v1', credentials=credentials)
+        response = service.users().list(customer='my_customer', orderBy='email').execute()
+
+        users = response['users']
+
+        for user in users:
+            user_primary_email = user['primaryEmail']
+            if user['isEnforcedIn2Sv'] and user['isEnrolledIn2Sv']:
+                result.append(self._append_gsuite_test_result(user_primary_email, "google_user", test_name, "no_issue_found"))
+            else:
+                result.append(self._append_gsuite_test_result(user_primary_email, "google_user", test_name, "issue_found"))
         
         return result
