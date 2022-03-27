@@ -1,7 +1,5 @@
 import os
 import time
-import json
-from urllib import response
 import requests
 import interfaces
 import jmespath
