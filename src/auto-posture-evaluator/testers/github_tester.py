@@ -247,8 +247,7 @@ class Tester(interfaces.TesterInterface):
                 if enforced_2fa:
                     result.append({"item": organization, "issue": False})
                 else: result.append({"item": organization, "issue": True})
-            else:
-                result.append({"item": "not_owner@@" + organization, "issue": True})
+            else: pass
         else: pass
         return result
 
@@ -268,8 +267,7 @@ class Tester(interfaces.TesterInterface):
                     result.append({"item": organization, "issue": True})
                 else:
                     result.append({"item": organization, "issue": False})
-            else:
-                result.append({"item": "not_owner@@" + organization, "issue": True})
+            else: pass
         else: pass
         return result
 
@@ -406,7 +404,7 @@ class Tester(interfaces.TesterInterface):
                     result.append({"item": organization, "issue": False})
             else:
                 result.append({"item": organization, "issue": False})
-        else: result.append({"item": "not_owner@@" + organization , "issue": True})
+        else: pass
         return result
 
     def get_pending_invitation_with_admin_permissions(self, organization):
