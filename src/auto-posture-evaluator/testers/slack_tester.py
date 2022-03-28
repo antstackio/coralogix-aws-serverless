@@ -7,8 +7,9 @@ from slack_sdk import WebClient
 class Tester(interfaces.TesterInterface):
     def __init__(self):
         self.slack_client = WebClient(token=os.environ.get("SLACK_USER_TOKEN"))
-        self.account_id = None#tbd
-    
+        self.team_info = self.slack_client.team_info()
+        self.team_id = self.team_info["team"]["id"]
+
     def declare_tested_service(self) -> str:
         return 'slack'
 
@@ -26,7 +27,7 @@ class Tester(interfaces.TesterInterface):
             if file["public_url_shared"]:
                 result.append({
                     "timestamp": time.time(),
-                    "account": self.account_id,
+                    "account": self.team_id,
                     "item": file["id"],
                     "item_type": "file",
                     "test_name": test_name,
@@ -35,7 +36,7 @@ class Tester(interfaces.TesterInterface):
             else:
                 result.append({
                     "timestamp": time.time(),
-                    "account": self.account_id,
+                    "account": self.team_id,
                     "item": file["id"],
                     "item_type": "file",
                     "test_name": test_name,
