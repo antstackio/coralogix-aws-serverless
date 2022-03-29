@@ -66,7 +66,8 @@ class Tester(interfaces.TesterInterface):
             self.get_instance_with_upcoming_system_reboot_scheduled_event(self.ec2_instances) + \
             self.get_region_nearing_limits_of_ec2_instances(region_names) + \
             self.get_elastic_ip_in_use() + \
-            self.get_unrestricted_mysql_access(all_inbound_permissions)
+            self.get_unrestricted_mysql_access(all_inbound_permissions) + \
+            self.detect_classic_ec2_instances()
             
     def _get_all_security_group_ids(self, instances) -> Set:
         return set(list(map(lambda i: i.id, list(instances))))
@@ -1283,5 +1284,40 @@ class Tester(interfaces.TesterInterface):
                 "test_name": test_name,
                 "test_result": "no_issue_found"
             })
+        
+        return result
+
+    def detect_classic_ec2_instances(self):
+        result = []
+        test_name = "detect_classic_ec2_instances"
+
+        ec2_instances = self.ec2_instances
+
+        for instance in ec2_instances:
+            instance_id = instance['InstanceId']
+            vpc_id = instance.get('VpcId')
+
+            if vpc_id is not None:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": instance_id,
+                    "item_type": "ec2_instance",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
+                })
+            else:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": instance_id,
+                    "item_type": "ec2_instance",
+                    "test_name": test_name,
+                    "test_result": "issue_found"
+                })
         
         return result
