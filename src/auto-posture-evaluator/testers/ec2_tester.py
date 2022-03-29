@@ -51,7 +51,8 @@ class Tester(interfaces.TesterInterface):
             self.get_security_group_allows_https_access() + \
             self.get_security_group_allows_inbound_access_from_ports_higher_than_1024() + \
             self.get_unrestricted_admin_port_access_in_network_acl() + \
-            self.get_internet_gateway_presence_detected()
+            self.get_internet_gateway_presence_detected() + \
+            self.get_sensitive_instance_tenancy_not_dedicated()
             
     def _get_all_security_group_ids(self, instances) -> Set:
         return set(list(map(lambda i: i.id, list(instances))))
@@ -869,4 +870,49 @@ class Tester(interfaces.TesterInterface):
                     "test_result": "no_issue_found"
                 })
 
+        return result
+
+    def get_sensitive_instance_tenancy_not_dedicated(self):
+        test_name = "sensitive_instance_tenancy_not_dedicated"
+        instances = []
+        result = []
+        can_paginate = self.aws_ec2_client.can_paginate('describe_instances')
+        if can_paginate:
+            reservations = []
+            paginator = self.aws_ec2_client.get_paginator('describe_instances')
+            response_iterator = paginator.paginate(PaginationConfig={'PageSize': 50})
+            for page in response_iterator:
+                reservations.extend(page['Reservations'])
+            for reservation in reservations:
+                instances.extend(reservation['Instances'])        
+        else:
+            response = self.aws_ec2_client.describe_instances()
+            for reservation in response['Reservations']:
+                instances.extend(reservation['Instances'])
+
+        for instance in instances:
+            instance_id = instance['InstanceId']
+            if any([tag['Value'] == 'sensitive' for tag in instance['Tags']]) and \
+                instance['Placement']['Tenancy'] != 'dedicated':
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": instance_id,
+                    "item_type": "ec2_instance",
+                    "test_name": test_name,
+                    "test_result": "issue_found"
+                })
+            else:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": instance_id,
+                    "item_type": "ec2_instance",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
+                })
         return result
