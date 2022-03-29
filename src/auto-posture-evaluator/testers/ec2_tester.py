@@ -62,7 +62,8 @@ class Tester(interfaces.TesterInterface):
             self.get_security_group_allows_inbound_traffic(all_inbound_permissions) + \
             self.get_instance_with_upcoming_system_maintenance_scheduled_event(self.ec2_instances) + \
             self.get_instance_with_upcoming_instance_stop_scheduled_event(self.ec2_instances) + \
-            self.get_instance_with_upcoming_system_reboot_scheduled_event(self.ec2_instances)
+            self.get_instance_with_upcoming_system_reboot_scheduled_event(self.ec2_instances) + \
+            self.get_region_nearing_limits_of_ec2_instances(region_names)
             
     def _get_all_security_group_ids(self, instances) -> Set:
         return set(list(map(lambda i: i.id, list(instances))))
@@ -1141,4 +1142,40 @@ class Tester(interfaces.TesterInterface):
                 "test_name": test_name,
                 "test_result": "no_issue_found"
             })
+        return result
+
+    def get_region_nearing_limits_of_ec2_instances(self, region_names):
+        test_name = "region_nearing_limits_of_ec2_instances"
+        result = []
+        service_quota_clients = self._get_service_clients_for_all_regions('service-quotas')
+        ec2_clients = self._get_service_clients_for_all_regions('ec2')
+        for i in range(len(region_names)):
+            region_vcpu_quota = service_quota_clients[i].get_service_quota(ServiceCode='ec2', QuotaCode='L-1216C47A')
+            region_limit = region_vcpu_quota['Quota']['Value']
+            instances = self._get_all_ec2_instances(ec2_clients[i], filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
+            current_cpu_count = 0
+            for instance in instances:
+                current_cpu_count += instance['CpuOptions']['CoreCount'] * instance['CpuOptions']['ThreadsPerCore']
+            if region_limit - current_cpu_count <= 50:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": region_names[i],
+                    "item_type": "ec2_region",
+                    "test_name": test_name,
+                    "test_result": "issue_found"
+                })
+            else:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": region_names[i],
+                    "item_type": "ec2_region",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
+                })
         return result
