@@ -49,7 +49,8 @@ class Tester(interfaces.TesterInterface):
             self.get_inbound_cifs_access(all_inbound_permissions) + \
             self.get_instance_uses_metadata_service_version_2() + \
             self.get_security_group_allows_https_access() + \
-            self.get_security_group_allows_inbound_access_from_ports_higher_than_1024()
+            self.get_security_group_allows_inbound_access_from_ports_higher_than_1024() + \
+            self.get_unrestricted_admin_port_access_in_network_acl()
             
     def _get_all_security_group_ids(self, instances) -> Set:
         return set(list(map(lambda i: i.id, list(instances))))
@@ -760,4 +761,49 @@ class Tester(interfaces.TesterInterface):
                 "test_result": "no_issue_found"
             })
     
+        return results
+
+    def get_unrestricted_admin_port_access_in_network_acl(self):
+        test_name = "unrestricted_admin_port_access_in_network_acl"
+        results = []
+        can_paginate = self.aws_ec2_client.can_paginate('describe_network_acls')
+        acls = []
+        filters = [{'Name': 'entry.protocol', 'Values': ['6']}]
+        if can_paginate:
+            paginator = self.aws_ec2_client.get_paginator('describe_network_acls')
+            response_iterator = paginator.paginate(PaginationConfig={'PageSize': 50}, Filters=filters)
+            for page in response_iterator:
+                acls.extend(page['NetworkAcls'])
+        else:
+            response = self.aws_ec2_client.describe_network_acls(Filters=filters)
+            acls.extend(response)
+        
+        for acl in acls:
+            issue_found = False
+            for entry in acl['Entries']:
+                if entry.get('CidrBlock') == '0.0.0.0/0' and entry.get('RuleAction') == 'allow' and (entry.get('PortRange')['to'] == 3389 or entry.get('PortRange')['from'] == 3389 or entry.get('PortRange')['to'] == 22 or entry.get('PortRange')['from'] == 22):
+                    issue_found = True
+                    break
+            if issue_found:
+                results.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": acl['NetworkAclId'],
+                    "item_type": "ec2_network_acl",
+                    "test_name": test_name,
+                    "test_result": "issue_found"
+                })
+            else:
+                results.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": acl['NetworkAclId'],
+                    "item_type": "ec2_network_acl",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
+                })
         return results
