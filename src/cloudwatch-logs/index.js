@@ -1,12 +1,12 @@
 /**
- * AWS CloudWatch Lambda function for Coralogix
+ * AWS CloudWatch Logs Lambda function for Coralogix
  *
  * @file        This file is lambda function source code
  * @author      Coralogix Ltd. <info@coralogix.com>
  * @link        https://coralogix.com/
  * @copyright   Coralogix Ltd.
  * @licence     Apache-2.0
- * @version     1.0.9
+ * @version     1.0.11
  * @since       1.0.0
  */
 
