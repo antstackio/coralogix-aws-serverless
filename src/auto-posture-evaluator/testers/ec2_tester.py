@@ -13,7 +13,7 @@ class Tester(interfaces.TesterInterface):
         self.account_arn = boto3.client('sts').get_caller_identity().get('Arn')
         self.account_id = boto3.client('sts').get_caller_identity().get('Account')
         self.security_groups = self.aws_ec2_resource.security_groups.all()
-        self.vpcs = self.aws_ec2_client.describe_vpcs()['Vpcs']
+        self.vpcs = self._get_all_vpcs()
         self.set_security_group = self._get_all_security_group_ids(self.security_groups)
         self.ec2_instances = self._get_all_ec2_instances()
 
@@ -999,3 +999,14 @@ class Tester(interfaces.TesterInterface):
                     "test_result": "no_issue_found"
                 })
         return result
+ 
+    def _get_all_vpcs(self):
+        vpcs = []
+        paginator = self.aws_ec2_client.get_paginator('describe_vpcs')
+        response_iterator = paginator.paginate()
+
+        for page in response_iterator:
+            vpcs.extend(page['Vpcs'])
+    
+        return vpcs
+
