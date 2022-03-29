@@ -20,7 +20,8 @@ class Tester(interfaces.TesterInterface):
     def run_tests(self) -> list:
         return \
             self.emr_cluster_should_have_a_security_configuration() + \
-            self.emr_cluster_should_use_kerberos_authentication()
+            self.emr_cluster_should_use_kerberos_authentication() + \
+            self.emr_in_transit_and_at_rest_encryption_enabled()
     
     def _get_all_emr_clusters(self):
         clusters = []
@@ -115,7 +116,7 @@ class Tester(interfaces.TesterInterface):
         
         return result
     
-    def emr_in_transit_and_at_rest_encryption(self):
+    def emr_in_transit_and_at_rest_encryption_enabled(self):
         result = []
         test_name = "emr_in_transit_and_at_rest_encryption_enabled"
 
