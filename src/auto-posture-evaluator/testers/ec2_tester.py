@@ -16,6 +16,7 @@ class Tester(interfaces.TesterInterface):
         self.vpcs = self._get_all_vpcs()
         self.set_security_group = self._get_all_security_group_ids(self.security_groups)
         self.ec2_instances = self._get_all_ec2_instances(self.aws_ec2_client)
+        self.aws_nfw_client = boto3.client('network-firewall')
 
     def declare_tested_service(self) -> str:
         return 'ec2'
@@ -68,7 +69,8 @@ class Tester(interfaces.TesterInterface):
             self.get_elastic_ip_in_use() + \
             self.get_unrestricted_mysql_access(all_inbound_permissions) + \
             self.detect_classic_ec2_instances() + \
-            self.get_security_group_should_allow_access_to_specific_private_networks_only()
+            self.get_security_group_should_allow_access_to_specific_private_networks_only() + \
+            self.get_network_firewall_used()
             
     def _get_all_security_group_ids(self, instances) -> Set:
         return set(list(map(lambda i: i.id, list(instances))))
@@ -1352,4 +1354,102 @@ class Tester(interfaces.TesterInterface):
                 "test_name": test_name,
                 "test_result": "no_issue_found"
             })
+        return result
+    
+    def get_network_firewall_used(self):
+        result = []
+        test_name = "network_firewall_used"
+
+        paginator = self.aws_nfw_client.get_paginator('list_firewalls')
+        response_iterator = paginator.paginate()
+        firewalls = []
+        for page in response_iterator:
+            firewalls.extend(page['Firewalls'])
+
+        if len(firewalls) > 0:
+            for fw in firewalls:
+                firewall_arn = fw['FirewallArn']
+                response = self.aws_nfw_client.describe_firewall(FirewallArn=firewall_arn)
+                firewall_details = response['Firewall']
+                firewall_status = response['FirewallStatus']['Status']
+                firewall_with_issue = False
+
+                if firewall_status == 'PROVISIONING' or firewall_status == 'READY':
+                    firewall_policy_arn = firewall_details.get('FirewallPolicyArn')
+
+                    if firewall_policy_arn is not None:
+                        response = self.aws_nfw_client.describe_firewall_policy(FirewallPolicyArn=firewall_policy_arn)
+                        firewall_policy_status = response['FirewallPolicyResponse']['FirewallPolicyStatus']
+                        firewall_rule_groups = []
+                        if firewall_policy_status == 'ACTIVE':
+                            firewall_policy = response['FirewallPolicy']
+
+                            if firewall_policy.get('StatelessRuleGroupReferences') is not None:
+                                firewall_rule_groups.extend(firewall_policy['StatelessRuleGroupReferences'])
+                            else: pass
+
+                            if firewall_policy.get('StatefulRuleGroupReferences') is not None:
+                                firewall_rule_groups.extend(firewall_policy['StatefulRuleGroupReferences'])
+                            else: pass
+
+                            for rule in firewall_rule_groups:
+                                rule_arn = rule['ResourceArn']
+                                response = self.aws_nfw_client.describe_rule_group(RuleGroupArn=rule_arn)
+
+                                rule_source = response['RuleGroup']['RulesSource']
+
+                                state_full_rules = rule_source.get('StatefulRules')
+                                state_less_rules = rule_source.get('StatelessRulesAndCustomActions')
+
+                                if state_full_rules is not None:
+                                    temp = list(filter(lambda x: x['Header']['Source'] == 'Any' or x['Header']['Destination'] == 'Any', state_full_rules))
+                                    if len(temp) > 0:
+                                        firewall_with_issue = True
+                                        break
+                                    else: pass
+                                else: pass
+
+                                if state_less_rules is not None:
+                                    rules = state_less_rules['StatelessRules']
+                                    for r in rules:
+                                        attrs = r['RuleDefinition']['MatchAttributes']
+                                        source_addresses = attrs['Sources']
+                                        destination_addresses = attrs['Destinations']
+
+                                        if any([i['AddressDefinition'] == '0.0.0.0/0' for i in source_addresses]) or any([i['AddressDefinition'] == '0.0.0.0/0' for i in destination_addresses]):
+                                            firewall_with_issue: True
+                                            break
+                                        else: pass
+                                else: pass
+
+                            if firewall_with_issue:
+                                result.append({
+                                    "user": self.user_id,
+                                    "account_arn": self.account_arn,
+                                    "account": self.account_id,
+                                    "timestamp": time.time(),
+                                    "item": firewall_arn,
+                                    "item_type": "aws_network_firewall",
+                                    "test_name": test_name,
+                                    "test_result": "issue_found"
+                                })
+                            else:
+                                result.append({
+                                    "user": self.user_id,
+                                    "account_arn": self.account_arn,
+                                    "account": self.account_id,
+                                    "timestamp": time.time(),
+                                    "item": firewall_arn,
+                                    "item_type": "aws_network_firewall",
+                                    "test_name": test_name,
+                                    "test_result": "no_issue_found"
+                                })
+
+                        else: pass
+
+                    else: pass
+
+                else: pass
+        else: pass
+
         return result
