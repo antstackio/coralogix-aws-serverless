@@ -47,7 +47,8 @@ class Tester(interfaces.TesterInterface):
             self.get_inbound_tcp_netbios_access(all_inbound_permissions) + \
             self.get_inbound_udp_netbios(all_inbound_permissions) + \
             self.get_inbound_cifs_access(all_inbound_permissions) + \
-            self.get_instance_uses_metadata_service_version_2()
+            self.get_instance_uses_metadata_service_version_2() + \
+            self.get_security_group_allows_https_access()
             
     def _get_all_security_group_ids(self, instances) -> Set:
         return set(list(map(lambda i: i.id, list(instances))))
@@ -685,3 +686,40 @@ class Tester(interfaces.TesterInterface):
                 })
 
         return result
+
+    def get_security_group_allows_https_access(self, all_inbound_permissions):
+        test_name = "security_group_allows_https_access"
+        results = []
+        instances = []
+        PORT443 = 443
+        instances_443 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= PORT443 and permission['ToPort'] >= PORT443) and permission['IpProtocol'] == 'tcp' and any([range.get('CidrIp', '') == '0.0.0.0/0' for range in permission['IpRanges']])), all_inbound_permissions))))
+        instances.extend(instances_443)
+
+        instances_with_issue = set(instances)
+        instances_with_no_issue = self.set_security_group.difference(instances_with_issue)
+
+        for i in instances_with_issue:
+            results.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": i,
+                "item_type": "ec2_security_group",
+                "test_name": test_name,
+                "test_result": "issue_found"
+            })
+        
+        for i in instances_with_no_issue:
+            results.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": i,
+                "item_type": "ec2_security_group",
+                "test_name": test_name,
+                "test_result": "no_issue_found"
+            })
+    
+        return results
