@@ -63,7 +63,8 @@ class Tester(interfaces.TesterInterface):
             self.get_instance_with_upcoming_system_maintenance_scheduled_event(self.ec2_instances) + \
             self.get_instance_with_upcoming_instance_stop_scheduled_event(self.ec2_instances) + \
             self.get_instance_with_upcoming_system_reboot_scheduled_event(self.ec2_instances) + \
-            self.get_region_nearing_limits_of_ec2_instances(region_names)
+            self.get_region_nearing_limits_of_ec2_instances(region_names) + \
+            self.get_elastic_ip_in_use()
             
     def _get_all_security_group_ids(self, instances) -> Set:
         return set(list(map(lambda i: i.id, list(instances))))
@@ -1178,4 +1179,39 @@ class Tester(interfaces.TesterInterface):
                     "test_name": test_name,
                     "test_result": "no_issue_found"
                 })
+        return result
+
+    def get_elastic_ip_in_use(self):
+        result = []
+        test_name = "elastic_ip_in_use"
+
+        response = self.aws_ec2_client.describe_addresses()
+        addresses = response['Addresses']
+
+        for address in addresses:
+            public_ip = address['PublicIp']
+            association_id = address.get('AssociationId')
+            if association_id is not None:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": public_ip,
+                    "item_type": "elastic_IP",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
+                })
+            else:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": public_ip,
+                    "item_type": "elastic_IP",
+                    "test_name": test_name,
+                    "test_result": "issue_found"
+                })
+        
         return result
