@@ -61,7 +61,8 @@ class Tester(interfaces.TesterInterface):
             self.get_ec2_instance_iam_role_not_enabled(self.ec2_instances) + \
             self.get_security_group_allows_inbound_traffic(all_inbound_permissions) + \
             self.get_instance_with_upcoming_system_maintenance_scheduled_event(self.ec2_instances) + \
-            self.get_instance_with_upcoming_instance_stop_scheduled_event(self.ec2_instances)
+            self.get_instance_with_upcoming_instance_stop_scheduled_event(self.ec2_instances) + \
+            self.get_instance_with_upcoming_system_reboot_scheduled_event(self.ec2_instances)
             
     def _get_all_security_group_ids(self, instances) -> Set:
         return set(list(map(lambda i: i.id, list(instances))))
@@ -1084,6 +1085,37 @@ class Tester(interfaces.TesterInterface):
         test_name = "instance_with_upcoming_instance_stop_scheduled_event"
         result = []
         instances_with_issue = self.aws_ec2_client.describe_instance_status(Filters=[{'Name': 'event.code', 'Values': ['instance-stop']}])
+        instances_with_issue = set(list(map(lambda x: x['InstanceId'], instances_with_issue['InstanceStatuses'])))
+        instances_with_no_issue = set(list(map(lambda x: x['InstanceId'], instances))).difference(instances_with_issue)
+        for i in instances_with_issue:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": i,
+                "item_type": "ec2_instance",
+                "test_name": test_name,
+                "test_result": "issue_found"
+            })
+        
+        for i in instances_with_no_issue:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": i,
+                "item_type": "ec2_instance",
+                "test_name": test_name,
+                "test_result": "no_issue_found"
+            })
+        return result
+
+    def get_instance_with_upcoming_system_reboot_scheduled_event(self, instances):
+        test_name = "instance_with_upcoming_system_reboot_scheduled_event"
+        result = []
+        instances_with_issue = self.aws_ec2_client.describe_instance_status(Filters=[{'Name': 'event.code', 'Values': ['system-reboot']}])
         instances_with_issue = set(list(map(lambda x: x['InstanceId'], instances_with_issue['InstanceStatuses'])))
         instances_with_no_issue = set(list(map(lambda x: x['InstanceId'], instances))).difference(instances_with_issue)
         for i in instances_with_issue:
