@@ -64,7 +64,8 @@ class Tester(interfaces.TesterInterface):
             self.get_instance_with_upcoming_instance_stop_scheduled_event(self.ec2_instances) + \
             self.get_instance_with_upcoming_system_reboot_scheduled_event(self.ec2_instances) + \
             self.get_region_nearing_limits_of_ec2_instances(region_names) + \
-            self.get_elastic_ip_in_use()
+            self.get_elastic_ip_in_use() + \
+            self.get_unrestricted_mysql_access(all_inbound_permissions)
             
     def _get_all_security_group_ids(self, instances) -> Set:
         return set(list(map(lambda i: i.id, list(instances))))
@@ -1213,5 +1214,42 @@ class Tester(interfaces.TesterInterface):
                     "test_name": test_name,
                     "test_result": "issue_found"
                 })
+        
+        return result
+
+    def get_unrestricted_mysql_access(self, all_inbound_permissions):
+        result = []
+        test_name = "unrestricted_mysql_access"
+
+        filtered_port = list(filter(lambda permission: (permission['IpProtocol'] == "-1") or 
+                                                    ((permission['FromPort'] <= 3306 and permission['ToPort'] >= 3306) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))
+        instances = list(map(lambda x: x['security_group'].id, list(filter(lambda permission: any([ip_range.get("CidrIp", "") == "0.0.0.0/0"  or ip_range.get("CidrIp", "") == "::/0" for ip_range in permission['IpRanges']]), filtered_port))))
+
+        instances_with_issue = set(instances)
+        instances_with_no_issue = self.set_security_group.difference(instances_with_issue)
+
+        for instance in instances_with_issue:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": instance,
+                "item_type": "ec2_security_group",
+                "test_name": test_name,
+                "test_result": "issue_found"
+            })
+
+        for instance in instances_with_no_issue:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": instance,
+                "item_type": "ec2_security_group",
+                "test_name": test_name,
+                "test_result": "no_issue_found"
+            })
         
         return result
