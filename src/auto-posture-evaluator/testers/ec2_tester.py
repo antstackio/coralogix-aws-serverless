@@ -50,7 +50,8 @@ class Tester(interfaces.TesterInterface):
             self.get_instance_uses_metadata_service_version_2() + \
             self.get_security_group_allows_https_access() + \
             self.get_security_group_allows_inbound_access_from_ports_higher_than_1024() + \
-            self.get_unrestricted_admin_port_access_in_network_acl()
+            self.get_unrestricted_admin_port_access_in_network_acl() + \
+            self.get_internet_gateway_presence_detected()
             
     def _get_all_security_group_ids(self, instances) -> Set:
         return set(list(map(lambda i: i.id, list(instances))))
@@ -807,3 +808,65 @@ class Tester(interfaces.TesterInterface):
                     "test_result": "no_issue_found"
                 })
         return results
+
+    def get_internet_gateway_presence_detected(self):
+        test_name = "internet_gateway_presence_detected"
+        result = []
+        gateways = []
+        can_paginate = self.aws_ec2_client.can_paginate('describe_internet_gateways')
+        if can_paginate:
+            paginator = self.aws_ec2_client.get_paginator('describe_internet_gateways')
+            response_iterator = paginator.paginate(PaginationConfig={'PageSize': 50})
+            for response in response_iterator:
+                gateways.extend(response['InternetGateways'])        
+        else:
+            response = self.aws_ec2_client.describe_internet_gateways()
+            for response in response['InternetGateways']:
+                gateways.extend(response)
+        vpc_ids = []
+        for gateway in gateways:
+            for attachment in gateway['Attachments']:
+                vpc_ids.append(attachment['VpcId'])
+
+        instances = []
+        can_paginate = self.aws_ec2_client.can_paginate('describe_instances')
+        if can_paginate:
+            reservations = []
+            paginator = self.aws_ec2_client.get_paginator('describe_instances')
+            response_iterator = paginator.paginate(PaginationConfig={'PageSize': 50})
+            for page in response_iterator:
+                reservations.extend(page['Reservations'])
+            for reservation in reservations:
+                instances.extend(reservation['Instances'])        
+        else:
+            response = self.aws_ec2_client.describe_instances()
+            for reservation in response['Reservations']:
+                instances.extend(reservation['Instances'])
+
+        for instance in instances:
+            instance_id = instance['InstanceId']
+            vpc_id = instance['VpcId']
+            if vpc_id and vpc_id in vpc_ids:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": instance_id,
+                    "item_type": "ec2_instance",
+                    "test_name": test_name,
+                    "test_result": "issue_found"
+                })
+            else:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": instance_id,
+                    "item_type": "ec2_instance",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
+                })
+
+        return result
