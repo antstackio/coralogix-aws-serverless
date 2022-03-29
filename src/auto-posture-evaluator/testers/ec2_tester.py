@@ -15,7 +15,7 @@ class Tester(interfaces.TesterInterface):
         self.security_groups = self.aws_ec2_resource.security_groups.all()
         self.vpcs = self._get_all_vpcs()
         self.set_security_group = self._get_all_security_group_ids(self.security_groups)
-        self.ec2_instances = self._get_all_ec2_instances()
+        self.ec2_instances = self._get_all_ec2_instances(self.aws_ec2_client)
 
     def declare_tested_service(self) -> str:
         return 'ec2'
@@ -58,7 +58,8 @@ class Tester(interfaces.TesterInterface):
             self.get_sensitive_instance_tenancy_not_dedicated(self.ec2_instances) + \
             self.get_aws_config_not_enabled_for_all_regions(region_names) + \
             self.get_nearing_regional_limit_for_elastic_ip_addresses(region_names) + \
-            self.get_ec2_instance_iam_role_not_enabled(self.ec2_instances)
+            self.get_ec2_instance_iam_role_not_enabled(self.ec2_instances) + \
+            self.get_security_group_allows_inbound_traffic(all_inbound_permissions)
             
     def _get_all_security_group_ids(self, instances) -> Set:
         return set(list(map(lambda i: i.id, list(instances))))
@@ -131,23 +132,30 @@ class Tester(interfaces.TesterInterface):
             region_names.append(region['RegionName'])
         return region_names
     
-    def _get_all_ec2_instances(self) -> List:
+    def _get_all_ec2_instances(self, client, filters=[]) -> List:
         instances = []
-        can_paginate = self.aws_ec2_client.can_paginate('describe_instances')
+        can_paginate = client.can_paginate('describe_instances')
         if can_paginate:
             reservations = []
-            paginator = self.aws_ec2_client.get_paginator('describe_instances')
-            response_iterator = paginator.paginate(PaginationConfig={'PageSize': 50})
+            paginator = client.get_paginator('describe_instances')
+            response_iterator = paginator.paginate(PaginationConfig={'PageSize': 50}, Filters=filters)
             for page in response_iterator:
                 reservations.extend(page['Reservations'])
             for reservation in reservations:
                 instances.extend(reservation['Instances'])        
         else:
-            response = self.aws_ec2_client.describe_instances()
+            response = client.describe_instances(Filters=filters)
             for reservation in response['Reservations']:
                 instances.extend(reservation['Instances'])
         return instances
     
+    def _get_service_clients_for_all_regions(self, client_name):
+        regions = self._get_ec2_region_names()
+        clients = []
+        for region in regions:
+            clients.append(boto3.client(client_name, region_name=region))
+        return clients
+
     def get_inbound_http_access(self, all_inbound_permissions) -> List:
         test_name = "ec2_inbound_http_access_restricted"
         return self._get_inbound_port_access(all_inbound_permissions, 80, test_name)
@@ -906,10 +914,8 @@ class Tester(interfaces.TesterInterface):
 
     def get_aws_config_not_enabled_for_all_regions(self, region_names):
         test_name = "aws_config_not_enabled_for_all_regions"
-        clients = []
+        clients = self._get_service_clients_for_all_regions('config')
         result = []
-        for region in region_names:
-            clients.append(boto3.client('config', region_name=region))
         for i in range(len(clients)):
             response = clients[i].describe_configuration_recorder_status()
             if len(response['ConfigurationRecordersStatus']) == 0 or response['ConfigurationRecordersStatus'][0]['recording'] == False:
@@ -938,10 +944,8 @@ class Tester(interfaces.TesterInterface):
 
     def get_nearing_regional_limit_for_elastic_ip_addresses(self, region_names):
         test_name = "nearing_regional_limit_for_elastic_ip_addresses"
-        clients = []
+        clients = self._get_service_clients_for_all_regions('ec2')
         result = []
-        for region in region_names:
-            clients.append(boto3.client('ec2', region_name=region))
         for i in range(len(clients)):
             response = clients[i].describe_account_attributes(AttributeNames=['vpc-max-elastic-ips'])
             limit = response['AccountAttributes'][0]['AttributeValues'][0]['AttributeValue']
@@ -1009,4 +1013,36 @@ class Tester(interfaces.TesterInterface):
             vpcs.extend(page['Vpcs'])
     
         return vpcs
+    
+    def get_security_group_allows_inbound_traffic(self, all_inbound_permissions):
+        test_name = "security_group_allows_all_inbound_traffic"
+        result = []
+        instances = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: any([range.get('CidrIp', '') == '0.0.0.0/0' or range.get('CidrIp', '') == '::/0' for range in permission['IpRanges']]), all_inbound_permissions))))
+        
+        instances_with_issue = set(instances)
+        instances_with_no_issue = self.set_security_group.difference(instances_with_issue)
 
+        for i in instances_with_issue:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": i,
+                "item_type": "ec2_security_group",
+                "test_name": test_name,
+                "test_result": "issue_found"
+            })
+        
+        for i in instances_with_no_issue:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": i,
+                "item_type": "ec2_security_group",
+                "test_name": test_name,
+                "test_result": "no_issue_found"
+            })
+        return result
