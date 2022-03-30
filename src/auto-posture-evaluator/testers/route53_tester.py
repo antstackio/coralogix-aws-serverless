@@ -26,7 +26,10 @@ class Tester(interfaces.TesterInterface):
 
     def run_tests(self) -> list:
         if self.hosted_zones is not None and 'HostedZones' in self.hosted_zones:
-            return self.detect_dangling_dns_records()
+            return \
+                self.detect_dangling_dns_records() + \
+                self.route53_domain_expiry_in_7_days() + \
+                self.detect_domain_is_not_locked_for_transfer()
         else:
             raise Exception("No Route53 data could be retrieved.")
 
@@ -133,3 +136,43 @@ class Tester(interfaces.TesterInterface):
                     "timestamp": time.time(),
                     "test_result": "issue_found"
                 })
+
+    def detect_domain_is_not_locked_for_transfer(self):
+        result = []
+        domains = []
+        test_name = "domain_is_not_locked_for_transfer"
+
+        paginator = self.aws_route53_domain_client.get_paginator('list_domains')
+        response_iterator = paginator.paginate()
+
+        for page in response_iterator:
+            domains.extend(page['Domains'])
+        
+        for domain in domains:
+            domain_name = domain['DomainName']
+            transfer_lock = domain['TransferLock']
+
+            if transfer_lock:
+                result.append({
+                   "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "test_name": test_name,
+                    "item": domain_name,
+                    "item_type": "domain_name",
+                    "timestamp": time.time(),
+                    "test_result": "no_issue_found" 
+                })
+            else:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "test_name": test_name,
+                    "item": domain_name,
+                    "item_type": "domain_name",
+                    "timestamp": time.time(),
+                    "test_result": "issue_found"
+                })
+        
+        return result
