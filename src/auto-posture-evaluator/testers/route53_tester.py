@@ -109,15 +109,10 @@ class Tester(interfaces.TesterInterface):
 
     def route53_domain_expiry_in_7_days(self):
         result = []
-        domains = []
         test_name = "route53_domain_expiry_in_7_days"
 
-        paginator = self.aws_route53_domain_client.get_paginator('list_domains')
-        response_iterator = paginator.paginate()
+        domains = self.route53_domains
 
-        for page in response_iterator:
-            domains.extend(page['Domains'])
-            
         for domain in domains:
             domain_name = domain['DomainName']
             expiry_date = domain['Expiry']
@@ -147,17 +142,13 @@ class Tester(interfaces.TesterInterface):
                     "timestamp": time.time(),
                     "test_result": "issue_found"
                 })
+        return result
 
     def detect_domain_is_not_locked_for_transfer(self):
         result = []
-        domains = []
         test_name = "domain_is_not_locked_for_transfer"
 
-        paginator = self.aws_route53_domain_client.get_paginator('list_domains')
-        response_iterator = paginator.paginate()
-
-        for page in response_iterator:
-            domains.extend(page['Domains'])
+        domains = self.route53_domains
         
         for domain in domains:
             domain_name = domain['DomainName']
