@@ -31,7 +31,8 @@ class Tester(interfaces.TesterInterface):
                 self.detect_dangling_dns_records() + \
                 self.route53_domain_expiry_in_7_days() + \
                 self.detect_domain_is_not_locked_for_transfer() + \
-                self.detect_domain_auto_renewal_disabled()
+                self.detect_domain_auto_renewal_disabled() + \
+                self.detect_domain_expired()
         else:
             raise Exception("No Route53 data could be retrieved.")
 
@@ -212,4 +213,40 @@ class Tester(interfaces.TesterInterface):
                     "timestamp": time.time(),
                     "test_result": "issue_found" 
                 })
+        return result
+
+    def detect_domain_expired(self):
+        result = []
+        test_name = "domain_expired"
+
+        domains = self.route53_domains
+
+        for domain in domains:
+            domain_name = domain['DomainName']
+            expiry = domain['Expiry']
+            current_date = datetime.now(tz=dt.timezone.utc)
+
+            if expiry <= current_date:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "test_name": test_name,
+                    "item": domain_name,
+                    "item_type": "domain_name",
+                    "timestamp": time.time(),
+                    "test_result": "issue_found" 
+                })
+            else:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "test_name": test_name,
+                    "item": domain_name,
+                    "item_type": "domain_name",
+                    "timestamp": time.time(),
+                    "test_result": "no_issue_found" 
+                })
+        
         return result
