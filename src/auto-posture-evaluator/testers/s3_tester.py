@@ -48,7 +48,10 @@ class Tester(interfaces.TesterInterface):
             self.detect_block_public_access_setting_disabled() + \
             self.detect_bucket_not_configured_with_block_public_access(self.s3_buckets) + \
             self.detect_buckets_with_global_upload_and_delete_permission(self.s3_buckets) + \
-            self.detect_bucket_has_global_list_acl_permission_through_acl(self.s3_buckets)
+            self.detect_bucket_has_global_list_acl_permission_through_acl(self.s3_buckets) + \
+            self.detect_bucket_has_global_put_permissions_enabled_via_bucket_policy(self.s3_buckets) + \
+            self.detect_bucket_has_global_list_permissions_enabled_via_bucket_policy(self.s3_buckets) + \
+            self.detect_bucket_has_global_get_permissions_enabled_via_bucket_policy(self.s3_buckets)
 
     def detect_write_enabled_buckets(self, buckets_list):
         return self._detect_buckets_with_permissions_matching(buckets_list, "WRITE", "write_enabled_s3_buckets")
@@ -740,6 +743,132 @@ class Tester(interfaces.TesterInterface):
                         "test_name": test_name,
                         "test_result": "no_issue_found"
                 })
+        return result
+    
+    def detect_bucket_has_global_list_permissions_enabled_via_bucket_policy(self, buckets_list):
+        result = []
+        test_name = "bucket_has_global_list_permissions_enabled_via_bucket_policy"
+        for bucket_meta in buckets_list["Buckets"]:
+            issue_detected = False
+            bucket_name = bucket_meta["Name"]
+            try:
+                bucket_policy = self._get_bucket_policy(bucket_name)
+                policy_statements = json.loads(bucket_policy['Policy'])['Statement']
+                for statement in policy_statements:
+                    if statement["Effect"] == "Allow" and (statement["Principal"] == '*' or statement["Principal"] == {"AWS": "*"}) and (any([("List" in action or action=="s3:*") for action in statement["Action"]]) or "List" in statement["Action"] or statement["Action"]=="s3:*"):
+                        result.append({
+                            "user": self.user_id,
+                            "account_arn": self.account_arn,
+                            "account": self.account_id,
+                            "timestamp": time.time(),
+                            "item": bucket_name,
+                            "item_type": "s3_bucket",
+                            "test_name": test_name,
+                            "policy": bucket_policy,
+                            "test_result": "issue_found"
+                        })
+                        issue_detected = True
+            except botocore.exceptions.ClientError as ex:
+                if ex.response['Error']['Code'] == 'NoSuchBucketPolicy':
+                    # No policy means the bucket content is not listable by policy
+                    pass
+                else:
+                    raise ex
+
+            if not issue_detected:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": bucket_name,
+                    "item_type": "s3_bucket",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"})
+        return result
+
+    def detect_bucket_has_global_get_permissions_enabled_via_bucket_policy(self, buckets_list):
+        result = []
+        test_name = "bucket_has_global_get_permissions_enabled_via_bucket_policy"
+        for bucket_meta in buckets_list["Buckets"]:
+            issue_detected = False
+            bucket_name = bucket_meta["Name"]
+            try:
+                bucket_policy = self._get_bucket_policy(bucket_name)
+                policy_statements = json.loads(bucket_policy['Policy'])['Statement']
+                for statement in policy_statements:
+                    if statement["Effect"] == "Allow" and (statement["Principal"] == '*' or statement["Principal"] == {"AWS": "*"}) and (any([("Get" in action or action=="s3:*") for action in statement["Action"]]) or "Get" in statement["Action"] or statement["Action"]=="s3:*"):
+                        result.append({
+                            "user": self.user_id,
+                            "account_arn": self.account_arn,
+                            "account": self.account_id,
+                            "timestamp": time.time(),
+                            "item": bucket_name,
+                            "item_type": "s3_bucket",
+                            "test_name": test_name,
+                            "policy": bucket_policy,
+                            "test_result": "issue_found"
+                        })
+                        issue_detected = True
+            except botocore.exceptions.ClientError as ex:
+                if ex.response['Error']['Code'] == 'NoSuchBucketPolicy':
+                    # No policy means the bucket content is not listable by policy
+                    pass
+                else:
+                    raise ex
+
+            if not issue_detected:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": bucket_name,
+                    "item_type": "s3_bucket",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"})
+        return result
+
+    def detect_bucket_has_global_put_permissions_enabled_via_bucket_policy(self, buckets_list):
+        result = []
+        test_name = "bucket_has_global_put_permissions_enabled_via_bucket_policy"
+        for bucket_meta in buckets_list["Buckets"]:
+            issue_detected = False
+            bucket_name = bucket_meta["Name"]
+            try:
+                bucket_policy = self._get_bucket_policy(bucket_name)
+                policy_statements = json.loads(bucket_policy['Policy'])['Statement']
+                for statement in policy_statements:
+                    if statement["Effect"] == "Allow" and (statement["Principal"] == '*' or statement["Principal"] == {"AWS": "*"}) and (any([("Put" in action or action=="s3:*") for action in statement["Action"]]) or "Put" in statement["Action"] or statement["Action"]=="s3:*"):
+                        result.append({
+                            "user": self.user_id,
+                            "account_arn": self.account_arn,
+                            "account": self.account_id,
+                            "timestamp": time.time(),
+                            "item": bucket_name,
+                            "item_type": "s3_bucket",
+                            "test_name": test_name,
+                            "policy": bucket_policy,
+                            "test_result": "issue_found"
+                        })
+                        issue_detected = True
+            except botocore.exceptions.ClientError as ex:
+                if ex.response['Error']['Code'] == 'NoSuchBucketPolicy':
+                    # No policy means the bucket content is not listable by policy
+                    pass
+                else:
+                    raise ex
+
+            if not issue_detected:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": bucket_name,
+                    "item_type": "s3_bucket",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"})
         return result
 
     def _test_bucket_url_access(self, buckets_list, protocol, test_name):
