@@ -17,6 +17,7 @@ class Tester(interfaces.TesterInterface):
         self.account_arn = boto3.client('sts').get_caller_identity().get('Arn')
         self.account_id = boto3.client('sts').get_caller_identity().get('Account')
         self.aws_route53_domain_client = boto3.client('route53domains')
+        self.route53_domains = self._get_all_route53_domains()
 
     def declare_tested_service(self) -> str:
         return 'route53'
@@ -95,6 +96,16 @@ class Tester(interfaces.TesterInterface):
                     })
 
         return result
+
+    def _get_all_route53_domains(self):
+        domains = []
+        paginator = self.aws_route53_domain_client.get_paginator('list_domains')
+        response_iterator = paginator.paginate()
+
+        for page in response_iterator:
+            domains.extend(page['Domains'])
+        
+        return domains
 
     def route53_domain_expiry_in_7_days(self):
         result = []
