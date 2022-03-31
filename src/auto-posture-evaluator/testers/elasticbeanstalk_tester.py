@@ -87,8 +87,9 @@ class Tester(interfaces.TesterInterface):
 
         for page in response_iterator:
             environments.extend(page['Environments'])
+        filtered_environments = list(filter(lambda env: env['Status'] == "Ready" or env['Status'] == "Updating" or env["Status"] == "Launching" or env["Status"] == "LinkingFrom" or env["Status"] == "LinkingTo", environments))
 
-        for env in environments:
+        for env in filtered_environments:
             env_name = env['EnvironmentName']
             health_status = env.get('HealthStatus')
 
