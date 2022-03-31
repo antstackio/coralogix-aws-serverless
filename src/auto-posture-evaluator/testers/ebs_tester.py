@@ -211,6 +211,7 @@ class Tester(interfaces.TesterInterface):
         test_name = "volume_snapshots_are_public"
         result = []
         snapshots = self.aws_ec2_client.describe_snapshots(OwnerIds=[self.account_id], Filters=[{"Name": "status", "Values":["completed"]}])
+        
         for snapshot in snapshots["Snapshots"]:
             snapshot_id = snapshot["SnapshotId"]
             attrs = self.aws_ec2_client.describe_snapshot_attribute(SnapshotId=snapshot_id, Attribute="createVolumePermission")
