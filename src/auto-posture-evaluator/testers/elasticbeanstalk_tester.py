@@ -18,7 +18,8 @@ class Tester(interfaces.TesterInterface):
     
     def run_tests(self) -> list:
         return \
-            self.application_environment_should_have_load_balancer_access_logs()
+            self.application_environment_should_have_load_balancer_access_logs() + \
+            self.enhanced_health_enabled()
 
     def application_environment_should_have_load_balancer_access_logs(self):
         result = []
@@ -74,5 +75,56 @@ class Tester(interfaces.TesterInterface):
                     "test_name": test_name,
                     "test_result": "issue_found"
                 })
+        
+        return result
+
+    def enhanced_health_enabled(self):
+        result = []
+        test_name = "enhanced_health_reporting_enabled"
+        applications = []
+
+        if self.aws_elasticbeanstalk_client.can_paginate('describe_applications'):
+            paginator = self.aws_elasticbeanstalk_client.get_paginator('describe_applications')
+            response_iterator = paginator.paginate()
+
+            for page in response_iterator:
+                applications.extend(page['Applications'])
+        else:
+            response = self.aws_elasticbeanstalk_client.describe_applications()
+            applications.extend(response['Applications'])
+
+        for application in applications:
+            application_name = application['ApplicationName']
+
+            response = self.aws_elasticbeanstalk_client.describe_environments(ApplicationName=application_name)
+            environments = response['Environments']
+            if len(environments) > 0:
+                environment = environments[0]
+                environment_name = environment['EnvironmentName']
+                health_status = environment.get('HealthStatus')
+
+                if health_status is not None:
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": application_name,
+                        "item_type": "elasticbeanstalk_application",
+                        "test_name": test_name,
+                        "test_result": "no_issue_found"
+                    })
+                else:
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": application_name,
+                        "item_type": "elasticbeanstalk_application",
+                        "test_name": test_name,
+                        "test_result": "issue_found"
+                    })
+            else: pass
         
         return result
