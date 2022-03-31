@@ -1,3 +1,4 @@
+from inspect import Attribute
 import time
 from typing import Dict, List, Set
 import boto3
@@ -14,6 +15,7 @@ class Tester(interfaces.TesterInterface):
         self.user_id = boto3.client('sts').get_caller_identity().get('UserId')
         self.account_arn = boto3.client('sts').get_caller_identity().get('Arn')
         self.account_id = boto3.client('sts').get_caller_identity().get('Account')
+        self.ebs_volumes = []
 
     def declare_tested_service(self) -> str:
         return 'ebs'
@@ -22,16 +24,15 @@ class Tester(interfaces.TesterInterface):
         return 'aws'
     
     def run_tests(self) -> list:
+        self.ebs_volumes = self._get_ebs_volumes()
         return \
-            self.get_volume_is_not_encrypted() + \
-            self.get_volume_attached_to_ec2() + \
-            self.get_volume_does_not_have_recent_snapshots() + \
-            self.get_volume_not_encrypted_with_kms_customer_keys()
+            self.get_volume_is_not_encrypted(self.ebs_volumes) + \
+            self.get_volume_attached_to_ec2(self.ebs_volumes) + \
+            self.get_volume_does_not_have_recent_snapshots(self.ebs_volumes) + \
+            self.get_volume_not_encrypted_with_kms_customer_keys(self.ebs_volumes) + \
+            self.get_volume_snapshots_are_public()
 
-    
-    def get_volume_is_not_encrypted(self) -> List:
-        result = []
-        test_name = "volume_is_not_encrypted"
+    def _get_ebs_volumes(self):
         volumes = []
         can_paginate = self.aws_ec2_client.can_paginate('describe_volumes')
         
@@ -43,6 +44,11 @@ class Tester(interfaces.TesterInterface):
         else:
             response = self.aws_ec2_client.describe_volumes()
             volumes.extend(response['Volumes'])
+        return volumes
+
+    def get_volume_is_not_encrypted(self, volumes) -> List:
+        result = []
+        test_name = "volume_is_not_encrypted"
 
         for volume in volumes:
             volume_id = volume['VolumeId']
@@ -71,20 +77,9 @@ class Tester(interfaces.TesterInterface):
         
         return result
 
-    def get_volume_attached_to_ec2(self):
+    def get_volume_attached_to_ec2(self, volumes):
         result = []
         test_name = "volume_attached_to_ec2"
-        volumes = []
-        can_paginate = self.aws_ec2_client.can_paginate('describe_volumes')
-        
-        if can_paginate:
-            paginator = self.aws_ec2_client.get_paginator('describe_volumes')
-            response_iterator = paginator.paginate(PaginationConfig={'PageSize': 50})
-            for page in response_iterator:
-                volumes.extend(page['Volumes'])
-        else:
-            response = self.aws_ec2_client.describe_volumes()
-            volumes.extend(response['Volumes'])
 
         for volume in volumes:
             volume_id = volume['VolumeId']
@@ -114,20 +109,9 @@ class Tester(interfaces.TesterInterface):
         
         return result
     
-    def get_volume_does_not_have_recent_snapshots(self):
+    def get_volume_does_not_have_recent_snapshots(self, volumes):
         result = []
         test_name = "volume_does_not_have_recent_snapshots"
-        volumes = []
-        can_paginate = self.aws_ec2_client.can_paginate('describe_volumes')
-        
-        if can_paginate:
-            paginator = self.aws_ec2_client.get_paginator('describe_volumes')
-            response_iterator = paginator.paginate(PaginationConfig={'PageSize': 50})
-            for page in response_iterator:
-                volumes.extend(page['Volumes'])
-        else:
-            response = self.aws_ec2_client.describe_volumes()
-            volumes.extend(response['Volumes'])
         
         for volume in volumes:
             snapshots = []
@@ -174,20 +158,9 @@ class Tester(interfaces.TesterInterface):
                 })
         return result
 
-    def get_volume_not_encrypted_with_kms_customer_keys(self):
+    def get_volume_not_encrypted_with_kms_customer_keys(self, volumes):
         result = []
         test_name = "volume_not_encrypted_with_kms_customer_keys"
-        volumes = []
-        can_paginate = self.aws_ec2_client.can_paginate('describe_volumes')
-        
-        if can_paginate:
-            paginator = self.aws_ec2_client.get_paginator('describe_volumes')
-            response_iterator = paginator.paginate(PaginationConfig={'PageSize': 50})
-            for page in response_iterator:
-                volumes.extend(page['Volumes'])
-        else:
-            response = self.aws_ec2_client.describe_volumes()
-            volumes.extend(response['Volumes'])
         
         for volume in volumes:
             volume_id = volume['VolumeId']
@@ -232,4 +205,35 @@ class Tester(interfaces.TesterInterface):
                         "test_name": test_name,
                         "test_result": "issue_found"
                     })
+        return result
+
+    def get_volume_snapshots_are_public(self):
+        test_name = "volume_snapshots_are_public"
+        result = []
+        snapshots = self.aws_ec2_client.describe_snapshots(OwnerIds=[self.account_id], Filters=[{"Name": "status", "Values":["completed"]}])
+        for snapshot in snapshots["Snapshots"]:
+            snapshot_id = snapshot["SnapshotId"]
+            attrs = self.aws_ec2_client.describe_snapshot_attribute(SnapshotId=snapshot_id, Attribute="createVolumePermission")
+            if any([attr["Group"]=="all" for attr in attrs["CreateVolumePermissions"]]):
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": snapshot_id,
+                    "item_type": "ebs_snapshot",
+                    "test_name": test_name,
+                    "test_result": "issue_found"
+                })
+            else:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": snapshot_id,
+                    "item_type": "ebs_snapshot",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
+                })
         return result
