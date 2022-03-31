@@ -1,4 +1,5 @@
 import time
+from traceback import print_tb
 import boto3
 import jmespath
 import interfaces
@@ -21,6 +22,18 @@ class Tester(interfaces.TesterInterface):
             self.application_environment_should_have_load_balancer_access_logs() + \
             self.enhanced_health_enabled() + \
             self.application_env_has_managed_updates_enabled()
+
+    def _append_elasticbeanstalk_test_result(self, item, item_type, test_name, issue_status):
+        return {
+            "user": self.user_id,
+            "account_arn": self.account_arn,
+            "account": self.account_id,
+            "timestamp": time.time(),
+            "item": item,
+            "item_type": item_type,
+            "test_name": test_name,
+            "test_result": issue_status
+        }
 
     def application_environment_should_have_load_balancer_access_logs(self):
         result = []
@@ -95,27 +108,9 @@ class Tester(interfaces.TesterInterface):
             health_status = env.get('HealthStatus')
 
             if health_status is not None:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": env_name,
-                    "item_type": "elasticbeanstalk_application_environment",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                })
+                result.append(self._append_elasticbeanstalk_test_result(env_name, "elasticbeanstalk_application_environment", test_name, "no_issue_found"))
             else:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": env_name,
-                    "item_type": "elasticbeanstalk_application_environment",
-                    "test_name": test_name,
-                    "test_result": "issue_found"
-                })
+                result.append(self._append_elasticbeanstalk_test_result(env_name, "elasticbeanstalk_application_environment", test_name, "issue_found"))
         
         return result
 
@@ -140,27 +135,9 @@ class Tester(interfaces.TesterInterface):
             if len(temp) > 0:
                 managed_actions = temp[0]['Value']
                 if managed_actions == "true":
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": env_name,
-                        "item_type": "elasticbeanstalk_application_environment",
-                        "test_name": test_name,
-                        "test_result": "no_issue_found"
-                    })
+                    result.append(self._append_elasticbeanstalk_test_result(env_name, "elasticbeanstalk_application_environment", test_name, "no_issue_found"))
                 else: 
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": env_name,
-                        "item_type": "elasticbeanstalk_application_environment",
-                        "test_name": test_name,
-                        "test_result": "issue_found"
-                    })
+                    result.append(self._append_elasticbeanstalk_test_result(env_name, "elasticbeanstalk_application_environment", test_name, "issue_found"))
             else: pass
         
         return result
