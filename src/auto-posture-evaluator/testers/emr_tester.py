@@ -208,7 +208,7 @@ class Tester(interfaces.TesterInterface):
         clusters = self._get_all_emr_clusters()
 
         for cluster in clusters:
-            issue_found = True
+            issue_found = False
             cluster_id = cluster['Id']
             cluster_state = cluster['Status']['State']
 
@@ -220,9 +220,13 @@ class Tester(interfaces.TesterInterface):
                 security_conf = json.loads(security_conf)
                 kms_key = security_conf.get("EncryptionConfiguration").get("AtRestEncryptionConfiguration").get("S3EncryptionConfiguration").get("AwsKmsKey")
                 if kms_key:
-                    key_details = self.aws_kms_client.describe_key(KeyId=kms_key)
-                    if key_details["KeyMetadata"]["KeyManager"] == "CUSTOMER":
-                        issue_found = False
+                    kms_response = self.aws_kms_client.list_aliases(KeyId=kms_key)
+                    for alias in kms_response['Aliases']:
+                        if alias['AliasName'] == 'alias/aws/emr':
+                            issue_found = True
+                            break
+                else:
+                    issue_found = True
             if issue_found:
                 result.append({
                     "user": self.user_id,
