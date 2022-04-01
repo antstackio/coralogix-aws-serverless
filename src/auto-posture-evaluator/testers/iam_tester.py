@@ -49,7 +49,8 @@ class Tester(interfaces.TesterInterface):
             self.get_policy_with_admin_privilege_not_created() + \
             self.get_iam_user_credentials_unused_for_45_days() + \
             self.get_more_than_one_active_access_key_for_a_single_user() + \
-            self.get_iam_access_analyzer_disabled()
+            self.get_iam_access_analyzer_disabled() + \
+            self.get_iam_pre_heartbleed_server_certificates()
 
     def get_password_policy_has_14_or_more_char(self):
         result = []
@@ -1093,4 +1094,50 @@ class Tester(interfaces.TesterInterface):
                 "test_result": "issue_found"
             })
 
+        return result
+
+    def get_iam_pre_heartbleed_server_certificates(self):
+        result = []
+        test_name = "iam_pre_heartbleed_server_certificates"
+        certificates = []
+        can_paginate = self.aws_iam_client.can_paginate('list_server_certificates')
+        if can_paginate:
+            paginator = self.aws_iam_client.get_paginator('list_server_certificates')
+            response_iterator = paginator.paginate(PaginationConfig={'PageSize': 50})
+            for page in response_iterator:
+                certificates.extend(page['ServerCertificateMetadataList'])  
+        else:
+            response = self.aws_iam_client.list_server_certificates()
+            certificates.extend(response['ServerCertificateMetadataList'])
+
+        for certificate in certificates:
+            name = certificate["ServerCertificateName"]
+            issue_found = False
+            response = self.aws_iam_client.get_server_certificate(ServerCertificateName=certificate)
+            upload_date = response['UploadDate']
+
+            if upload_date.year < 2014 or (upload_date.year == 2014 and upload_date.month<4):
+                issue_found = True
+            if issue_found:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": name,
+                    "item_type": "server_certificate",
+                    "test_name": test_name,
+                    "test_result": "issue_found"
+                })
+            else:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": name,
+                    "item_type": "server_certificate",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
+                })
         return result
