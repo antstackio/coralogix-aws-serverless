@@ -1113,8 +1113,7 @@ class Tester(interfaces.TesterInterface):
         for certificate in certificates:
             name = certificate["ServerCertificateName"]
             issue_found = False
-            response = self.aws_iam_client.get_server_certificate(ServerCertificateName=certificate)
-            upload_date = response['UploadDate']
+            upload_date = certificate['UploadDate']
 
             if upload_date.year < 2014 or (upload_date.year == 2014 and upload_date.month<4):
                 issue_found = True
