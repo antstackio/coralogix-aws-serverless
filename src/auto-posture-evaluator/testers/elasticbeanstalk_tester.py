@@ -10,6 +10,7 @@ class Tester(interfaces.TesterInterface):
         self.account_arn = boto3.client('sts').get_caller_identity().get('Arn')
         self.account_id = boto3.client('sts').get_caller_identity().get('Account')
         self.aws_elasticbeanstalk_client = boto3.client('elasticbeanstalk')
+        self.elasticbeanstalk_enviroments = self._get_all_environemnts()
 
     def declare_tested_provider(self) -> str:
         return "aws"
@@ -35,6 +36,16 @@ class Tester(interfaces.TesterInterface):
             "test_name": test_name,
             "test_result": issue_status
         }
+
+    def _get_all_environemnts(self):
+        environments = []
+        paginator = self.aws_elasticbeanstalk_client.get_paginator('describe_environments')
+        response_iterator = paginator.paginate()
+
+        for page in response_iterator:
+            environments.extend(page['Environments'])
+        
+        return environments
 
     def application_environment_should_have_load_balancer_access_logs(self):
         result = []
@@ -96,12 +107,8 @@ class Tester(interfaces.TesterInterface):
     def enhanced_health_enabled(self):
         result = []
         test_name = "enhanced_health_reporting_enabled"
-        environments = []
-        paginator = self.aws_elasticbeanstalk_client.get_paginator('describe_environments')
-        response_iterator = paginator.paginate()
-
-        for page in response_iterator:
-            environments.extend(page['Environments'])
+        environments = self.elasticbeanstalk_enviroments
+        
         filtered_environments = list(filter(lambda env: env['Status'] == "Ready" or env['Status'] == "Updating" or env["Status"] == "Launching" or env["Status"] == "LinkingFrom" or env["Status"] == "LinkingTo", environments))
 
         for env in filtered_environments:
@@ -117,14 +124,8 @@ class Tester(interfaces.TesterInterface):
 
     def application_env_has_managed_updates_enabled(self):
         result = []
-        environments = []
         test_name = "application_environment_should_have_managed_platform_updates_enabled"
-
-        paginator = self.aws_elasticbeanstalk_client.get_paginator('describe_environments')
-        response_iterator = paginator.paginate()
-
-        for page in response_iterator:
-            environments.extend(page['Environments'])
+        environments = self.elasticbeanstalk_enviroments
         
         for env in environments:
             env_name = env['EnvironmentName']
@@ -146,12 +147,7 @@ class Tester(interfaces.TesterInterface):
     def detect_environment_notification_configured(self):
         result = []
         test_name = "environment_notifications_should_be_configured"
-        environments = []
-        paginator = self.aws_elasticbeanstalk_client.get_paginator('describe_environments')
-        response_iterator = paginator.paginate()
-
-        for page in response_iterator:
-            environments.extend(page['Environments'])
+        environments = self.elasticbeanstalk_enviroments
         
         for env in environments:
             env_name = env['EnvironmentName']
