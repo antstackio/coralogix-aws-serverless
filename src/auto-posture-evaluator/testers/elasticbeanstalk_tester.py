@@ -21,7 +21,8 @@ class Tester(interfaces.TesterInterface):
         return \
             self.application_environment_should_have_load_balancer_access_logs() + \
             self.enhanced_health_enabled() + \
-            self.application_env_has_managed_updates_enabled()
+            self.application_env_has_managed_updates_enabled() + \
+            self.detect_environment_notification_configured()
 
     def _append_elasticbeanstalk_test_result(self, item, item_type, test_name, issue_status):
         return {
@@ -140,4 +141,29 @@ class Tester(interfaces.TesterInterface):
                     result.append(self._append_elasticbeanstalk_test_result(env_name, "elasticbeanstalk_application_environment", test_name, "issue_found"))
             else: pass
         
+        return result
+
+    def detect_environment_notification_configured(self):
+        result = []
+        test_name = "environment_notifications_should_be_configured"
+        environments = []
+        paginator = self.aws_elasticbeanstalk_client.get_paginator('describe_environments')
+        response_iterator = paginator.paginate()
+
+        for page in response_iterator:
+            environments.extend(page['Environments'])
+        
+        for env in environments:
+            env_name = env['EnvironmentName']
+            app_name = env['ApplicationName']
+
+            response = self.aws_elasticbeanstalk_client.describe_configuration_settings(ApplicationName=app_name, EnvironmentName=env_name)
+            configuration_settings = {"ConfigurationSettings" : response["ConfigurationSettings"]}
+            temp = jmespath.search("ConfigurationSettings[*].OptionSettings[?OptionName==`Notification Endpoint`].Value | []", configuration_settings)
+
+            if not temp:
+                result.append(self._append_elasticbeanstalk_test_result(env_name, "elasticbeanstalk_application_environment", test_name, "issue_found"))
+            else:
+                result.append(self._append_elasticbeanstalk_test_result(env_name, "elasticbeanstalk_application_environment", test_name, "no_issue_found"))
+
         return result
