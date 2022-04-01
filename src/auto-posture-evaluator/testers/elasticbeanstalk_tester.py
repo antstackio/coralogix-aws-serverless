@@ -50,57 +50,23 @@ class Tester(interfaces.TesterInterface):
     def application_environment_should_have_load_balancer_access_logs(self):
         result = []
         test_name = "elasticbeanstalk_application_environment_should_have_load_balancer_access_logs"
-        applications = []
-        required_values = []
+        environments = self.elasticbeanstalk_enviroments
 
-        if self.aws_elasticbeanstalk_client.can_paginate('describe_applications'):
-            paginator = self.aws_elasticbeanstalk_client.get_paginator('describe_applications')
-            response_iterator = paginator.paginate()
-
-            for page in response_iterator:
-                applications.extend(page['Applications'])
-        else:
-            response = self.aws_elasticbeanstalk_client.describe_applications()
-            applications.extend(response['Applications'])
-        
-        for application in applications:
-            application_name = application['ApplicationName']
-
-            response = self.aws_elasticbeanstalk_client.describe_environments(ApplicationName=application_name)
-            environment = response['Environments'][0]
-            environment_name = environment['EnvironmentName']
-            required_values.append({"application_name": application_name, "environment_name": environment_name})
-
-        for value in required_values:
-            application_name = value['application_name']
-            environment_name = value['environment_name']
+        for env in environments:
+            application_name = env['ApplicationName']
+            environment_name = env['EnvironmentName']
 
             response = self.aws_elasticbeanstalk_client.describe_configuration_settings(ApplicationName=application_name, EnvironmentName=environment_name)
             configuration_settings = {"configuration_settings": response['ConfigurationSettings']}
-            filtered_response = jmespath.search("configuration_settings[*].OptionSettings[?(OptionName==`AccessLogsS3Enabled`)].Value", configuration_settings)
-            access_logs_enabled = filtered_response[0][0]
-            if access_logs_enabled == "true":
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": application_name,
-                    "item_type": "elasticbeanstalk_application",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                })
+            filtered_response = jmespath.search("configuration_settings[*].OptionSettings[?(OptionName==`AccessLogsS3Enabled`)].Value | []", configuration_settings)
+
+            access_logs_enabled = filtered_response
+            if not access_logs_enabled: 
+                result.append(self._append_elasticbeanstalk_test_result(environment_name, "elasticbeanstalk_application_environment", test_name, "issue_found"))
+            elif access_logs_enabled[0] == "false":
+                result.append(self._append_elasticbeanstalk_test_result(environment_name, "elasticbeanstalk_application_environment", test_name, "issue_found"))
             else:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": application_name,
-                    "item_type": "elasticbeanstalk_application",
-                    "test_name": test_name,
-                    "test_result": "issue_found"
-                })
+                result.append(self._append_elasticbeanstalk_test_result(environment_name, "elasticbeanstalk_application_environment", test_name, "no_issue_found"))
         
         return result
 
