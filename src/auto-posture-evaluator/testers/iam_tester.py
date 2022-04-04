@@ -50,7 +50,8 @@ class Tester(interfaces.TesterInterface):
             self.get_iam_user_credentials_unused_for_45_days() + \
             self.get_more_than_one_active_access_key_for_a_single_user() + \
             self.get_iam_access_analyzer_disabled() + \
-            self.get_iam_pre_heartbleed_server_certificates()
+            self.get_iam_pre_heartbleed_server_certificates() + \
+            self.get_user_access_keys()
 
     def get_password_policy_has_14_or_more_char(self):
         result = []
@@ -1139,4 +1140,58 @@ class Tester(interfaces.TesterInterface):
                     "test_name": test_name,
                     "test_result": "no_issue_found"
                 })
+        return result
+
+    def get_user_access_keys(self):
+        result = []
+        users = []
+        test_name = "there_is_atleast_one_iam_user_with_access_keys_for_api_access"
+
+        paginator = self.aws_iam_client.get_paginator('list_users')
+        response_iterator = paginator.paginate()
+
+        for page in response_iterator:
+            users.extend(page['Users'])
+
+        if len(users) > 0:
+            for user in users:
+                user_name = user["UserName"]
+                response = self.aws_iam_client.list_access_keys(UserName=user_name)
+                access_keys = response["AccessKeyMetadata"]
+                temp = list(filter(lambda x: x["Status"] == "Active", access_keys))
+                print(temp)
+                if len(temp) >= 1:
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": user_name,
+                        "item_type": "iam_user",
+                        "test_name": test_name,
+                        "test_result": "no_issue_found"
+                    })
+                else:
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": user_name,
+                        "item_type": "iam_user",
+                        "test_name": test_name,
+                        "test_result": "issue_found"
+                    })
+        else:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": "no_iam_users@@" + self.account_id,
+                "item_type": "iam_user",
+                "test_name": test_name,
+                "test_result": "issue_found"
+            })
+        
         return result
