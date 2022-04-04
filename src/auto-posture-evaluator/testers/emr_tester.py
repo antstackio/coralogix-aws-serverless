@@ -177,6 +177,7 @@ class Tester(interfaces.TesterInterface):
                 security_conf_name = response["Cluster"]["SecurityConfiguration"]
                 security_conf = self.aws_emr_client.describe_security_configuration(Name=security_conf_name)
                 security_conf = json.loads(security_conf)
+                security_conf = security_conf["SecurityConfiguration"]
                 if security_conf.get("EncryptionConfiguration").get("AtRestEncryptionConfiguration").get("S3EncryptionConfiguration").get("EncryptionMode")=="SSE-KMS":
                     result.append({
                         "user": self.user_id,
@@ -218,6 +219,7 @@ class Tester(interfaces.TesterInterface):
                 security_conf_name = response["Cluster"]["SecurityConfiguration"]
                 security_conf = self.aws_emr_client.describe_security_configuration(Name=security_conf_name)
                 security_conf = json.loads(security_conf)
+                security_conf = security_conf["SecurityConfiguration"]
                 kms_key = security_conf.get("EncryptionConfiguration").get("AtRestEncryptionConfiguration").get("S3EncryptionConfiguration").get("AwsKmsKey")
                 if kms_key:
                     kms_response = self.aws_kms_client.list_aliases(KeyId=kms_key)
@@ -287,4 +289,46 @@ class Tester(interfaces.TesterInterface):
                     "test_result": "issue_found"
                 })
         
+        return result
+
+    def emr_cluster_should_have_local_disk_encryption(self):
+        test_name = "emr_cluster_should_have_local_disk_encryption"
+        result = []
+
+        clusters = self._get_all_emr_clusters()
+
+        for cluster in clusters:
+            cluster_id = cluster['Id']
+            cluster_state = cluster['Status']['State']
+
+            if cluster_state == "TERMINATING" or cluster_state == "TERMINATED" or cluster_state == "TERMINATED_WITH_ERRORS": pass
+            else:
+                response = self.aws_emr_client.describe_cluster(ClusterId=cluster_id)
+                security_conf_name = response["Cluster"]["SecurityConfiguration"]
+                security_conf = self.aws_emr_client.describe_security_configuration(Name=security_conf_name)
+                security_conf = json.loads(security_conf)
+                security_conf = security_conf["SecurityConfiguration"]
+                local_encryption = security_conf.get("EncryptionConfiguration").get("AtRestEncryptionConfiguration").get("LocalDiskEncryptionConfiguration")
+                if local_encryption:
+                    result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": cluster_id,
+                    "item_type": "emr_cluster",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
+                    })
+                else:
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": cluster_id,
+                        "item_type": "emr_cluster",
+                        "test_name": test_name,
+                        "test_result": "issue_found"
+                    })
         return result
