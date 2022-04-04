@@ -46,6 +46,7 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
+                "item": "SecurityGroupEventCount",
                 "item_type": "cloudwatch_alarm",
                 "test_name": test_name,
                 "test_result": "no_issue_found"
@@ -56,6 +57,7 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
+                "item": "SecurityGroupEventCount",
                 "item_type": "cloudwatch_alarm",
                 "test_name": test_name,
                 "test_result": "issue_found"
@@ -70,6 +72,7 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
+                "item": "RouteTableEventCount",
                 "item_type": "cloudwatch_alarm",
                 "test_name": test_name,
                 "test_result": "no_issue_found"
@@ -80,6 +83,7 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
+                "item": "RouteTableEventCount",
                 "item_type": "cloudwatch_alarm",
                 "test_name": test_name,
                 "test_result": "issue_found"
@@ -94,6 +98,7 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
+                "item": "ConsoleSignInFailureCount",
                 "item_type": "cloudwatch_alarm",
                 "test_name": test_name,
                 "test_result": "no_issue_found"
@@ -104,6 +109,7 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
+                "item": "ConsoleSignInFailureCount",
                 "item_type": "cloudwatch_alarm",
                 "test_name": test_name,
                 "test_result": "issue_found"
@@ -118,6 +124,7 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
+                "item": "S3BucketEventCount",
                 "item_type": "cloudwatch_alarm",
                 "test_name": test_name,
                 "test_result": "no_issue_found"
@@ -128,6 +135,7 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
+                "item": "S3BucketEventCount",
                 "item_type": "cloudwatch_alarm",
                 "test_name": test_name,
                 "test_result": "issue_found"
@@ -142,6 +150,7 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
+                "item": "VpcEventCount",
                 "item_type": "cloudwatch_alarm",
                 "test_name": test_name,
                 "test_result": "no_issue_found"
@@ -152,6 +161,7 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
+                "item": "VpcEventCount",
                 "item_type": "cloudwatch_alarm",
                 "test_name": test_name,
                 "test_result": "issue_found"
@@ -166,6 +176,7 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
+                "item": "OrganizationEvents",
                 "item_type": "cloudwatch_alarm",
                 "test_name": test_name,
                 "test_result": "no_issue_found"
@@ -176,6 +187,7 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
+                "item": "OrganizationEvents",
                 "item_type": "cloudwatch_alarm",
                 "test_name": test_name,
                 "test_result": "issue_found"
@@ -190,6 +202,7 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
+                "item": "RootAccountUsageEventCount",
                 "item_type": "cloudwatch_alarm",
                 "test_name": test_name,
                 "test_result": "no_issue_found"
@@ -200,6 +213,7 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
+                "item": "RootAccountUsageEventCount",
                 "item_type": "cloudwatch_alarm",
                 "test_name": test_name,
                 "test_result": "issue_found"
@@ -214,6 +228,7 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
+                "item": "CloudTrailEventCount",
                 "item_type": "cloudwatch_alarm",
                 "test_name": test_name,
                 "test_result": "no_issue_found"
@@ -224,6 +239,7 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
+                "item": "CloudTrailEventCount",
                 "item_type": "cloudwatch_alarm",
                 "test_name": test_name,
                 "test_result": "issue_found"
@@ -238,6 +254,7 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
+                "item": "ConsoleSignInWithoutMfaCount",
                 "item_type": "cloudwatch_alarm",
                 "test_name": test_name,
                 "test_result": "no_issue_found"
@@ -248,6 +265,7 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
+                "item": "ConsoleSignInWithoutMfaCount",
                 "item_type": "cloudwatch_alarm",
                 "test_name": test_name,
                 "test_result": "issue_found"
@@ -262,6 +280,7 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
+                "item": "CMKEventCount",
                 "item_type": "cloudwatch_alarm",
                 "test_name": test_name,
                 "test_result": "no_issue_found"
@@ -272,6 +291,7 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
+                "item": "CMKEventCount",
                 "item_type": "cloudwatch_alarm",
                 "test_name": test_name,
                 "test_result": "issue_found"
@@ -286,6 +306,7 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
+                "item": "GatewayEventCount",
                 "item_type": "cloudwatch_alarm",
                 "test_name": test_name,
                 "test_result": "no_issue_found"
@@ -296,6 +317,7 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
+                "item": "GatewayEventCount",
                 "item_type": "cloudwatch_alarm",
                 "test_name": test_name,
                 "test_result": "issue_found"
@@ -310,6 +332,7 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
+                "item": "SecurityGroupEventCount",
                 "item_type": "cloudwatch_alarm",
                 "test_name": test_name,
                 "test_result": "no_issue_found"
@@ -320,6 +343,7 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
+                "item": "SecurityGroupEventCount",
                 "item_type": "cloudwatch_alarm",
                 "test_name": test_name,
                 "test_result": "issue_found"
@@ -334,6 +358,7 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
+                "item": "NetworkAclEventCount",
                 "item_type": "cloudwatch_alarm",
                 "test_name": test_name,
                 "test_result": "no_issue_found"
@@ -344,6 +369,7 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
+                "item": "NetworkAclEventCount",
                 "item_type": "cloudwatch_alarm",
                 "test_name": test_name,
                 "test_result": "issue_found"
@@ -358,6 +384,7 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
+                "item": "ConfigEventCount",
                 "item_type": "cloudwatch_alarm",
                 "test_name": test_name,
                 "test_result": "no_issue_found"
@@ -368,6 +395,7 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
+                "item": "ConfigEventCount",
                 "item_type": "cloudwatch_alarm",
                 "test_name": test_name,
                 "test_result": "issue_found"
@@ -382,6 +410,7 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
+                "item": "IAMPolicyEventCount",
                 "item_type": "cloudwatch_alarm",
                 "test_name": test_name,
                 "test_result": "no_issue_found"
@@ -392,6 +421,7 @@ class Tester(interfaces.TesterInterface):
                 "account_arn": self.account_arn,
                 "account": self.account_id,
                 "timestamp": time.time(),
+                "item": "IAMPolicyEventCount",
                 "item_type": "cloudwatch_alarm",
                 "test_name": test_name,
                 "test_result": "issue_found"
@@ -439,3 +469,5 @@ class Tester(interfaces.TesterInterface):
                 })
 
         return result
+
+print(Tester().run_tests())
