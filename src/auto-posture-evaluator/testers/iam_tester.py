@@ -51,7 +51,8 @@ class Tester(interfaces.TesterInterface):
             self.get_more_than_one_active_access_key_for_a_single_user() + \
             self.get_iam_access_analyzer_disabled() + \
             self.get_iam_pre_heartbleed_server_certificates() + \
-            self.get_user_access_keys()
+            self.get_user_access_keys() + \
+            self.detect_no_iam_user_present()
 
     def get_password_policy_has_14_or_more_char(self):
         result = []
@@ -1194,4 +1195,40 @@ class Tester(interfaces.TesterInterface):
                 "test_result": "issue_found"
             })
         
+        return result
+
+    def detect_no_iam_user_present(self):
+        result = []
+        test_name = "atleast_one_iam_user_is_present_to_access_aws_account"
+        users = []
+
+        paginator = self.aws_iam_client.get_paginator("list_users")
+        response_iterator = paginator.paginate()
+
+        for page in response_iterator:
+            users.extend(page["Users"])
+
+        if len(users) >= 1:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": "iam_users_present@@" + self.account_id,
+                "item_type": "iam_user",
+                "test_name": test_name,
+                "test_result": "no_issue_found"
+            })
+        else:
+            result.append({
+                "user": self.user_id,
+                "account_arn": self.account_arn,
+                "account": self.account_id,
+                "timestamp": time.time(),
+                "item": "no_iam_users@@" + self.account_id,
+                "item_type": "iam_user",
+                "test_name": test_name,
+                "test_result": "issue_found"
+            })
+
         return result
