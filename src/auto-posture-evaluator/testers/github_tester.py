@@ -106,6 +106,7 @@ class Tester(interfaces.TesterInterface):
 
     def run_tests(self) -> list:
         results = []
+        self._detect_valid_github_personal_access_token()
         organizations_list = self.get_organizations_list(
             self.github_organizations)
         for test_name in self.tests.keys():
@@ -655,3 +656,12 @@ class Tester(interfaces.TesterInterface):
                     pass
         else: pass
         return result
+
+    def _detect_valid_github_personal_access_token(self):
+        response = requests.get(url=f"{self.BASE_URL_USERS}", headers=self.request_headers)
+        status_code = response.status_code
+
+        if status_code != 200:
+            message = response.json().get("message")
+            raise Exception(message)
+        else: pass
