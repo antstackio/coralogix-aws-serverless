@@ -1,4 +1,3 @@
-from cgi import test
 import time
 import boto3
 import interfaces
@@ -24,7 +23,8 @@ class Tester(interfaces.TesterInterface):
             self.emr_cluster_should_have_a_security_configuration() + \
             self.emr_cluster_should_use_kerberos_authentication() + \
             self.emr_in_transit_and_at_rest_encryption_enabled() + \
-            self.emr_cluster_should_use_kms_for_s3_sse()
+            self.emr_cluster_should_use_kms_for_s3_sse() + \
+            self.emr_cluster_should_upload_logs_to_s3()
     
     def _get_all_emr_clusters(self):
         clusters = []
@@ -249,4 +249,42 @@ class Tester(interfaces.TesterInterface):
                     "test_name": test_name,
                     "test_result": "no_issue_found"
                 })
+        return result
+    
+    def emr_cluster_should_upload_logs_to_s3(self):
+        result = []
+        test_name = "emr_cluster_should_upload_logs_to_s3"
+
+        clusters = self.emr_clusters
+
+        for cluster in clusters:
+            cluster_id = cluster['Id']
+            response = self.aws_emr_client.describe_cluster(ClusterId=cluster_id)
+            cluster_obj = response['Cluster']
+
+            log_uri = cluster_obj.get("LogUri")
+
+            if log_uri is not None:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": cluster_id,
+                    "item_type": "emr_cluster",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
+                })
+            else:
+                result.append({
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": cluster_id,
+                    "item_type": "emr_cluster",
+                    "test_name": test_name,
+                    "test_result": "issue_found"
+                })
+        
         return result
