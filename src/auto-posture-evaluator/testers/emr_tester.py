@@ -26,7 +26,8 @@ class Tester(interfaces.TesterInterface):
             self.emr_cluster_should_use_kms_for_s3_sse() + \
             self.emr_cluster_should_upload_logs_to_s3() + \
             self.emr_cluster_should_have_local_disk_encryption() + \
-            self.emr_cluster_should_have_encryption_in_transit_enabled()
+            self.emr_cluster_should_have_encryption_in_transit_enabled() + \
+            self.emr_cluster_should_use_kms_for_s3_cse()
     
     def _get_all_emr_clusters(self):
         clusters = []
@@ -375,4 +376,49 @@ class Tester(interfaces.TesterInterface):
                         "test_result": "issue_found"
                     })
         return result
-                
+    
+    def emr_cluster_should_use_kms_for_s3_cse(self):
+        result = []
+        test_name = "emr_cluster_should_use_kms_for_s3_cse"
+
+        clusters = self.emr_clusters
+
+        for cluster in clusters:
+            cluster_id = cluster['Id']
+            cluster_state = cluster['Status']['State']
+
+            if cluster_state == "TERMINATING" or cluster_state == "TERMINATED" or cluster_state == "TERMINATED_WITH_ERRORS": pass
+            else:
+                response = self.aws_emr_client.describe_cluster(ClusterId=cluster_id)
+                cluster_obj = response['Cluster']
+                security_configuration = cluster_obj.get('SecurityConfiguration')
+
+                if security_configuration is not None:
+                    response = self.aws_emr_client.describe_security_configuration(Name=security_configuration)
+                    security_configuration_details = json.loads(response['SecurityConfiguration'])
+
+                    if security_configuration_details.get("EncryptionConfiguration").get("AtRestEncryptionConfiguration").get("S3EncryptionConfiguration").get("EncryptionMode") == "CSE-KMS":
+                        result.append({
+                            "user": self.user_id,
+                            "account_arn": self.account_arn,
+                            "account": self.account_id,
+                            "timestamp": time.time(),
+                            "item": cluster_id,
+                            "item_type": "emr_cluster",
+                            "test_name": test_name,
+                            "test_result": "no_issue_found"
+                        })
+                    else:
+                        result.append({
+                            "user": self.user_id,
+                            "account_arn": self.account_arn,
+                            "account": self.account_id,
+                            "timestamp": time.time(),
+                            "item": cluster_id,
+                            "item_type": "emr_cluster",
+                            "test_name": test_name,
+                            "test_result": "issue_found"
+                        })
+                else: pass
+
+        return result
