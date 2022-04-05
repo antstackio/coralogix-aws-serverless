@@ -39,6 +39,18 @@ class Tester(interfaces.TesterInterface):
             
         return clusters
     
+    def _append_emr_cluster_test_result(self, item, item_type, test_name, issue_status):
+        return {
+            "user": self.user_id,
+            "account_arn": self.account_arn,
+            "account": self.account_id,
+            "timestamp": time.time(),
+            "item": item,
+            "item_type": item_type,
+            "test_name": test_name,
+            "test_result": issue_status
+        }
+
     def emr_cluster_should_have_a_security_configuration(self):
         result = []
         test_name = "emr_cluster_should_have_a_security_configuration"
@@ -56,27 +68,9 @@ class Tester(interfaces.TesterInterface):
                 security_config = cluster_info.get("SecurityConfiguration")
 
                 if security_config is not None:
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": cluster_id,
-                        "item_type": "emr_cluster",
-                        "test_name": test_name,
-                        "test_result": "no_issue_found"
-                    })
+                    result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "no_issue_found"))
                 else:
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": cluster_id,
-                        "item_type": "emr_cluster",
-                        "test_name": test_name,
-                        "test_result": "issue_found"
-                    })
+                    result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "issue_found"))
         
         return result
 
@@ -98,27 +92,9 @@ class Tester(interfaces.TesterInterface):
                 kerberos_attrs = cluster_info.get('KerberosAttributes')
 
                 if kerberos_attrs is not None:
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": cluster_id,
-                        "item_type": "emr_cluster",
-                        "test_name": test_name,
-                        "test_result": "no_issue_found"
-                    })
+                    result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "no_issue_found"))
                 else:
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": cluster_id,
-                        "item_type": "emr_cluster",
-                        "test_name": test_name,
-                        "test_result": "issue_found"
-                    })
+                    result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "issue_found"))
         
         return result
     
@@ -140,27 +116,9 @@ class Tester(interfaces.TesterInterface):
                 security_conf = cluster_info.get('SecurityConfiguration')
 
                 if security_conf is not None:
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": cluster_id,
-                        "item_type": "emr_cluster",
-                        "test_name": test_name,
-                        "test_result": "no_issue_found"
-                    })
+                    result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "no_issue_found"))
                 else:
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": cluster_id,
-                        "item_type": "emr_cluster",
-                        "test_name": test_name,
-                        "test_result": "issue_found"
-                    })
+                    result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "issue_found"))
         
         return result
 
@@ -182,27 +140,9 @@ class Tester(interfaces.TesterInterface):
                 security_conf = json.loads(security_conf)
                 security_conf = security_conf["SecurityConfiguration"]
                 if security_conf.get("EncryptionConfiguration").get("AtRestEncryptionConfiguration").get("S3EncryptionConfiguration").get("EncryptionMode")=="SSE-KMS":
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": cluster_id,
-                        "item_type": "emr_cluster",
-                        "test_name": test_name,
-                        "test_result": "no_issue_found"
-                    })
+                    result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "no_issue_found"))
                 else:
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": cluster_id,
-                        "item_type": "emr_cluster",
-                        "test_name": test_name,
-                        "test_result": "issue_found"
-                    })
+                    result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "issue_found"))
         return result
     
     def emr_cluster_should_have_local_disk_encryption_with_cmk(self):
@@ -233,27 +173,9 @@ class Tester(interfaces.TesterInterface):
                 else:
                     issue_found = True
             if issue_found:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": cluster_id,
-                    "item_type": "emr_cluster",
-                    "test_name": test_name,
-                    "test_result": "issue_found"
-                })
+                result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "issue_found"))
             else:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": cluster_id,
-                    "item_type": "emr_cluster",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                })
+                result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "no_issue_found"))
         return result
     
     def emr_cluster_should_upload_logs_to_s3(self):
@@ -270,27 +192,9 @@ class Tester(interfaces.TesterInterface):
             log_uri = cluster_obj.get("LogUri")
 
             if log_uri is not None:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": cluster_id,
-                    "item_type": "emr_cluster",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                })
+                result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "no_issue_found"))
             else:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": cluster_id,
-                    "item_type": "emr_cluster",
-                    "test_name": test_name,
-                    "test_result": "issue_found"
-                })
+                result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "issue_found"))
         
         return result
 
@@ -313,27 +217,9 @@ class Tester(interfaces.TesterInterface):
                 security_conf = security_conf["SecurityConfiguration"]
                 local_encryption = security_conf.get("EncryptionConfiguration").get("AtRestEncryptionConfiguration").get("LocalDiskEncryptionConfiguration")
                 if local_encryption:
-                    result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": cluster_id,
-                    "item_type": "emr_cluster",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                    })
+                    result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "no_issue_found"))
                 else:
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": cluster_id,
-                        "item_type": "emr_cluster",
-                        "test_name": test_name,
-                        "test_result": "issue_found"
-                    })
+                    result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "issue_found"))
         return result
 
     def emr_cluster_should_have_encryption_in_transit_enabled(self):
@@ -354,27 +240,9 @@ class Tester(interfaces.TesterInterface):
                 security_conf = security_conf["SecurityConfiguration"]
                 encryption_enabled = security_conf.get("EncryptionConfiguration").get("EnableInTransitEncryption")
                 if encryption_enabled:
-                    result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": cluster_id,
-                    "item_type": "emr_cluster",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                    })
+                    result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "no_issue_found"))
                 else:
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": cluster_id,
-                        "item_type": "emr_cluster",
-                        "test_name": test_name,
-                        "test_result": "issue_found"
-                    })
+                    result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "issue_found"))
         return result
     
     def emr_cluster_should_use_kms_for_s3_cse(self):
@@ -398,27 +266,9 @@ class Tester(interfaces.TesterInterface):
                     security_configuration_details = json.loads(response['SecurityConfiguration'])
 
                     if security_configuration_details.get("EncryptionConfiguration").get("AtRestEncryptionConfiguration").get("S3EncryptionConfiguration").get("EncryptionMode") == "CSE-KMS":
-                        result.append({
-                            "user": self.user_id,
-                            "account_arn": self.account_arn,
-                            "account": self.account_id,
-                            "timestamp": time.time(),
-                            "item": cluster_id,
-                            "item_type": "emr_cluster",
-                            "test_name": test_name,
-                            "test_result": "no_issue_found"
-                        })
+                        result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "no_issue_found"))
                     else:
-                        result.append({
-                            "user": self.user_id,
-                            "account_arn": self.account_arn,
-                            "account": self.account_id,
-                            "timestamp": time.time(),
-                            "item": cluster_id,
-                            "item_type": "emr_cluster",
-                            "test_name": test_name,
-                            "test_result": "issue_found"
-                        })
+                        result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "issue_found"))
                 else: pass
 
         return result
