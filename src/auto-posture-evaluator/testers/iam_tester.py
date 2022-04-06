@@ -18,6 +18,7 @@ class Tester(interfaces.TesterInterface):
         self.password_maximum_age_policy = os.environ.get('AUTOPOSTURE_PASSWORD_MAX_AGE_POLICY')
         self.password_length_threshold_policy = os.environ.get('AUTOPOSTURE_PASSWORD_LENGTH_THRESHOLD_POLICY')
         self.access_key_maximum_age = os.environ.get('AUTOPOSTURE_ACCESS_KEY_MAX_AGE')
+        self.iam_users = self._get_all_iam_users()
 
     def declare_tested_provider(self) -> str:
         return 'aws'
@@ -53,6 +54,16 @@ class Tester(interfaces.TesterInterface):
             self.get_iam_pre_heartbleed_server_certificates() + \
             self.get_user_access_keys() + \
             self.detect_no_iam_user_present()
+
+    def _get_all_iam_users(self):
+        users = []
+        paginator = self.aws_iam_client.get_paginator('list_users')
+        response_iterator = paginator.paginate()
+
+        for page in response_iterator:
+            users.extend(page['Users'])
+        
+        return users
 
     def get_password_policy_has_14_or_more_char(self):
         result = []
@@ -216,11 +227,7 @@ class Tester(interfaces.TesterInterface):
         result = []
         test_name = "access_keys_are_rotated_every_90_days_or_less"
 
-        paginator = self.aws_iam_client.get_paginator('list_users')
-        response_iterator = paginator.paginate()
-        users = []
-        for page in response_iterator:
-            users.extend(page['Users'])
+        users = self.iam_users
         access_keys_max_age = int(self.access_key_maximum_age) if self.access_key_maximum_age else 90
         if len(users) > 0:
             for user in users:
@@ -640,11 +647,7 @@ class Tester(interfaces.TesterInterface):
         result = []
         test_name = "priviledged_user_has_admin_permissions"
 
-        paginator = self.aws_iam_client.get_paginator('list_users')
-        response_iterator = paginator.paginate()
-        users = []
-        for page in response_iterator:
-            users.extend(page['Users'])
+        users = self.iam_users
         
         if len(users) > 0:
             for user in users:
@@ -759,14 +762,8 @@ class Tester(interfaces.TesterInterface):
 
     def get_mfa_enabled_for_all_iam_users(self):
         result = []
-        users = []
+        users = self.iam_users
         test_name = "mfa_is_enabled_for_all_iam_users_with_console_password"
-
-        paginator = self.aws_iam_client.get_paginator('list_users')
-        response_paginator = paginator.paginate()
-        
-        for page in response_paginator:
-            users.extend(page['Users'])
         
         if len(users) > 0:
             for user in users:
@@ -851,12 +848,7 @@ class Tester(interfaces.TesterInterface):
     def get_access_keys_are_not_created_during_initial_setup(self):
         result = []
         test_name = "access_keys_are_not_created_for_IAM_user_during_initial_setup"
-        users = []
-        paginator = self.aws_iam_client.get_paginator('list_users')
-        response_iterator = paginator.paginate()
-
-        for page in response_iterator:
-            users.extend(page['Users'])
+        users = self.iam_users
         
         if len(users) > 0:
             for user in users:
@@ -967,14 +959,8 @@ class Tester(interfaces.TesterInterface):
 
     def get_iam_user_credentials_unused_for_45_days(self):
         result = []
-        users = []
+        users = self.iam_users
         test_name = "iam_user_credentials_unused_for_45_days_or_more"
-
-        paginator = self.aws_iam_client.get_paginator('list_users')
-        response_iterator = paginator.paginate()
-
-        for page in response_iterator:
-            users.extend(page['Users'])
         
         credentials_unuse_threshold = int(self.iam_user_credentials_unuse_threshold) if self.iam_user_credentials_unuse_threshold else 45
         
@@ -1024,14 +1010,8 @@ class Tester(interfaces.TesterInterface):
 
     def get_more_than_one_active_access_key_for_a_single_user(self):
         result = []
-        users = []
+        users = self.iam_users
         test_name = "more_than_one_active_access_key_for_a_single_user"
-
-        paginator = self.aws_iam_client.get_paginator('list_users')
-        response_iterator = paginator.paginate()
-
-        for page in response_iterator:
-            users.extend(page['Users'])
 
         for user in users:
             user_name = user['UserName']
@@ -1145,14 +1125,8 @@ class Tester(interfaces.TesterInterface):
 
     def get_user_access_keys(self):
         result = []
-        users = []
+        users = self.iam_users
         test_name = "there_is_atleast_one_iam_user_with_access_keys_for_api_access"
-
-        paginator = self.aws_iam_client.get_paginator('list_users')
-        response_iterator = paginator.paginate()
-
-        for page in response_iterator:
-            users.extend(page['Users'])
 
         if len(users) > 0:
             for user in users:
@@ -1160,7 +1134,7 @@ class Tester(interfaces.TesterInterface):
                 response = self.aws_iam_client.list_access_keys(UserName=user_name)
                 access_keys = response["AccessKeyMetadata"]
                 temp = list(filter(lambda x: x["Status"] == "Active", access_keys))
-                print(temp)
+
                 if len(temp) >= 1:
                     result.append({
                         "user": self.user_id,
@@ -1200,13 +1174,7 @@ class Tester(interfaces.TesterInterface):
     def detect_no_iam_user_present(self):
         result = []
         test_name = "atleast_one_iam_user_is_present_to_access_aws_account"
-        users = []
-
-        paginator = self.aws_iam_client.get_paginator("list_users")
-        response_iterator = paginator.paginate()
-
-        for page in response_iterator:
-            users.extend(page["Users"])
+        users = self.iam_users
 
         if len(users) >= 1:
             result.append({
