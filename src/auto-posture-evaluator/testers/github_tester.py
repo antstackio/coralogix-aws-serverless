@@ -11,6 +11,7 @@ class Tester(interfaces.TesterInterface):
         self.github_authorization_token = os.environ.get('AUTOPOSTURE_GITHUB_TOKEN')
         self.github_organizations = os.environ.get('AUTOPOSTURE_GITHUB_ORGANIZATIONS')
         self.deploy_keys_max_days_old = os.environ.get('AUTOPOSTURE_GITHUB_DEPLOY_KEYS_MAX_DAYS_OLD')
+        self.max_admin_users = os.environ.get('AUTOPOSTURE_GITHUB_MAX_ADMIN_USERS')
         self.BASE_URL_ORGS = "https://api.github.com/orgs"
         self.BASE_URL_REPOS = "https://api.github.com/repos"
         self.BASE_URL_USERS = "http://api.github.com/users"
@@ -187,6 +188,7 @@ class Tester(interfaces.TesterInterface):
     def check_for_too_many_admin_users(self, organization):
         result = []
         org_admins = []
+        max_admin_users = int(self.max_admin_users) if self.max_admin_users else 15
         api = f"{self.BASE_URL_ORGS}/{organization}/members?role=admin"
         raw_api_result = requests.get(
             headers=self.request_headers, url=api)
@@ -196,7 +198,7 @@ class Tester(interfaces.TesterInterface):
             raw_api_result_obj = raw_api_result.json()
             for user in raw_api_result_obj:
                 org_admins.append(user["login"])
-            if len(org_admins) > 15:
+            if len(org_admins) > max_admin_users:
                 result.append({"item": organization, "issue": True})
             else:
                 result.append({"item": organization, "issue": False})
