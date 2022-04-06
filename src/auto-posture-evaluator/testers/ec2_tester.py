@@ -29,49 +29,48 @@ class Tester(interfaces.TesterInterface):
         all_outbound_permissions = self._get_all_outbound_permissions_by_security_groups(self.security_groups)
         region_names = self._get_ec2_region_names()
 
-        # return \
-        #     self.get_inbound_http_access(all_inbound_permissions) + \
-        #     self.get_inbound_https_access(all_inbound_permissions) + \
-        #     self.get_inbound_mongodb_access(all_inbound_permissions) + \
-        #     self.get_inbound_mysql_access(all_inbound_permissions) + \
-        #     self.get_inbound_mssql_access(all_inbound_permissions) + \
-        #     self.get_inbound_ssh_access(all_inbound_permissions) + \
-        #     self.get_inbound_rdp_access(all_inbound_permissions) + \
-        #     self.get_inbound_dns_access(all_inbound_permissions) + \
-        #     self.get_inbound_telnet_access(all_inbound_permissions) + \
-        #     self.get_inbound_rpc_access(all_inbound_permissions) + \
-        #     self.get_inbound_icmp_access(all_inbound_permissions) + \
-        #     self.get_security_group_allows_ingress_from_anywhere(all_inbound_permissions) + \
-        #     self.get_vpc_default_security_group_restrict_traffic() + \
-        #     self.get_outbound_access_to_all_ports(all_outbound_permissions) + \
-        #     self.get_inbound_oracle_access(all_inbound_permissions) + \
-        #     self.get_inbound_ftp_access(all_inbound_permissions) + \
-        #     self.get_inbound_smtp_access(all_inbound_permissions) + \
-        #     self.get_inbound_elasticsearch_access(all_inbound_permissions) + \
-        #     self.get_inbound_tcp_netbios_access(all_inbound_permissions) + \
-        #     self.get_inbound_udp_netbios(all_inbound_permissions) + \
-        #     self.get_inbound_cifs_access(all_inbound_permissions) + \
-        #     self.get_instance_uses_metadata_service_version_2(self.ec2_instances) + \
-        #     self.get_security_group_allows_https_access(all_inbound_permissions) + \
-        #     self.get_security_group_allows_inbound_access_from_ports_higher_than_1024(all_inbound_permissions) + \
-        #     self.get_unrestricted_admin_port_access_in_network_acl() + \
-        #     self.get_internet_gateway_presence_detected(self.ec2_instances) + \
-        #     self.get_sensitive_instance_tenancy_not_dedicated(self.ec2_instances) + \
-        #     self.get_aws_config_not_enabled_for_all_regions(region_names) + \
-        #     self.get_nearing_regional_limit_for_elastic_ip_addresses(region_names) + \
-        #     self.get_ec2_instance_iam_role_not_enabled(self.ec2_instances) + \
-        #     self.get_security_group_allows_inbound_traffic(all_inbound_permissions) + \
-        #     self.get_instance_with_upcoming_system_maintenance_scheduled_event(self.ec2_instances) + \
-        #     self.get_instance_with_upcoming_instance_stop_scheduled_event(self.ec2_instances) + \
-        #     self.get_instance_with_upcoming_instance_reboot_scheduled_event(self.ec2_instances) + \
-        #     self.get_instance_with_upcoming_system_reboot_scheduled_event(self.ec2_instances) + \
-        #     self.get_region_nearing_limits_of_ec2_instances(region_names) + \
-        #     self.get_elastic_ip_in_use() + \
-        #     self.get_unrestricted_mysql_access(all_inbound_permissions) + \
-        #     self.detect_classic_ec2_instances() + \
-        #     self.get_security_group_should_allow_access_to_specific_private_networks_only() + \
-        #     self.get_network_firewall_used()
-        return self.get_security_group_allows_ingress_from_anywhere(all_inbound_permissions)
+        return \
+            self.get_inbound_http_access(all_inbound_permissions) + \
+            self.get_inbound_https_access(all_inbound_permissions) + \
+            self.get_inbound_mongodb_access(all_inbound_permissions) + \
+            self.get_inbound_mysql_access(all_inbound_permissions) + \
+            self.get_inbound_mssql_access(all_inbound_permissions) + \
+            self.get_inbound_ssh_access(all_inbound_permissions) + \
+            self.get_inbound_rdp_access(all_inbound_permissions) + \
+            self.get_inbound_dns_access(all_inbound_permissions) + \
+            self.get_inbound_telnet_access(all_inbound_permissions) + \
+            self.get_inbound_rpc_access(all_inbound_permissions) + \
+            self.get_inbound_icmp_access(all_inbound_permissions) + \
+            self.get_security_group_allows_ingress_from_anywhere(all_inbound_permissions) + \
+            self.get_vpc_default_security_group_restrict_traffic() + \
+            self.get_outbound_access_to_all_ports(all_outbound_permissions) + \
+            self.get_inbound_oracle_access(all_inbound_permissions) + \
+            self.get_inbound_ftp_access(all_inbound_permissions) + \
+            self.get_inbound_smtp_access(all_inbound_permissions) + \
+            self.get_inbound_elasticsearch_access(all_inbound_permissions) + \
+            self.get_inbound_tcp_netbios_access(all_inbound_permissions) + \
+            self.get_inbound_udp_netbios(all_inbound_permissions) + \
+            self.get_inbound_cifs_access(all_inbound_permissions) + \
+            self.get_instance_uses_metadata_service_version_2(self.ec2_instances) + \
+            self.get_security_group_allows_https_access(all_inbound_permissions) + \
+            self.get_security_group_allows_inbound_access_from_ports_higher_than_1024(all_inbound_permissions) + \
+            self.get_unrestricted_admin_port_access_in_network_acl() + \
+            self.get_internet_gateway_presence_detected(self.ec2_instances) + \
+            self.get_sensitive_instance_tenancy_not_dedicated(self.ec2_instances) + \
+            self.get_aws_config_not_enabled_for_all_regions(region_names) + \
+            self.get_nearing_regional_limit_for_elastic_ip_addresses(region_names) + \
+            self.get_ec2_instance_iam_role_not_enabled(self.ec2_instances) + \
+            self.get_security_group_allows_inbound_traffic(all_inbound_permissions) + \
+            self.get_instance_with_upcoming_system_maintenance_scheduled_event(self.ec2_instances) + \
+            self.get_instance_with_upcoming_instance_stop_scheduled_event(self.ec2_instances) + \
+            self.get_instance_with_upcoming_instance_reboot_scheduled_event(self.ec2_instances) + \
+            self.get_instance_with_upcoming_system_reboot_scheduled_event(self.ec2_instances) + \
+            self.get_region_nearing_limits_of_ec2_instances(region_names) + \
+            self.get_elastic_ip_in_use() + \
+            self.get_unrestricted_mysql_access(all_inbound_permissions) + \
+            self.detect_classic_ec2_instances() + \
+            self.get_security_group_should_allow_access_to_specific_private_networks_only() + \
+            self.get_network_firewall_used()
             
     def _get_all_security_group_ids(self, instances) -> Set:
         return set(list(map(lambda i: i.id, list(instances))))
