@@ -65,6 +65,18 @@ class Tester(interfaces.TesterInterface):
         
         return users
 
+    def _append_iam_test_result(self, item, item_type, test_name, issue_status):
+        return {
+            "user": self.user_id,
+            "account_arn": self.account_arn,
+            "account": self.account_id,
+            "timestamp": time.time(),
+            "item": item,
+            "item_type": item_type,
+            "test_name": test_name,
+            "test_result": issue_status
+        }
+
     def get_password_policy_has_14_or_more_char(self):
         result = []
         test_name = "password_has_14_or_more_characters"
@@ -75,38 +87,11 @@ class Tester(interfaces.TesterInterface):
             password_length_threshold = int(self.password_length_threshold_policy) if self.password_length_threshold_policy else 14
             
             if password_policy['MinimumPasswordLength'] >= password_length_threshold:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": "password_policy@@" + self.account_id,
-                    "item_type": "password_policy_record",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                })
+                result.append(self._append_iam_test_result("password_policy@@" + self.account_id, "password_policy_record", test_name, "no_issue_found"))
             else:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": "password_policy@@" + self.account_id,
-                    "item_type": "password_policy_record",
-                    "test_name": test_name,
-                    "test_result": "issue_found"
-                })
+                result.append(self._append_iam_test_result("password_policy@@" + self.account_id, "password_policy_record", test_name, "issue_found"))
         except self.aws_iam_client.exceptions.NoSuchEntityException as e:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": "no_password_policy@@" + self.account_id,
-                "item_type": "password_policy_record",
-                "test_name": test_name,
-                "test_result": "issue_found"
-            })
+            result.append(self._append_iam_test_result("password_policy@@" + self.account_id, "password_policy_record", test_name, "issue_found"))
         return result
     
     def get_hw_mfa_enabled_for_root_account(self):
@@ -122,27 +107,9 @@ class Tester(interfaces.TesterInterface):
                 root_account_device = serial_number.split('/')[-1]
 
                 if root_account_device == 'root-account-mfa-device':
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": "account_summary@@" + self.account_id,
-                        "item_type": "account_summary_record",
-                        "test_name": test_name,
-                        "test_result": "no_issue_found"
-                    })
+                    result.append(self._append_iam_test_result("account_summary@@" + self.account_id, "account_summary_record", test_name, "no_issue_found"))
                 else:
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": "account_summary@@" + self.account_id,
-                        "item_type": "account_summary_record",
-                        "test_name": test_name,
-                        "test_result": "issue_found"
-                    })
+                    result.append(self._append_iam_test_result("account_summary@@" + self.account_id, "account_summary_record", test_name, "issue_found"))
         else: pass
         return result
     
@@ -153,27 +120,9 @@ class Tester(interfaces.TesterInterface):
         response = self.aws_iam_client.get_account_summary()
         account_summary = response['SummaryMap']
         if account_summary['AccountMFAEnabled']:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": "account_summary@@" + self.account_id,
-                "item_type": "account_summary_record",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
+            result.append(self._append_iam_test_result("account_summary@@" + self.account_id, "account_summary_record", test_name, "no_issue_found"))
         else:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": "account_summary@@" + self.account_id,
-                "item_type": "account_summary_record",
-                "test_name": test_name,
-                "test_result": "issue_found"
-            })
+            result.append(self._append_iam_test_result("account_summary@@" + self.account_id, "account_summary_record", test_name, "issue_found"))
         
         return result
     
@@ -199,27 +148,9 @@ class Tester(interfaces.TesterInterface):
             
             attached_users = response['PolicyUsers']
             if len(attached_users) > 0:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": policy_id,
-                    "item_type": "iam_policy",
-                    "test_name": test_name,
-                    "test_result": "issue_found"
-                })
+                result.append(self._append_iam_test_result(policy_id, "iam_policy", test_name, "issue_found"))
             else:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": policy_id,
-                    "item_type": "iam_policy",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                })
+                result.append(self._append_iam_test_result(policy_id, "iam_policy", test_name, "no_issue_found"))
 
         return result
 
@@ -245,27 +176,9 @@ class Tester(interfaces.TesterInterface):
                         old_access_keys += 1
                     else: pass
                 if old_access_keys > 0:
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": user_name,
-                        "item_type": "iam_user",
-                        "test_name": test_name,
-                        "test_result": "issue_found"
-                    })
+                    result.append(self._append_iam_test_result(user_name, "iam_user", test_name, "issue_found"))
                 else:
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": user_name,
-                        "item_type": "iam_user",
-                        "test_name": test_name,
-                        "test_result": "no_issue_found"
-                    })
+                    result.append(self._append_iam_test_result(user_name, "iam_user", test_name, "no_issue_found"))
         else: pass
         
         return result
@@ -284,43 +197,15 @@ class Tester(interfaces.TesterInterface):
             
             for certificate in certificates:
                 certificate_id = certificate['ServerCertificateId']
-                expiration_date = certificate['Expiration']
+                expiration_date = datetime.date(certificate['Expiration'])
                 current_date = datetime.date(datetime.now())
                 time_diff = (expiration_date - current_date).days
-
                 if time_diff < 0:
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": certificate_id,
-                        "item_type": "iam_server_certificate",
-                        "test_name": test_name,
-                        "test_result": "issue_found"
-                    })
+                    result.append(self._append_iam_test_result(certificate_id, "iam_server_certificate", test_name, "issue_found"))
                 elif time_diff <= 30:
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": certificate_id,
-                        "item_type": "iam_server_certificate",
-                        "test_name": test_name,
-                        "test_result": "issue_found"
-                    })
+                    result.append(self._append_iam_test_result(certificate_id, "iam_server_certificate", test_name, "issue_found"))
                 else:
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": certificate_id,
-                        "item_type": "iam_server_certificate",
-                        "test_name": test_name,
-                        "test_result": "no_issue_found"
-                    })
+                    result.append(self._append_iam_test_result(certificate_id, "iam_server_certificate", test_name, "no_issue_found"))
         else: pass
         
         return result
@@ -338,32 +223,13 @@ class Tester(interfaces.TesterInterface):
         if len(certificates) > 0:
             for certificate in certificates:
                 certificate_id = certificate['ServerCertificateId']
-                expiration_date = certificate['Expiration']
+                expiration_date = datetime.date(certificate['Expiration'])
                 current_date = datetime.date(datetime.now())
                 time_diff = (expiration_date - current_date).days
-
                 if time_diff < 0:
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": certificate_id,
-                        "item_type": "iam_server_certificate",
-                        "test_name": test_name,
-                        "test_result": "issue_found"
-                    })
+                    result.append(self._append_iam_test_result(certificate_id, "iam_server_certificate", test_name, "issue_found"))
                 else:
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": certificate_id,
-                        "item_type": "iam_server_certificate",
-                        "test_name": test_name,
-                        "test_result": "no_issue_found"
-                    })
+                    result.append(self._append_iam_test_result(certificate_id, "iam_server_certificate", test_name, "no_issue_found"))
         else: pass
 
         return result
@@ -381,49 +247,13 @@ class Tester(interfaces.TesterInterface):
             if expire_passwords:
                 max_password_age = password_policy['MaxPasswordAge']
                 if max_password_age <= password_maximum_age_policy:
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": "password_policy@@" + self.account_id,
-                        "item_type": "password_policy_record",
-                        "test_name": test_name,
-                        "test_result": "no_issue_found"
-                    })
+                    result.append(self._append_iam_test_result("password_policy@@" + self.account_id, "password_policy_record", test_name, "no_issue_found"))
                 else:
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": "password_policy@@" + self.account_id,
-                        "item_type": "password_policy_record",
-                        "test_name": test_name,
-                        "test_result": "issue_found"
-                })
+                    result.append(self._append_iam_test_result("password_policy@@" + self.account_id, "password_policy_record", test_name, "issue_found"))
             else:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": "password_policy@@" + self.account_id,
-                    "item_type": "password_policy_record",
-                    "test_name": test_name,
-                    "test_result": "issue_found"
-                })
+                result.append(self._append_iam_test_result("password_policy@@" + self.account_id, "password_policy_record", test_name, "issue_found"))
         except self.aws_iam_client.exceptions.NoSuchEntityException as e:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": "no_password_policy@@" + self.account_id,
-                "item_type": "password_policy_record",
-                "test_name": test_name,
-                "test_result": "issue_found"
-            })
+            result.append(self._append_iam_test_result("no_password_policy@@" + self.account_id, "password_policy_record", test_name, "issue_found"))
         return result
 
     def get_password_policy_requires_lowercase(self):
@@ -435,38 +265,11 @@ class Tester(interfaces.TesterInterface):
             password_policy = response['PasswordPolicy']
 
             if password_policy['RequireLowercaseCharacters']:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": "password_policy@@" + self.account_id,
-                    "item_type": "password_policy_record",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                })
+                result.append(self._append_iam_test_result("password_policy@@" + self.account_id, "password_policy_record", test_name, "no_issue_found"))
             else:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": "password_policy@@" + self.account_id,
-                    "item_type": "password_policy_record",
-                    "test_name": test_name,
-                    "test_result": "issue_found"
-                })
+                result.append(self._append_iam_test_result("password_policy@@" + self.account_id, "password_policy_record", test_name, "issue_found"))
         except self.aws_iam_client.exceptions.NoSuchEntityException as e:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": "no_password_policy@@" + self.account_id,
-                "item_type": "password_policy_record",
-                "test_name": test_name,
-                "test_result": "issue_found"
-            })
+            result.append(self._append_iam_test_result("no_password_policy@@" + self.account_id, "password_policy_record", test_name, "issue_found"))
         return result
 
     def get_password_policy_requires_uppercase(self):
@@ -478,38 +281,11 @@ class Tester(interfaces.TesterInterface):
             password_policy = response['PasswordPolicy']
 
             if password_policy['RequireUppercaseCharacters']:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": "password_policy@@" + self.account_id,
-                    "item_type": "password_policy_record",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                })
+                result.append(self._append_iam_test_result("password_policy@@" + self.account_id, "password_policy_record", test_name, "no_issue_found"))
             else:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": "password_policy@@" + self.account_id,
-                    "item_type": "password_policy_record",
-                    "test_name": test_name,
-                    "test_result": "issue_found"
-                })
+                result.append(self._append_iam_test_result("password_policy@@" + self.account_id, "password_policy_record", test_name, "issue_found"))
         except self.aws_iam_client.exceptions.NoSuchEntityException as e:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": "no_password_policy@@" + self.account_id,
-                "item_type": "password_policy_record",
-                "test_name": test_name,
-                "test_result": "issue_found"
-            })
+            result.append(self._append_iam_test_result("no_password_policy@@" + self.account_id, "password_policy_record", test_name, "issue_found"))
         return result
     
     def get_password_policy_requires_symbols(self):
@@ -520,38 +296,11 @@ class Tester(interfaces.TesterInterface):
             password_policy = response['PasswordPolicy']
 
             if password_policy['RequireSymbols']:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": "password_policy@@" + self.account_id,
-                    "item_type": "password_policy_record",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                })
+                result.append(self._append_iam_test_result("password_policy@@" + self.account_id, "password_policy_record", test_name, "no_issue_found"))
             else:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": "password_policy@@" + self.account_id,
-                    "item_type": "password_policy_record",
-                    "test_name": test_name,
-                    "test_result": "issue_found"
-                })
+                result.append(self._append_iam_test_result("password_policy@@" + self.account_id, "password_policy_record", test_name, "issue_found"))
         except self.aws_iam_client.exceptions.NoSuchEntityException as e:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": "no_password_policy@@" + self.account_id,
-                "item_type": "password_policy_record",
-                "test_name": test_name,
-                "test_result": "issue_found"
-            })
+            result.append(self._append_iam_test_result("no_password_policy@@" + self.account_id, "password_policy_record", test_name, "issue_found"))
         return result
 
     def get_password_policy_requires_numbers(self):
@@ -563,38 +312,12 @@ class Tester(interfaces.TesterInterface):
             password_policy = response['PasswordPolicy']
 
             if password_policy['RequireNumbers']:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": "password_policy@@" + self.account_id,
-                    "item_type": "password_policy_record",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                })
+                result.append(self._append_iam_test_result("password_policy@@" + self.account_id, "password_policy_record", test_name, "no_issue_found"))
             else:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": "password_policy@@" + self.account_id,
-                    "item_type": "password_policy_record",
-                    "test_name": test_name,
-                    "test_result": "issue_found"
-                })
+                result.append(self._append_iam_test_result("password_policy@@" + self.account_id, "password_policy_record", test_name, "issue_found"))
         except self.aws_iam_client.exceptions.NoSuchEntityException as e:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": "no_password_policy@@" + self.account_id,
-                "item_type": "password_policy_record",
-                "test_name": test_name,
-                "test_result": "issue_found"
-            })
+            result.append(self._append_iam_test_result("password_policy@@" + self.account_id, "password_policy_record", test_name, "issue_found"))
+
         return result
 
     def get_support_role_for_aws_support(self):
@@ -618,27 +341,9 @@ class Tester(interfaces.TesterInterface):
             )
             support_role =  response['PolicyRoles']
             if len(support_role) > 0:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": "support_role@@" + self.account_id,
-                    "item_type": "iam_support_role",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                })
+                result.append(self._append_iam_test_result("support_role@@" + self.account_id, "iam_support_role", test_name, "no_issue_found"))
             else:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": "support_role@@" + self.account_id,
-                    "item_type": "iam_support_role",
-                    "test_name": test_name,
-                    "test_result": "issue_found"
-                })
+                result.append(self._append_iam_test_result("support_role@@" + self.account_id, "iam_support_role", test_name, "issue_found"))
         else: pass
         
         return result
@@ -658,28 +363,10 @@ class Tester(interfaces.TesterInterface):
                 for policy in policy_names:
                     if policy == 'AdministratorAccess':
                         admin_access = True
-                        result.append({
-                            "user": self.user_id,
-                            "account_arn": self.account_arn,
-                            "account": self.account_id,
-                            "timestamp": time.time(),
-                            "item": user_name,
-                            "item_type": "iam_user",
-                            "test_name": test_name,
-                            "test_result": "issue_found"
-                        })
+                        result.append(self._append_iam_test_result(user_name, "iam_user", test_name, "issue_found"))
                         break
                 if not admin_access:
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": user_name,
-                        "item_type": "iam_user",
-                        "test_name": test_name,
-                        "test_result": "no_issue_found"
-                    })
+                    result.append(self._append_iam_test_result(user_name, "iam_user", test_name, "no_issue_found"))
         else: pass
         
         return result
@@ -694,38 +381,11 @@ class Tester(interfaces.TesterInterface):
             password_reuse_prevetion = password_policy.get('PasswordReusePrevention')
 
             if password_reuse_prevetion is not None:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": "password_policy@@" + self.account_id,
-                    "item_type": "password_policy_record",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-            })
+                result.append(self._append_iam_test_result("password_policy@@" + self.account_id, "password_policy_record", test_name, "no_issue_found"))
             else:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": "password_policy@@" + self.account_id,
-                    "item_type": "password_policy_record",
-                    "test_name": test_name,
-                    "test_result": "issue_found"
-                })
+                result.append(self._append_iam_test_result("password_policy@@" + self.account_id, "password_policy_record", test_name, "issue_found"))
         except self.aws_iam_client.exceptions.NoSuchEntityException as e:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": "no_password_policy@@" + self.account_id,
-                "item_type": "password_policy_record",
-                "test_name": test_name,
-                "test_result": "issue_found"
-            })
+            result.append(self._append_iam_test_result("no_password_policy@@" + self.account_id, "password_policy_record", test_name, "issue_found"))
         return result
 
     def get_no_access_key_for_root_account(self):
@@ -736,27 +396,9 @@ class Tester(interfaces.TesterInterface):
         root_access_key_present = response['SummaryMap']['AccountAccessKeysPresent']
         
         if root_access_key_present:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": "root_account@@" + self.account_id,
-                "item_type": "iam_root_account",
-                "test_name": test_name,
-                "test_result": "issue_found"
-            })
+            result.append(self._append_iam_test_result("root_account@@" + self.account_id, "iam_root_account", test_name, "issue_found"))
         else:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": "root_account@@" + self.account_id,
-                "item_type": "iam_root_account",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
+            result.append(self._append_iam_test_result("root_account@@" + self.account_id, "iam_root_account", test_name, "no_issue_found"))
         
         return result
 
@@ -776,27 +418,9 @@ class Tester(interfaces.TesterInterface):
                     mfa_devices.extend(page['MFADevices'])
             
                 if len(mfa_devices) > 0:
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": user_name,
-                        "item_type": "iam_user",
-                        "test_name": test_name,
-                        "test_result": "no_issue_found"
-                    })
+                    result.append(self._append_iam_test_result(user_name, "iam_user", test_name, "no_issue_found"))
                 else: 
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": user_name,
-                        "item_type": "iam_user",
-                        "test_name": test_name,
-                        "test_result": "issue_found"
-                    })
+                    result.append(self._append_iam_test_result(user_name, "iam_user", test_name, "issue_found"))
         else: pass
 
         return result
@@ -821,27 +445,9 @@ class Tester(interfaces.TesterInterface):
             policy_groups = response['PolicyGroups']
             policy_roles = response['PolicyRoles']
             if (len(policy_groups) > 0 or len(policy_roles) > 0) and len(policy_users) == 0:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": policy_id,
-                    "item_type": "iam_policy",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                })
+                result.append(self._append_iam_test_result(policy_id, "iam_policy", test_name, "no_issue_found"))
             else:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": policy_id,
-                    "item_type": "iam_policy",
-                    "test_name": test_name,
-                    "test_result": "issue_found"
-                })
+                result.append(self._append_iam_test_result(policy_id, "iam_policy", test_name, "issue_found"))
 
         return result
 
@@ -874,38 +480,11 @@ class Tester(interfaces.TesterInterface):
                         else: pass
 
                     if issue_with_access_key:
-                        result.append({
-                            "user": self.user_id,
-                            "account_arn": self.account_arn,
-                            "account": self.account_id,
-                            "timestamp": time.time(),
-                            "item": user_name,
-                            "item_type": "iam_user",
-                            "test_name": test_name,
-                            "test_result": "issue_found"
-                        })
+                        result.append(self._append_iam_test_result(user_name, "iam_user", test_name, "issue_found"))
                     else:
-                        result.append({
-                            "user": self.user_id,
-                            "account_arn": self.account_arn,
-                            "account": self.account_id,
-                            "timestamp": time.time(),
-                            "item": user_name,
-                            "item_type": "iam_user",
-                            "test_name": test_name,
-                            "test_result": "no_issue_found"
-                        })
+                        result.append(self._append_iam_test_result(user_name, "iam_user", test_name, "no_issue_found"))
                 else:
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": user_name,
-                        "item_type": "iam_user",
-                        "test_name": test_name,
-                        "test_result": "no_issue_found"
-                    })
+                    result.append(self._append_iam_test_result(user_name, "iam_user", test_name, "no_issue_found"))
         else: pass
 
         return result
@@ -934,27 +513,9 @@ class Tester(interfaces.TesterInterface):
                 if ((policy.get('Resource') and (policy['Resource']=='*' and policy['Action']=='*')) \
                     or (type(policy['Action']) is str and policy['Action']=='*:*') \
                     or (type(policy['Action']) is list and any([True if action=='*:*' else False for action in policy['Action']]))):
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": policy_id,
-                        "item_type": "iam_policy",
-                        "test_name": test_name,
-                        "test_result": "issue_found"
-                    })
+                    result.append(self._append_iam_test_result(policy_id, "iam_policy", test_name, "issue_found"))  
                 else:
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": policy_id,
-                        "item_type": "iam_policy",
-                        "test_name": test_name,
-                        "test_result": "no_issue_found"
-                    })
+                    result.append(self._append_iam_test_result(policy_id, "iam_policy", test_name, "no_issue_found"))
         return result
 
     def get_iam_user_credentials_unused_for_45_days(self):
@@ -972,38 +533,11 @@ class Tester(interfaces.TesterInterface):
                     current_date = datetime.now(tz=dt.timezone.utc)
                     time_diff = (current_date - password_last_used).days
                     if time_diff >= credentials_unuse_threshold:
-                        result.append({
-                           "user": self.user_id,
-                            "account_arn": self.account_arn,
-                            "account": self.account_id,
-                            "timestamp": time.time(),
-                            "item": user_name,
-                            "item_type": "iam_user",
-                            "test_name": test_name,
-                            "test_result": "issue_found" 
-                        })
+                        result.append(self._append_iam_test_result(user_name, "iam_user", test_name, "issue_found"))
                     else:
-                        result.append({
-                            "user": self.user_id,
-                            "account_arn": self.account_arn,
-                            "account": self.account_id,
-                            "timestamp": time.time(),
-                            "item": user_name,
-                            "item_type": "iam_user",
-                            "test_name": test_name,
-                            "test_result": "no_issue_found"
-                        })
+                        result.append(self._append_iam_test_result(user_name, "iam_user", test_name, "no_issue_found"))
                 else:
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": user_name,
-                        "item_type": "iam_user",
-                        "test_name": test_name,
-                        "test_result": "no_issue_found" 
-                    })
+                    result.append(self._append_iam_test_result(user_name, "iam_user", test_name, "no_issue_found"))
         else: pass
         
         return result
@@ -1022,27 +556,10 @@ class Tester(interfaces.TesterInterface):
             response = jmespath.search("access_keys[?Status=='Active'].AccessKeyId", access_keys)
             
             if len(response) > 1:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": user_id,
-                    "item_type": "iam_user",
-                    "test_name": test_name,
-                    "test_result": "issue_found"
-                })
+                result.append(self._append_iam_test_result(user_name, "iam_user", test_name, "issue_found"))
             else:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": user_id,
-                    "item_type": "iam_user",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                })
+                result.append(self._append_iam_test_result(user_name, "iam_user", test_name, "no_issue_found"))
+
         return result
 
     def get_iam_access_analyzer_disabled(self):
@@ -1054,27 +571,9 @@ class Tester(interfaces.TesterInterface):
         
         query_result = jmespath.search("analyzer[?status=='ACTIVE'].arn", analyzers)
         if len(query_result) > 0:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": "access_analyzers@@" + self.account_id,
-                "item_type": "iam_user",
-                "test_name": test_name,
-                "test_result": "no_issue_found" 
-            })
+            result.append(self._append_iam_test_result("access_analyzers@@" + self.account_id, "iam_access_analyzers", test_name, "no_issue_found"))
         else:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": "no_access_analyzers@@" + self.account_id,
-                "item_type": "iam_user",
-                "test_name": test_name,
-                "test_result": "issue_found"
-            })
+            result.append(self._append_iam_test_result("no_access_analyzers@@" + self.account_id, "iam_access_analyzers", test_name, "issue_found"))
 
         return result
 
@@ -1100,27 +599,9 @@ class Tester(interfaces.TesterInterface):
             if upload_date.year < 2014 or (upload_date.year == 2014 and upload_date.month<4):
                 issue_found = True
             if issue_found:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": name,
-                    "item_type": "server_certificate",
-                    "test_name": test_name,
-                    "test_result": "issue_found"
-                })
+                result.append(self._append_iam_test_result(name, "server_certificate", test_name, "issue_found"))
             else:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": name,
-                    "item_type": "server_certificate",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                })
+                result.append(self._append_iam_test_result(name, "server_certificate", test_name, "no_issue_found"))
         return result
 
     def get_user_access_keys(self):
@@ -1136,38 +617,10 @@ class Tester(interfaces.TesterInterface):
                 temp = list(filter(lambda x: x["Status"] == "Active", access_keys))
 
                 if len(temp) >= 1:
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": user_name,
-                        "item_type": "iam_user",
-                        "test_name": test_name,
-                        "test_result": "no_issue_found"
-                    })
+                    result.append(self._append_iam_test_result(user_name, "iam_user", test_name, "no_issue_found"))
                 else:
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": user_name,
-                        "item_type": "iam_user",
-                        "test_name": test_name,
-                        "test_result": "issue_found"
-                    })
-        else:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": "no_iam_users@@" + self.account_id,
-                "item_type": "iam_user",
-                "test_name": test_name,
-                "test_result": "issue_found"
-            })
+                    result.append(self._append_iam_test_result(user_name, "iam_user", test_name, "issue_found"))
+        else: pass
         
         return result
 
@@ -1177,26 +630,8 @@ class Tester(interfaces.TesterInterface):
         users = self.iam_users
 
         if len(users) >= 1:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": "iam_users_present@@" + self.account_id,
-                "item_type": "iam_user",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
+            result.append(self._append_iam_test_result("iam_users_present@@" + self.account_id, "iam_user", test_name, "no_issue_found"))
         else:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": "no_iam_users@@" + self.account_id,
-                "item_type": "iam_user",
-                "test_name": test_name,
-                "test_result": "issue_found"
-            })
+            result.append(self._append_iam_test_result("iam_users_present@@" + self.account_id, "iam_user", test_name, "issue_found"))
 
         return result
