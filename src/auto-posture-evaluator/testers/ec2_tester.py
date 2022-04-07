@@ -71,7 +71,19 @@ class Tester(interfaces.TesterInterface):
             self.detect_classic_ec2_instances() + \
             self.get_security_group_should_allow_access_to_specific_private_networks_only() + \
             self.get_network_firewall_used()
-            
+    
+    def _get_result_object(self, item, item_type, test_name, issue_status):
+        return {
+            "user": self.user_id,
+            "account_arn": self.account_arn,
+            "account": self.account_id,
+            "timestamp": time.time(),
+            "item": item,
+            "item_type": item_type,
+            "test_name": test_name,
+            "test_result": issue_status
+        }
+
     def _get_all_security_group_ids(self, instances) -> Set:
         return set(list(map(lambda i: i.id, list(instances))))
 
@@ -112,28 +124,10 @@ class Tester(interfaces.TesterInterface):
         instances_with_no_issue = self.set_security_group.difference(instances_with_issue)
 
         for i in instances_with_issue:
-            result.append({
-               "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_security_group",
-                "test_name": test_name,
-                "test_result": "issue_found"
-                })
+            result.append(self._get_result_object(i, "ec2_security_group", test_name, "issue_found"))
         
         for i in instances_with_no_issue:
-            result.append({
-               "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_security_group",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
+            result.append(self._get_result_object(i, "ec2_security_group", test_name, "no_issue_found"))
         return result
 
     def _get_ec2_region_names(self) -> List:
@@ -214,28 +208,10 @@ class Tester(interfaces.TesterInterface):
         instances_with_no_issue = self.set_security_group.difference(instances_with_issue)
 
         for i in instances_with_issue:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_security_group",
-                "test_name": test_name,
-                "test_result": "issue_found"
-            })
+            result.append(self._get_result_object(i, "ec2_security_group", test_name, "issue_found"))
 
         for i in instances_with_no_issue:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_security_group",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
+            result.append(self._get_result_object(i, "ec2_security_group", test_name, "no_issue_found"))
         
         return result
 
@@ -247,28 +223,10 @@ class Tester(interfaces.TesterInterface):
         instances_with_issue = set(instances)
         instances_with_no_issue = self.set_security_group.difference(instances_with_issue)
         for i in instances_with_issue:
-            result.append({
-               "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_security_group",
-                "test_name": test_name,
-                "test_result": "issue_found"
-            })
+            result.append(self._get_result_object(i, "ec2_security_group", test_name, "issue_found"))
 
         for i in instances_with_no_issue:    
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_security_group",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
+            result.append(self._get_result_object(i, "ec2_security_group", test_name, "no_issue_found"))
         return result
 
     def get_inbound_telnet_access(self, all_inbound_permissions):
@@ -300,28 +258,10 @@ class Tester(interfaces.TesterInterface):
         instances_with_no_issue = self.set_security_group.difference(instances_with_issue)
 
         for i in instances_with_issue:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_security_group",
-                "test_name": test_name,
-                "test_result": "issue_found"
-            })
+            result.append(self._get_result_object(i, "ec2_security_group", test_name, "issue_found"))
         
         for i in instances_with_no_issue:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_security_group",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
+            result.append(self._get_result_object(i, "ec2_security_group", test_name, "no_issue_found"))
         
         return result
     
@@ -340,28 +280,10 @@ class Tester(interfaces.TesterInterface):
         instances_with_no_issue = self.set_security_group.difference(instances_with_issue)
 
         for i in instances_with_issue:
-            results.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_security_group",
-                "test_name": test_name,
-                "test_result": "issue_found"
-            })
+            results.append(self._get_result_object(i, "ec2_security_group", test_name, "issue_found"))
         
         for i in instances_with_no_issue:
-            results.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_security_group",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
+            results.append(self._get_result_object(i, "ec2_security_group", test_name, "no_issue_found"))
     
         return results
     
@@ -380,28 +302,10 @@ class Tester(interfaces.TesterInterface):
         instances_with_no_issue = self.set_security_group.difference(instances_with_issue)
 
         for i in instances_with_issue:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_security_group",
-                "test_name": test_name,
-                "test_result": "issue_found"
-            })
+            result.append(self._get_result_object(i, "ec2_security_group", test_name, "issue_found"))
         
         for i in instances_with_no_issue:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_security_group",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
+            result.append(self._get_result_object(i, "ec2_security_group", test_name, "no_issue_found"))
         
         return result
 
@@ -424,28 +328,10 @@ class Tester(interfaces.TesterInterface):
         instances_with_no_issue = self.set_security_group.difference(instances_with_issue)
         
         for i in instances_with_issue:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_security_group",
-                "test_name": test_name,
-                "test_result": "issue_found"
-            })
+            result.append(self._get_result_object(i, "ec2_security_group", test_name, "issue_found"))
         
         for i in instances_with_no_issue:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_security_group",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
+            result.append(self._get_result_object(i, "ec2_security_group", test_name, "no_issue_found"))
         
         return result
 
@@ -465,28 +351,10 @@ class Tester(interfaces.TesterInterface):
         instances_with_no_issue = self.set_security_group.difference(instances_with_issue)
 
         for i in instances_with_issue:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_security_group",
-                "test_name": test_name,
-                "test_result": "issue_found"
-            })
+            result.append(self._get_result_object(i, "ec2_security_group", test_name, "issue_found"))
         
         for i in instances_with_no_issue:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_security_group",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
+            result.append(self._get_result_object(i, "ec2_security_group", test_name, "no_issue_found"))
         
         return result
 
@@ -502,28 +370,10 @@ class Tester(interfaces.TesterInterface):
         security_groups_with_issues = set(security_groups)
         security_groups_with_no_issues = self.set_security_group.difference(security_groups_with_issues)
         for i in security_groups_with_issues:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_security_group",
-                "test_name": test_name,
-                "test_result": "issue_found"
-            })
+            result.append(self._get_result_object(i, "ec2_security_group", test_name, "issue_found"))
         
         for i in security_groups_with_no_issues:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_security_group",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
+            result.append(self._get_result_object(i, "ec2_security_group", test_name, "no_issue_found"))
 
         return result 
 
@@ -552,28 +402,10 @@ class Tester(interfaces.TesterInterface):
         vpcs_with_no_issue = all_vpcs.difference(vpcs_with_issue)
 
         for vpc in vpcs_with_issue:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": vpc,
-                "item_type": "aws_vpc",
-                "test_name": test_name,
-                "test_result": "issue_found"
-            })
+            result.append(self._get_result_object(vpc, "aws_vpc", test_name, "issue_found"))
         
         for vpc in vpcs_with_no_issue:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": vpc,
-                "item_type": "aws_vpc",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
+            result.append(self._get_result_object(vpc, "aws_vpc", test_name, "no_issue_found"))
         return result
     
     def get_inbound_oracle_access(self, all_inbound_permissions):
@@ -596,28 +428,10 @@ class Tester(interfaces.TesterInterface):
         instances_with_no_issue = self.set_security_group.difference(instances_with_issue)
 
         for i in instances_with_issue:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_security_group",
-                "test_name": test_name,
-                "test_result": "issue_found"
-            })
+            result.append(self._get_result_object(i, "ec2_security_group", test_name, "issue_found"))
 
         for i in instances_with_no_issue:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_security_group",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
+            result.append(self._get_result_object(i, "ec2_security_group", test_name, "no_issue_found"))
         
         return result
 
@@ -628,27 +442,9 @@ class Tester(interfaces.TesterInterface):
         instances_with_issue = set(instances)
         instances_with_no_issue = self.set_security_group.difference(instances_with_issue)
         for i in instances_with_issue:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_security_group",
-                "test_name": test_name,
-                "test_result": "issue_found"
-            })
+            result.append(self._get_result_object(i, "ec2_security_group", test_name, "issue_found"))
         for i in instances_with_no_issue:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_security_group",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
+            result.append(self._get_result_object(i, "ec2_security_group", test_name, "no_issue_found"))
 
         return result
 
@@ -674,28 +470,10 @@ class Tester(interfaces.TesterInterface):
         security_groups_with_no_issue = self.set_security_group.difference(security_groups_with_issue)
 
         for s in security_groups_with_issue:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": s,
-                "item_type": "ec2_security_group",
-                "test_name": test_name,
-                "test_result": "issue_found"
-            })
+            result.append(self._get_result_object(s, "ec2_security_group", test_name, "issue_found"))
         
         for s in security_groups_with_no_issue:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": s,
-                "item_type": "ec2_security_group",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
+            result.append(self._get_result_object(s, "ec2_security_group", test_name, "no_issue_found"))
         return result
     
     def get_instance_uses_metadata_service_version_2(self, instances):
@@ -705,27 +483,9 @@ class Tester(interfaces.TesterInterface):
         for instance in instances:
             instance_id = instance['InstanceId']
             if instance['MetadataOptions']['HttpTokens'] == 'optional':
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": instance_id,
-                    "item_type": "ec2_instance",
-                    "test_name": test_name,
-                    "test_result": "issue_found"
-                })
+                result.append(self._get_result_object(instance_id, "ec2_instance", test_name, "issue_found"))
             else:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": instance_id,
-                    "item_type": "ec2_instance",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                })
+                result.append(self._get_result_object(instance_id, "ec2_instance", test_name, "no_issue_found"))
 
         return result
 
@@ -741,28 +501,10 @@ class Tester(interfaces.TesterInterface):
         instances_with_no_issue = self.set_security_group.difference(instances_with_issue)
 
         for i in instances_with_issue:
-            results.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_security_group",
-                "test_name": test_name,
-                "test_result": "issue_found"
-            })
+            results.append(self._get_result_object(i, "ec2_security_group", test_name, "issue_found"))
         
         for i in instances_with_no_issue:
-            results.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_security_group",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
+            results.append(self._get_result_object(i, "ec2_security_group", test_name, "no_issue_found"))
     
         return results
 
@@ -778,28 +520,10 @@ class Tester(interfaces.TesterInterface):
         instances_with_no_issue = self.set_security_group.difference(instances_with_issue)
 
         for i in instances_with_issue:
-            results.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_security_group",
-                "test_name": test_name,
-                "test_result": "issue_found"
-            })
+            results.append(self._get_result_object(i, "ec2_security_group", test_name, "issue_found"))
         
         for i in instances_with_no_issue:
-            results.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_security_group",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
+            results.append(self._get_result_object(i, "ec2_security_group", test_name, "no_issue_found"))
     
         return results
 
@@ -825,27 +549,9 @@ class Tester(interfaces.TesterInterface):
                     issue_found = True
                     break
             if issue_found:
-                results.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": acl['NetworkAclId'],
-                    "item_type": "ec2_network_acl",
-                    "test_name": test_name,
-                    "test_result": "issue_found"
-                })
+                results.append(self._get_result_object(acl['NetworkAclId'], "ec2_network_acl", test_name, "issue_found"))
             else:
-                results.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": acl['NetworkAclId'],
-                    "item_type": "ec2_network_acl",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                })
+                results.append(self._get_result_object(acl['NetworkAclId'], "ec2_network_acl", test_name, "no_issue_found"))
         return results
 
     def get_internet_gateway_presence_detected(self, instances):
@@ -871,27 +577,9 @@ class Tester(interfaces.TesterInterface):
             instance_id = instance['InstanceId']
             vpc_id = instance.get('VpcId')
             if vpc_id and vpc_id in vpc_ids:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": instance_id,
-                    "item_type": "ec2_instance",
-                    "test_name": test_name,
-                    "test_result": "issue_found"
-                })
+                result.append(self._get_result_object(instance_id, "ec2_instance", test_name, "issue_found"))
             else:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": instance_id,
-                    "item_type": "ec2_instance",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                })
+                result.append(self._get_result_object(instance_id, "ec2_instance", test_name, "no_issue_found"))
 
         return result
     
@@ -903,27 +591,9 @@ class Tester(interfaces.TesterInterface):
             instance_id = instance['InstanceId']
             if any([tag['Value'] == 'sensitive' for tag in instance['Tags']]) and \
                 instance['Placement']['Tenancy'] != 'dedicated':
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": instance_id,
-                    "item_type": "ec2_instance",
-                    "test_name": test_name,
-                    "test_result": "issue_found"
-                })
+                result.append(self._get_result_object(instance_id, "ec2_instance", test_name, "issue_found"))
             else:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": instance_id,
-                    "item_type": "ec2_instance",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                })
+                result.append(self._get_result_object(instance_id, "ec2_instance", test_name, "no_issue_found"))
         return result
 
     def get_aws_config_not_enabled_for_all_regions(self, region_names):
@@ -933,27 +603,9 @@ class Tester(interfaces.TesterInterface):
         for i in range(len(clients)):
             response = clients[i].describe_configuration_recorder_status()
             if len(response['ConfigurationRecordersStatus']) == 0 or response['ConfigurationRecordersStatus'][0]['recording'] == False:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": region_names[i],
-                    "item_type": "ec2_region",
-                    "test_name": test_name,
-                    "test_result": "issue_found"
-                })
+                result.append(self._get_result_object(region_names[i], "ec2_region", test_name, "issue_found"))
             else:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": region_names[i],
-                    "item_type": "ec2_region",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                })
+                result.append(self._get_result_object(region_names[i], "ec2_region", test_name, "no_issue_found"))
         return result
 
     def get_nearing_regional_limit_for_elastic_ip_addresses(self, region_names):
@@ -965,27 +617,9 @@ class Tester(interfaces.TesterInterface):
             limit = response['AccountAttributes'][0]['AttributeValues'][0]['AttributeValue']
             addresses = clients[i].describe_addresses(Filters=[{'Name': 'domain', 'Values': ['vpc']}])
             if len(addresses['Addresses']) == limit:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": region_names[i],
-                    "item_type": "ec2_region",
-                    "test_name": test_name,
-                    "test_result": "issue_found"
-                })
+                result.append(self._get_result_object(region_names[i], "ec2_region", test_name, "issue_found"))
             else:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": region_names[i],
-                    "item_type": "ec2_region",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                })
+                result.append(self._get_result_object(region_names[i], "ec2_region", test_name, "no_issue_found"))
         return result
     
     def get_ec2_instance_iam_role_not_enabled(self, instances):
@@ -995,27 +629,9 @@ class Tester(interfaces.TesterInterface):
             instance_id = instance['InstanceId']
             iam_instance_profile = instance.get('IamInstanceProfile')
             if not iam_instance_profile or not iam_instance_profile.get('Id') or not iam_instance_profile.get('Arn'):
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": instance_id,
-                    "item_type": "ec2_instance",
-                    "test_name": test_name,
-                    "test_result": "issue_found"
-                })
+                result.append(self._get_result_object(instance_id, "ec2_instance", test_name, "issue_found"))
             else:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": instance_id,
-                    "item_type": "ec2_instance",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                })
+                result.append(self._get_result_object(instance_id, "ec2_instance", test_name, "no_issue_found"))
         return result
  
     def _get_all_vpcs(self):
@@ -1037,28 +653,10 @@ class Tester(interfaces.TesterInterface):
         instances_with_no_issue = self.set_security_group.difference(instances_with_issue)
 
         for i in instances_with_issue:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_security_group",
-                "test_name": test_name,
-                "test_result": "issue_found"
-            })
+            result.append(self._get_result_object(i, "ec2_security_group", test_name, "issue_found"))
         
         for i in instances_with_no_issue:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_security_group",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
+            result.append(self._get_result_object(i, "ec2_security_group", test_name, "no_issue_found"))
         return result
 
     def get_instance_with_upcoming_system_maintenance_scheduled_event(self, instances):
@@ -1068,28 +666,10 @@ class Tester(interfaces.TesterInterface):
         instances_with_issue = set(list(map(lambda x: x['InstanceId'], instances_with_issue['InstanceStatuses'])))
         instances_with_no_issue = set(list(map(lambda x: x['InstanceId'], instances))).difference(instances_with_issue)
         for i in instances_with_issue:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_instance",
-                "test_name": test_name,
-                "test_result": "issue_found"
-            })
-        
+            result.append(self._get_result_object(i, "ec2_instance", test_name, "issue_found"))
+    
         for i in instances_with_no_issue:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_instance",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
+            result.append(self._get_result_object(i, "ec2_instance", test_name, "no_issue_found"))
         return result
 
     def get_instance_with_upcoming_instance_stop_scheduled_event(self, instances):
@@ -1099,28 +679,10 @@ class Tester(interfaces.TesterInterface):
         instances_with_issue = set(list(map(lambda x: x['InstanceId'], instances_with_issue['InstanceStatuses'])))
         instances_with_no_issue = set(list(map(lambda x: x['InstanceId'], instances))).difference(instances_with_issue)
         for i in instances_with_issue:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_instance",
-                "test_name": test_name,
-                "test_result": "issue_found"
-            })
+            result.append(self._get_result_object(i, "ec2_instance", test_name, "issue_found"))
         
         for i in instances_with_no_issue:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_instance",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
+            result.append(self._get_result_object(i, "ec2_instance", test_name, "no_issue_found"))
         return result
 
     def get_instance_with_upcoming_instance_reboot_scheduled_event(self, instances):
@@ -1130,28 +692,10 @@ class Tester(interfaces.TesterInterface):
         instances_with_issue = set(list(map(lambda x: x['InstanceId'], instances_with_issue['InstanceStatuses'])))
         instances_with_no_issue = set(list(map(lambda x: x['InstanceId'], instances))).difference(instances_with_issue)
         for i in instances_with_issue:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_instance",
-                "test_name": test_name,
-                "test_result": "issue_found"
-            })
+            result.append(self._get_result_object(i, "ec2_instance", test_name, "issue_found"))
         
         for i in instances_with_no_issue:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_instance",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
+            result.append(self._get_result_object(i, "ec2_instance", test_name, "no_issue_found"))
         return result
 
     def get_instance_with_upcoming_system_reboot_scheduled_event(self, instances):
@@ -1161,28 +705,10 @@ class Tester(interfaces.TesterInterface):
         instances_with_issue = set(list(map(lambda x: x['InstanceId'], instances_with_issue['InstanceStatuses'])))
         instances_with_no_issue = set(list(map(lambda x: x['InstanceId'], instances))).difference(instances_with_issue)
         for i in instances_with_issue:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_instance",
-                "test_name": test_name,
-                "test_result": "issue_found"
-            })
+            result.append(self._get_result_object(i, "ec2_instance", test_name, "issue_found"))
         
         for i in instances_with_no_issue:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_instance",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
+            result.append(self._get_result_object(i, "ec2_instance", test_name, "no_issue_found"))
         return result
 
     def get_region_nearing_limits_of_ec2_instances(self, region_names):
@@ -1198,27 +724,9 @@ class Tester(interfaces.TesterInterface):
             for instance in instances:
                 current_cpu_count += instance['CpuOptions']['CoreCount'] * instance['CpuOptions']['ThreadsPerCore']
             if region_limit - current_cpu_count <= 50:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": region_names[i],
-                    "item_type": "ec2_region",
-                    "test_name": test_name,
-                    "test_result": "issue_found"
-                })
+                result.append(self._get_result_object(region_names[i], "ec2_region", test_name, "issue_found"))
             else:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": region_names[i],
-                    "item_type": "ec2_region",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                })
+                result.append(self._get_result_object(region_names[i], "ec2_region", test_name, "no_issue_found"))
         return result
 
     def get_elastic_ip_in_use(self):
@@ -1232,27 +740,9 @@ class Tester(interfaces.TesterInterface):
             public_ip = address['PublicIp']
             association_id = address.get('AssociationId')
             if association_id is not None:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": public_ip,
-                    "item_type": "elastic_IP",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                })
+                result.append(self._get_result_object(public_ip, "elastic_IP", test_name, "no_issue_found"))
             else:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": public_ip,
-                    "item_type": "elastic_IP",
-                    "test_name": test_name,
-                    "test_result": "issue_found"
-                })
+                result.append(self._get_result_object(public_ip, "elastic_IP", test_name, "issue_found"))
         
         return result
 
@@ -1268,28 +758,9 @@ class Tester(interfaces.TesterInterface):
         instances_with_no_issue = self.set_security_group.difference(instances_with_issue)
 
         for instance in instances_with_issue:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": instance,
-                "item_type": "ec2_security_group",
-                "test_name": test_name,
-                "test_result": "issue_found"
-            })
-
+            result.append(self._get_result_object(instance, "ec2_security_group", test_name, "issue_found"))
         for instance in instances_with_no_issue:
-            result.append({
-                "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": instance,
-                "item_type": "ec2_security_group",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
+            result.append(self._get_result_object(instance, "ec2_security_group", test_name, "no_issue_found"))
         
         return result
 
@@ -1304,27 +775,9 @@ class Tester(interfaces.TesterInterface):
             vpc_id = instance.get('VpcId')
 
             if vpc_id is not None:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": instance_id,
-                    "item_type": "ec2_instance",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                })
+                result.append(self._get_result_object(instance_id, "ec2_instance", test_name, "no_issue_found"))
             else:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": instance_id,
-                    "item_type": "ec2_instance",
-                    "test_name": test_name,
-                    "test_result": "issue_found"
-                })
+                result.append(self._get_result_object(instance_id, "ec2_instance", test_name, "issue_found"))
         
         return result
     
@@ -1335,28 +788,9 @@ class Tester(interfaces.TesterInterface):
         instances_with_issue = set(list(map(lambda x: x['GroupId'], security_groups['SecurityGroups'])))
         instances_with_no_issue = self.set_security_group.difference(instances_with_issue)
         for i in instances_with_issue:
-            result.append({
-               "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_security_group",
-                "test_name": test_name,
-                "test_result": "issue_found"
-                })
-        
+            result.append(self._get_result_object(i, "ec2_security_group", test_name, "issue_found"))
         for i in instances_with_no_issue:
-            result.append({
-               "user": self.user_id,
-                "account_arn": self.account_arn,
-                "account": self.account_id,
-                "timestamp": time.time(),
-                "item": i,
-                "item_type": "ec2_security_group",
-                "test_name": test_name,
-                "test_result": "no_issue_found"
-            })
+            result.append(self._get_result_object(i, "ec2_security_group", test_name, "no_issue_found"))
         return result
     
     def get_network_firewall_used(self):
@@ -1426,27 +860,9 @@ class Tester(interfaces.TesterInterface):
                                 else: pass
 
                             if firewall_with_issue:
-                                result.append({
-                                    "user": self.user_id,
-                                    "account_arn": self.account_arn,
-                                    "account": self.account_id,
-                                    "timestamp": time.time(),
-                                    "item": firewall_arn,
-                                    "item_type": "aws_network_firewall",
-                                    "test_name": test_name,
-                                    "test_result": "issue_found"
-                                })
+                                result.append(self._get_result_object(firewall_arn, "aws_network_firewall", test_name, "issue_found"))
                             else:
-                                result.append({
-                                    "user": self.user_id,
-                                    "account_arn": self.account_arn,
-                                    "account": self.account_id,
-                                    "timestamp": time.time(),
-                                    "item": firewall_arn,
-                                    "item_type": "aws_network_firewall",
-                                    "test_name": test_name,
-                                    "test_result": "no_issue_found"
-                                })
+                                result.append(self._get_result_object(firewall_arn, "aws_network_firewall", test_name, "no_issue_found"))
 
                         else: pass
 
