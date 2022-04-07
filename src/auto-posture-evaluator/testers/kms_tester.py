@@ -21,6 +21,18 @@ class Tester(interfaces.TesterInterface):
             self.get_rotation_for_cmks_is_enabled(self.kms_keys) + \
             self.get_kms_cmk_pending_deletion(self.kms_keys)
     
+    def _get_result_object(self, item, item_type, test_name, issue_status):
+        return {
+            "user": self.user_id,
+            "account_arn": self.account_arn,
+            "account": self.account_id,
+            "timestamp": time.time(),
+            "item": item,
+            "item_type": item_type,
+            "test_name": test_name,
+            "test_result": issue_status
+        }
+
     def _get_kms_keys(self):
         keys = []
         can_paginate = self.aws_kms_client.can_paginate('list_keys')
@@ -44,27 +56,9 @@ class Tester(interfaces.TesterInterface):
             response = self.aws_kms_client.get_key_rotation_status(KeyId = key_id)
             rotation_status = response['KeyRotationEnabled']
             if rotation_status:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": key_id,
-                    "item_type": "kms_policy",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                })
+                result.append(self._get_result_object(key_id, "kms_policy", test_name, "no_issue_found"))
             else:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": key_id,
-                    "item_type": "kms_policy",
-                    "test_name": test_name,
-                    "test_result": "issue_found"
-                })
+                result.append(self._get_result_object(key_id, "kms_policy", test_name, "issue_found"))
         return result
 
     def get_kms_cmk_pending_deletion(self, keys):
@@ -76,25 +70,7 @@ class Tester(interfaces.TesterInterface):
             response = self.aws_kms_client.describe_key(KeyId = key_id)
             rotation_status = response['KeyMetadata']['KeyState']
             if rotation_status == 'PendingDeletion':
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": key_id,
-                    "item_type": "kms_policy",
-                    "test_name": test_name,
-                    "test_result": "issue_found"
-                })
+                result.append(self._get_result_object(key_id, "kms_policy", test_name, "issue_found"))
             else:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": key_id,
-                    "item_type": "kms_policy",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                })
+                result.append(self._get_result_object(key_id, "kms_policy", test_name, "no_issue_found"))
         return result
