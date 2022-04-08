@@ -415,8 +415,8 @@ class Tester(interfaces.TesterInterface):
         status_code = response['status_code']
 
         if status_code == 200:
-            result = response['result']
-            invitations = {"result": result}
+            temp = response['result']
+            invitations = {"result": temp}
             admin_invitation = jmespath.search("result[?role=='admin']", invitations)
         
             if len(admin_invitation) > 0:
