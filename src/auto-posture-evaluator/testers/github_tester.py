@@ -350,8 +350,8 @@ class Tester(interfaces.TesterInterface):
                 result.append({"item": organization, "issue": True})
             else:
                 result.append({"item": organization, "issue": False})
-        elif status_code == 302: result.append({"item": "not_member@@" + organization, "issue": True})
-        elif status_code == 422: result.append({"item": "validation_failed@@" + organization, "issue": True})
+        elif status_code == 302: pass
+        elif status_code == 422: pass
         else: pass
         return result
 
