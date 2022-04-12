@@ -281,11 +281,14 @@ class Tester(interfaces.TesterInterface):
 
         if status_code == 200:
             org_details = raw_api_response.json()
+            public_repo_create_permission = org_details.get('members_can_create_public_repositories')
 
-            if org_details['members_can_create_public_repositories']:
-                result.append({"item": organization, "issue": True})
-            else:
-                result.append({"item": organization, "issue": False})
+            if public_repo_create_permission is not None:
+                if public_repo_create_permission:
+                    result.append({"item": organization, "issue": True})
+                else:
+                    result.append({"item": organization, "issue": False})
+            else: pass
         else: pass
 
         return result
