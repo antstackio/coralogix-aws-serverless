@@ -243,7 +243,7 @@ class Tester(interfaces.TesterInterface):
         
         if status_code == 200:
             raw_api_response_obj = raw_api_response.json()
-            enforced_2fa = raw_api_response_obj['two_factor_requirement_enabled']
+            enforced_2fa = raw_api_response_obj.get('two_factor_requirement_enabled')
             if enforced_2fa is not None:
                 if enforced_2fa:
                     result.append({"item": organization, "issue": False})
