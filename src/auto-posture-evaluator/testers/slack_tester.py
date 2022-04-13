@@ -19,7 +19,8 @@ class Tester(interfaces.TesterInterface):
     def run_tests(self) -> list:
         return self.get_public_file_sharing_enabled() + \
                self.get_apps_with_no_privacy_policy() + \
-               self.get_apps_with_no_description()
+               self.get_apps_with_no_description() + \
+               self.get_number_of_workspace_admins_more_than_conf()
 
     def get_public_file_sharing_enabled(self):
         test_name = "public_file_sharing_enabled"
@@ -95,3 +96,28 @@ class Tester(interfaces.TesterInterface):
                     "test_result": "no_issue_found"
                 })
         return result
+
+    def get_number_of_workspace_admins_more_than_conf(self):
+        test_name = "number_of_workspace_admins_more_than_conf"
+        response = self.slack_client.admin_users_list(team_id=self.team_id)
+        admin_count = 0
+        for user in response['users']:
+            if user['is_admin']:
+                admin_count += 1
+                if admin_count > 2:
+                    return [{
+                        "timestamp": time.time(),
+                        "account": self.team_id,
+                        "item": self.team_id,
+                        "item_type": "team",
+                        "test_name": test_name,
+                        "test_result": "issue_found"
+                    }]
+        return [{
+            "timestamp": time.time(),
+            "account": self.team_id,
+            "item": self.team_id,
+            "item_type": "team",
+            "test_name": test_name,
+            "test_result": "no_issue_found"
+        }]
