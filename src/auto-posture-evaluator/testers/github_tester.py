@@ -452,8 +452,9 @@ class Tester(interfaces.TesterInterface):
                         found_old_key = False
                         for key in deploy_keys:
                             key_created_at = key['created_at']
-                            key_created_at_obj = datetime.strptime(key_created_at, '%Y-%M-%dT%H:%m:%SZ')
-                            current_datetime = datetime.now()
+                            key_created_date = key_created_at.split('T')[0]
+                            key_created_at_obj = datetime.strptime(key_created_date, '%Y-%M-%d').date()
+                            current_datetime = datetime.now().date()
                             time_diff = (current_datetime - key_created_at_obj).days
 
                             if time_diff > freshness_threshold:
@@ -464,8 +465,7 @@ class Tester(interfaces.TesterInterface):
                             result.append({"item": repo_name, "issue": True})
                         else:
                             result.append({"item": repo_name, "issue": False})
-                    else:
-                        result.append({"item": repo_name, "issue": False})
+                    else: pass
                 else: pass
         else: pass
         return result
