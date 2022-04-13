@@ -538,7 +538,7 @@ class Tester(interfaces.TesterInterface):
                     response_headers = raw_response.headers
                         
                     if pg_status_code == 200: collaborators.extend(response)
-                    elif pg_status_code == 403: result.append({"item": "forbidden@@" + repo_name, "issue": True})
+                    elif pg_status_code == 403: pass
                     else: pass
                     
                     link = response_headers.get('Link')
