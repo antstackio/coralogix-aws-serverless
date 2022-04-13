@@ -302,10 +302,13 @@ class Tester(interfaces.TesterInterface):
 
         if status_code == 200:
             org_details = raw_api_response.json()
-            if org_details['is_verified']:
-                result.append({"item": organization, "issue": False})
-            else:
-                result.append({"item": organization, "issue": True})
+            is_verifid = org_details.get('is_verified')
+            if is_verifid is not None:
+                if is_verifid:
+                    result.append({"item": organization, "issue": False})
+                else:
+                    result.append({"item": organization, "issue": True})
+            else: pass
         else: pass
         return result
 
