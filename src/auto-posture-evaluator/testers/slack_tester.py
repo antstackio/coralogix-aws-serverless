@@ -7,8 +7,8 @@ from slack_sdk import WebClient
 class Tester(interfaces.TesterInterface):
     def __init__(self):
         self.slack_client = WebClient(token=os.environ.get("SLACK_USER_TOKEN"))
-        self.team_info = self.slack_client.team_info()
-        self.team_id = self.team_info["team"]["id"]
+        self.team_info = self.slack_client.team_info() #returns enterprise info rather than team
+        self.enterprise_id = self.team_info["team"]["id"]
 
     def declare_tested_service(self) -> str:
         return 'slack'
@@ -20,17 +20,18 @@ class Tester(interfaces.TesterInterface):
         return self.get_public_file_sharing_enabled() + \
                self.get_apps_with_no_privacy_policy() + \
                self.get_apps_with_no_description() + \
-               self.get_number_of_workspace_admins_more_than_conf()
+               self.get_number_of_workspace_admins_more_than_conf() + \
+               self.get_number_of_workspace_owners_more_than_conf()
 
     def get_public_file_sharing_enabled(self):
         test_name = "public_file_sharing_enabled"
-        response = self.slack_client.files_list(team_id=self.team_id)
+        response = self.slack_client.files_list(team_id=os.environ.get("TEAM_ID"))
         result = []
         for file in response["files"]:
             if file["public_url_shared"]:
                 result.append({
                     "timestamp": time.time(),
-                    "account": self.team_id,
+                    "account": self.enterprise_id,
                     "item": file["id"],
                     "item_type": "file",
                     "test_name": test_name,
@@ -39,7 +40,7 @@ class Tester(interfaces.TesterInterface):
             else:
                 result.append({
                     "timestamp": time.time(),
-                    "account": self.team_id,
+                    "account": self.enterprise_id,
                     "item": file["id"],
                     "item_type": "file",
                     "test_name": test_name,
@@ -49,13 +50,13 @@ class Tester(interfaces.TesterInterface):
     
     def get_apps_with_no_privacy_policy(self):
         test_name = "apps_with_no_privacy_policy"
-        response = self.slack_client.admin_apps_approved_list(team_id=self.team_id)
+        response = self.slack_client.admin_apps_approved_list(team_id=os.environ.get("TEAM_ID"))
         result = []
         for app in response['approved_apps']:
             if not app['app']['privacy_policy_url']:
                 result.append({
                     "timestamp": time.time(),
-                    "account": self.team_id,
+                    "account": self.enterprise_id,
                     "item": app["app"]["id"],
                     "item_type": "app",
                     "test_name": test_name,
@@ -64,7 +65,7 @@ class Tester(interfaces.TesterInterface):
             else:
                 result.append({
                     "timestamp": time.time(),
-                    "account": self.team_id,
+                    "account": self.enterprise_id,
                     "item": app["app"]["id"],
                     "item_type": "app",
                     "test_name": test_name,
@@ -74,13 +75,13 @@ class Tester(interfaces.TesterInterface):
 
     def get_apps_with_no_description(self):
         test_name = "apps_with_no_description"
-        response = self.slack_client.admin_apps_approved_list(team_id=self.team_id)
+        response = self.slack_client.admin_apps_approved_list(team_id=os.environ.get("TEAM_ID"))
         result = []
         for app in response['approved_apps']:
             if not app['app']['description']:
                 result.append({
                     "timestamp": time.time(),
-                    "account": self.team_id,
+                    "account": self.enterprise_id,
                     "item": app["app"]["id"],
                     "item_type": "app",
                     "test_name": test_name,
@@ -89,7 +90,7 @@ class Tester(interfaces.TesterInterface):
             else:
                 result.append({
                     "timestamp": time.time(),
-                    "account": self.team_id,
+                    "account": self.enterprise_id,
                     "item": app["app"]["id"],
                     "item_type": "app",
                     "test_name": test_name,
@@ -99,7 +100,7 @@ class Tester(interfaces.TesterInterface):
 
     def get_number_of_workspace_admins_more_than_conf(self):
         test_name = "number_of_workspace_admins_more_than_conf"
-        response = self.slack_client.admin_users_list(team_id=self.team_id)
+        response = self.slack_client.admin_users_list(team_id=os.environ.get("TEAM_ID"))
         admin_count = 0
         for user in response['users']:
             if user['is_admin']:
@@ -107,17 +108,40 @@ class Tester(interfaces.TesterInterface):
                 if admin_count > 2:
                     return [{
                         "timestamp": time.time(),
-                        "account": self.team_id,
-                        "item": self.team_id,
-                        "item_type": "team",
+                        "account": self.enterprise_id,
+                        "item": os.environ.get("TEAM_ID"),# team id same as workspace id
+                        "item_type": "workspace",
                         "test_name": test_name,
                         "test_result": "issue_found"
                     }]
         return [{
             "timestamp": time.time(),
-            "account": self.team_id,
-            "item": self.team_id,
-            "item_type": "team",
+            "account": self.enterprise_id,
+            "item": os.environ.get("TEAM_ID"),
+            "item_type": "workspace",
             "test_name": test_name,
             "test_result": "no_issue_found"
         }]
+
+    def get_number_of_workspace_owners_more_than_conf(self):
+        test_name = "number_of_workspace_owners_more_than_conf"
+        response = self.slack_client.admin_teams_owners_list(team_id=os.environ.get("TEAM_ID"))
+        owner_count = len(response.get('owner_ids', 0))
+        if owner_count>2:
+            return [{
+                        "timestamp": time.time(),
+                        "account": self.enterprise_id,
+                        "item": os.environ.get("TEAM_ID"),
+                        "item_type": "workspace",
+                        "test_name": test_name,
+                        "test_result": "issue_found"
+                    }]
+        else:
+            return [{
+                        "timestamp": time.time(),
+                        "account": self.enterprise_id,
+                        "item": os.environ.get("TEAM_ID"),
+                        "item_type": "workspace",
+                        "test_name": test_name,
+                        "test_result": "no_issue_found"
+                    }]
