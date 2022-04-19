@@ -1,3 +1,4 @@
+import os
 import time
 from typing import Dict, List, Set
 import boto3
@@ -17,6 +18,7 @@ class Tester(interfaces.TesterInterface):
         self.set_security_group = self._get_all_security_group_ids(self.security_groups)
         self.ec2_instances = self._get_all_ec2_instances(self.aws_ec2_client)
         self.aws_nfw_client = boto3.client('network-firewall')
+        self.sensitive_instance_tag = os.environ.get('AUTOPOSTURE_EC2_SENSITIVE_TAG')
 
     def declare_tested_service(self) -> str:
         return 'ec2'
@@ -586,10 +588,10 @@ class Tester(interfaces.TesterInterface):
     def get_sensitive_instance_tenancy_not_dedicated(self, instances):
         test_name = "sensitive_instance_tenancy_not_dedicated"
         result = []
-        
+        sensitive_tag = self.sensitive_instance_tag if self.sensitive_instance_tag else "sensitive"
         for instance in instances:
             instance_id = instance['InstanceId']
-            if any([tag['Value'] == 'sensitive' for tag in instance['Tags']]) and \
+            if any([tag['Value'] == sensitive_tag for tag in instance['Tags']]) and \
                 instance['Placement']['Tenancy'] != 'dedicated':
                 result.append(self._get_result_object(instance_id, "ec2_instance", test_name, "issue_found"))
             else:
