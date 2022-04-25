@@ -21,7 +21,8 @@ class Tester(interfaces.TesterInterface):
         return \
             self.detect_single_super_admin_account() + \
             self.detect_2step_verification_enforced() + \
-            self.detect_2step_verification_enforcement_for_all_users()
+            self.detect_2step_verification_enforcement_for_all_users() + \
+            self.detect_users_authenticating_with_imap()
     
     def _get_user_id(self):
         credentials = service_account.Credentials.from_service_account_file(self.SERVICE_ACCOUNT)
@@ -31,6 +32,15 @@ class Tester(interfaces.TesterInterface):
         user_id = resource_name.split('/')[-1]
 
         return user_id
+    def _get_google_workspace_users(self):
+        SCOPES = ['https://www.googleapis.com/auth/admin.directory.user']
+
+        credentials = service_account.Credentials.from_service_account_file(self.SERVICE_ACCOUNT, scopes=SCOPES, subject='admin@cparanoid.com')
+        service = build('admin', 'directory_v1', credentials=credentials)
+        response = service.users().list(customer='my_customer', orderBy='email').execute()
+
+        users = response['users']
+        return users
 
     def _append_gsuite_test_result(self, item, item_type, test_name, issue_status):
         return {
@@ -99,4 +109,24 @@ class Tester(interfaces.TesterInterface):
             else:
                 result.append(self._append_gsuite_test_result(user_primary_email, "google_user", test_name, "issue_found"))
         
+        return result
+
+    def detect_users_authenticating_with_imap(self):
+        result = []
+        test_name = "users_authenticating_with_imap"
+        users = self._get_google_workspace_users()
+        user = users[0]
+
+        user_id = user['id']
+        user_primary_email = user['primaryEmail']
+        SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
+        credentials = service_account.Credentials.from_service_account_file(self.SERVICE_ACCOUNT, scopes=SCOPES, subject=user_primary_email)
+        gmail_service = build('gmail', 'v1', credentials=credentials)
+        response =gmail_service.users().settings().getImap(userId=user_id).execute()
+        imap_enabled = response['enabled']
+        if imap_enabled:
+            result.append(self._append_gsuite_test_result('gmail_iamp_settings', 'google_workspace_settings', test_name, "issue_found"))
+        else:
+            result.append(self._append_gsuite_test_result('gmail_iamp_settings', 'google_workspace_settings', test_name, "no_issue_found"))
+
         return result
