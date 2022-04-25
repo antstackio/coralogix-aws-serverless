@@ -22,7 +22,8 @@ class Tester(interfaces.TesterInterface):
             self.detect_single_super_admin_account() + \
             self.detect_2step_verification_enforced() + \
             self.detect_2step_verification_enforcement_for_all_users() + \
-            self.detect_users_authenticating_with_imap()
+            self.detect_users_authenticating_with_imap() + \
+            self.detect_users_authenticating_with_pop()
     
     def _get_user_id(self):
         credentials = service_account.Credentials.from_service_account_file(self.SERVICE_ACCOUNT)
@@ -129,4 +130,27 @@ class Tester(interfaces.TesterInterface):
         else:
             result.append(self._append_gsuite_test_result('gmail_iamp_settings', 'google_workspace_settings', test_name, "no_issue_found"))
 
+        return result
+
+    def detect_users_authenticating_with_pop(self):
+        result = []
+        test_name = "users_authenticating_with_pop"
+        users = self._get_google_workspace_users()
+        user = users[0]
+
+        SCOPES = ['https://www.googleapis.com/auth/admin.directory.user', 'https://www.googleapis.com/auth/gmail.readonly']
+
+        user_id = user['id']
+        user_primary_email = user['primaryEmail']
+        SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
+        credentials = service_account.Credentials.from_service_account_file(self.SERVICE_ACCOUNT, scopes=SCOPES, subject=user_primary_email)
+        gmail_service = build('gmail', 'v1', credentials=credentials)
+        response =gmail_service.users().settings().getPop(userId=user_id).execute()
+        
+        access_winow = response['accessWindow']
+        if access_winow == 'disabled':
+            result.append(self._append_gsuite_test_result('gmail_pop_settings', 'google_workspace_settings', test_name, "no_issue_found"))
+        else: 
+            result.append(self._append_gsuite_test_result('gmail_pop_settings', 'google_workspace_settings', test_name, "issue_found"))
+        
         return result
