@@ -19,10 +19,6 @@ class Tester(interfaces.TesterInterface):
         self.ec2_instances = self._get_all_ec2_instances(self.aws_ec2_client)
         self.aws_nfw_client = boto3.client('network-firewall')
         self.sensitive_instance_tag = os.environ.get('AUTOPOSTURE_EC2_SENSITIVE_TAG')
-        self.per_region_max_cpu_count_diff = os.environ.get('AUTOPOSTURE_PER_REGION_MAX_CPU_COUNT_DIFF')
-
-    def declare_tested_service(self) -> str:
-        return 'ec2'
 
     def declare_tested_provider(self) -> str:
         return 'aws'
