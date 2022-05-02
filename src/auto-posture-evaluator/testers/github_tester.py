@@ -650,7 +650,6 @@ class Tester(interfaces.TesterInterface):
                 api = f"{self.BASE_URL_REPOS}/{owner}/{repo_name}/code-scanning/alerts"
                 raw_response = requests.get(headers=self.request_headers, url=api)
                 status_code = raw_response.status_code
-                vulnerabilities_alerts = raw_response.json()
                 
                 if status_code == 403:
                    result.append({"item": repo_name, "issue": True})
