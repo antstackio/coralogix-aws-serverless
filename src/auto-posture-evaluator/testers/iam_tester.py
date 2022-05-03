@@ -4,6 +4,7 @@ import jmespath
 import interfaces
 import boto3
 from botocore.exceptions import ClientError
+import botocore
 import datetime as dt
 from datetime import datetime
 class Tester(interfaces.TesterInterface):
