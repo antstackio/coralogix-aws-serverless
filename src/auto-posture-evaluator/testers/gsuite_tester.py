@@ -1,3 +1,4 @@
+from datetime import datetime
 import os
 import time
 import interfaces
@@ -9,7 +10,7 @@ class Tester(interfaces.TesterInterface):
         self.ACCOUNT_ADMIN_EMAIL = os.environ.get("AUTOPOSTURE_GSUITE_ADMIN_EMAIL")
         self.SERVICE_ACCOUNT = "service_account.json"
         self.user_id = self._get_user_id()
-
+        self.inactive_user_threshold = os.environ.get("AUTOPOSTURE_GSUITE_USER_INACTIVE_THRESHOLD")
         self.SCOPES = {}
     def declare_tested_provider(self) -> str:
         return "google"
@@ -175,4 +176,22 @@ class Tester(interfaces.TesterInterface):
         else:
             result.append(self._append_gsuite_test_result("gmail_auto_forwarding_settings", "google_workspace_settings", test_name, "issue_found"))
         
+        return result
+
+    def detect_inactive_user(self):
+        result = []
+        test_name = "inactive_gsuite_user"
+        users = self._get_google_workspace_users()
+        inactive_user_threshold = int(self.inactive_user_threshold) if self.inactive_user_threshold else 30
+        for user in users:
+            last_login = user['lastLoginTime']
+            user_primary_email = user['primaryEmail']
+            last_login_obj = datetime.strptime(last_login, '%Y-%m-%dT%H:%M:%S.000Z').date()
+            current_date_obj = datetime.now().date()
+            diff = (current_date_obj - last_login_obj).days
+            
+            if diff >= inactive_user_threshold:
+                result.append(self._append_gsuite_test_result(user_primary_email, "user_email", test_name, "issue_found"))
+            else: result.append(self._append_gsuite_test_result(user_primary_email, "user_email", test_name, "no_issue_found"))
+
         return result
