@@ -25,7 +25,8 @@ class Tester(interfaces.TesterInterface):
             self.detect_2step_verification_enforcement_for_all_users() + \
             self.detect_users_authenticating_with_imap() + \
             self.detect_users_authenticating_with_pop() + \
-            self.detect_automatic_mail_forwarding()
+            self.detect_automatic_mail_forwarding() + \
+            self.detect_inactive_user()
     
     def _get_user_id(self):
         credentials = service_account.Credentials.from_service_account_file(self.SERVICE_ACCOUNT)
