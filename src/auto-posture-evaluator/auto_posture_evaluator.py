@@ -13,12 +13,25 @@ from model.helper import struct_from_dict
 
 
 testers_module_names = []
-for module in os.listdir(os.path.dirname(__file__) + '/testers'):
-    if module.startswith('_') or module[-3:] != '.py':
-        continue
-    module_name = "testers." + module[:-3]
-    testers_module_names.append(module_name)
-    importlib.import_module(module_name)
+if not os.environ.get('TESTER_LIST'):
+    for module in os.listdir(os.path.dirname(__file__) + '/testers'):
+        if module.startswith('_') or module[-3:] != '.py':
+            continue
+        module_name = "testers." + module[:-3]
+        testers_module_names.append(module_name)
+        importlib.import_module(module_name)
+else:
+    tester_list = os.environ.get('TESTER_LIST').split(',')
+    for module in tester_list:
+        if module:
+            module_realpath = os.path.realpath("testers/" + module + "_tester.py")
+            if module_realpath.startswith(os.path.dirname(__file__) + '/testers'):
+                module_name = "testers." + module + "_tester"
+                testers_module_names.append(module_name)
+                importlib.import_module(module_name)
+            else:
+                print("The requested tester " + module + " is outside the expected path")
+                continue
 del module
 
 
@@ -68,10 +81,11 @@ class AutoPostureEvaluator:
 
     def run_tests(self):
         execution_id = str(uuid.uuid4())
-
+        lambda_start_timestamp = datetime.datetime.now()
         for i in range(0, len(self.tests)):
             cur_test_start_timestamp = datetime.datetime.now()
             tester = self.tests[i]
+            print("INFO: Start " + str(tester) + " tester")
             try:
                 cur_tester = tester()
                 tester_result = cur_tester.run_tests()
@@ -121,7 +135,8 @@ class AutoPostureEvaluator:
             )
             report = SecurityReport(context=context, test_results=security_report_test_result_list)
             print("DEBUG: Sent " + str(len(security_report_test_result_list)) + " events for " +
-                  str(testers_module_names[i]))
+                  str(testers_module_names[i]) + " time taken " +
+                  str(cur_test_end_timestamp - cur_test_start_timestamp))
             loop: AbstractEventLoop = asyncio.get_event_loop()
             try:
                 loop.run_until_complete(
@@ -129,5 +144,6 @@ class AutoPostureEvaluator:
             except Exception as ex:
                 print("ERROR: Failed to send " + str(len(security_report_test_result_list)) + " for tester " +
                       str(testers_module_names[i]) + " events due to the following exception: " + str(ex))
+        print("Lambda taken " + str(datetime.datetime.now()-lambda_start_timestamp))
         self.channel.close()
 
