@@ -620,12 +620,15 @@ class Tester(interfaces.TesterInterface):
         result = []
         for i in range(len(clients)):
             response = clients[i].describe_account_attributes(AttributeNames=['vpc-max-elastic-ips'])
-            limit = response['AccountAttributes'][0]['AttributeValues'][0]['AttributeValue']
-            addresses = clients[i].describe_addresses(Filters=[{'Name': 'domain', 'Values': ['vpc']}])
-            if len(addresses['Addresses']) == limit:
-                result.append(self._get_result_object(region_names[i], "ec2_region", test_name, "issue_found"))
-            else:
-                result.append(self._get_result_object(region_names[i], "ec2_region", test_name, "no_issue_found"))
+            account_attrs = response['AccountAttributes']
+            if account_attrs:
+                limit = response['AccountAttributes'][0]['AttributeValues'][0]['AttributeValue']
+                addresses = clients[i].describe_addresses(Filters=[{'Name': 'domain', 'Values': ['vpc']}])
+                if len(addresses['Addresses']) == limit:
+                    result.append(self._get_result_object(region_names[i], "ec2_region", test_name, "issue_found"))
+                else:
+                    result.append(self._get_result_object(region_names[i], "ec2_region", test_name, "no_issue_found"))
+            else: pass
         return result
     
     def get_ec2_instance_iam_role_not_enabled(self, instances):
