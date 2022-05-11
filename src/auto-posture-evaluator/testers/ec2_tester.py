@@ -590,12 +590,15 @@ class Tester(interfaces.TesterInterface):
         result = []
         sensitive_tag = self.sensitive_instance_tag if self.sensitive_instance_tag else "sensitive"
         for instance in instances:
+            instance_tags = instance.get('Tags')
             instance_id = instance['InstanceId']
-            if any([tag['Value'] == sensitive_tag for tag in instance['Tags']]) and \
-                instance['Placement']['Tenancy'] != 'dedicated':
-                result.append(self._get_result_object(instance_id, "ec2_instance", test_name, "issue_found"))
-            else:
-                result.append(self._get_result_object(instance_id, "ec2_instance", test_name, "no_issue_found"))
+            if instance_tags is not None:
+                if any([tag['Value'] == sensitive_tag for tag in instance_tags]) and \
+                    instance['Placement']['Tenancy'] != 'dedicated':
+                    result.append(self._get_result_object(instance_id, "ec2_instance", test_name, "issue_found"))
+                else:
+                    result.append(self._get_result_object(instance_id, "ec2_instance", test_name, "no_issue_found"))
+            else: pass
         return result
 
     def get_aws_config_not_enabled_for_all_regions(self, region_names):
