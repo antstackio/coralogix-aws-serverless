@@ -497,7 +497,7 @@ class Tester(interfaces.TesterInterface):
         results = []
         instances = []
         PORT443 = 443
-        instances_443 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= PORT443 and permission['ToPort'] >= PORT443) and permission['IpProtocol'] == 'tcp' and any([range.get('CidrIp', '') == '0.0.0.0/0' for range in permission['IpRanges']])), all_inbound_permissions))))
+        instances_443 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= PORT443 and permission['ToPort'] >= PORT443) and permission['IpProtocol'] == 'tcp' and any([range.get('CidrIp', '') == '0.0.0.0/0' or range.get('CidrIp', '') == '::/0' for range in permission['IpRanges']])), all_inbound_permissions))))
         instances.extend(instances_443)
 
         instances_with_issue = set(instances)
@@ -516,7 +516,7 @@ class Tester(interfaces.TesterInterface):
         results = []
         instances = []
         PORT1024 = 1024
-        instances_1024 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] > PORT1024 and permission['ToPort'] > PORT1024) and any([range.get('CidrIp', '') == '0.0.0.0/0' for range in permission['IpRanges']])), all_inbound_permissions))))
+        instances_1024 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] > PORT1024 and permission['ToPort'] > PORT1024) and any([range.get('CidrIp', '') == '0.0.0.0/0' or range.get('CidrIp', '') == '::/0' for range in permission['IpRanges']])), all_inbound_permissions))))
         instances.extend(instances_1024)
 
         instances_with_issue = set(instances)
