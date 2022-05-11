@@ -608,10 +608,13 @@ class Tester(interfaces.TesterInterface):
         result = []
         for i in range(len(clients)):
             response = clients[i].describe_configuration_recorder_status()
-            if len(response['ConfigurationRecordersStatus']) == 0 or response['ConfigurationRecordersStatus'][0]['recording'] == False:
-                result.append(self._get_result_object(region_names[i], "ec2_region", test_name, "issue_found"))
-            else:
-                result.append(self._get_result_object(region_names[i], "ec2_region", test_name, "no_issue_found"))
+            configuration_records_status = response.get('ConfigurationRecordersStatus')
+            if configuration_records_status is not None:
+                if len(configuration_records_status) == 0 or configuration_records_status[0]['recording'] == False:
+                    result.append(self._get_result_object(region_names[i], "ec2_region", test_name, "issue_found"))
+                else:
+                    result.append(self._get_result_object(region_names[i], "ec2_region", test_name, "no_issue_found"))
+            else: pass
         return result
 
     def get_nearing_regional_limit_for_elastic_ip_addresses(self, region_names):
