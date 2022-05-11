@@ -19,6 +19,7 @@ class Tester(interfaces.TesterInterface):
         self.ec2_instances = self._get_all_ec2_instances(self.aws_ec2_client)
         self.aws_nfw_client = boto3.client('network-firewall')
         self.sensitive_instance_tag = os.environ.get('AUTOPOSTURE_EC2_SENSITIVE_TAG')
+        self.per_region_max_cpu_count_diff = os.environ.get('AUTOPOSTURE_PER_REGION_MAX_CPU_COUNT_DIFF')
 
     def declare_tested_service(self) -> str:
         return 'ec2'
@@ -719,6 +720,7 @@ class Tester(interfaces.TesterInterface):
     def get_region_nearing_limits_of_ec2_instances(self, region_names):
         test_name = "region_nearing_limits_of_ec2_instances"
         result = []
+        cpu_count_limit = int(self.per_region_max_cpu_count_diff) if self.per_region_max_cpu_count_diff else 50
         service_quota_clients = self._get_service_clients_for_all_regions('service-quotas')
         ec2_clients = self._get_service_clients_for_all_regions('ec2')
         for i in range(len(region_names)):
@@ -728,7 +730,7 @@ class Tester(interfaces.TesterInterface):
             current_cpu_count = 0
             for instance in instances:
                 current_cpu_count += instance['CpuOptions']['CoreCount'] * instance['CpuOptions']['ThreadsPerCore']
-            if region_limit - current_cpu_count <= 50:
+            if region_limit - current_cpu_count <= cpu_count_limit:
                 result.append(self._get_result_object(region_names[i], "ec2_region", test_name, "issue_found"))
             else:
                 result.append(self._get_result_object(region_names[i], "ec2_region", test_name, "no_issue_found"))
