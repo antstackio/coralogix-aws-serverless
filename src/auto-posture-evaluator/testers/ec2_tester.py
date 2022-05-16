@@ -199,11 +199,15 @@ class Tester(interfaces.TesterInterface):
         instances = []
         NAMERESPORT = 137
         SESSIONPORT = 139
+        DATAGRAMPORT = 138
+
         instancse_137 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= NAMERESPORT and permission['ToPort'] >= NAMERESPORT) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
         instances.extend(instancse_137)
         instancse_139 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= SESSIONPORT and permission['ToPort'] >= SESSIONPORT) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
         instances.extend(instancse_139)
-        
+        instances_138 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= DATAGRAMPORT and permission['ToPort'] >= DATAGRAMPORT) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
+        instances.extend(instances_138)
+
         instances_with_issue = set(instances)
         instances_with_no_issue = self.set_security_group.difference(instances_with_issue)
 
