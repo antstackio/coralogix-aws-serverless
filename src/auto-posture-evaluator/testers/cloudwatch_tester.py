@@ -188,8 +188,8 @@ class Tester(interfaces.TesterInterface):
                     raise ex
             
             if issue_detected:
-                self._get_result("stack_name", "cloudformation_stack", test_name, "issue_found")
+                self._get_result(stack_name, "cloudformation_stack", test_name, "issue_found")
             else:
-                self._get_result("stack_name", "cloudformation_stack", test_name, "no_issue_found")
+                self._get_result(stack_name, "cloudformation_stack", test_name, "no_issue_found")
 
         return result
