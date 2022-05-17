@@ -445,7 +445,7 @@ class Tester(interfaces.TesterInterface):
     def get_inbound_icmp_access(self, all_inbound_permissions):
         test_name = "ec2_inbound_icmp_access_restricted"
         result = []
-        instances = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: permission['IpProtocol'] == "icmp" or permission['IpProtocol'] == "-1", all_inbound_permissions))))
+        instances = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: permission['IpProtocol'] == "icmp" or permission['IpProtocol'] == "-1" or permission['IpProtocol'] == "icmpv6", all_inbound_permissions))))
         instances_with_issue = set(instances)
         instances_with_no_issue = self.set_security_group.difference(instances_with_issue)
         for i in instances_with_issue:
@@ -520,7 +520,12 @@ class Tester(interfaces.TesterInterface):
         results = []
         instances = []
         PORT1024 = 1024
-        instances_1024 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] > PORT1024 and permission['ToPort'] > PORT1024) and any([range.get('CidrIp', '') == '0.0.0.0/0' or range.get('CidrIp', '') == '::/0' for range in permission['IpRanges']])), all_inbound_permissions))))
+        HISHESTPORT = 65535
+        instances_1024 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or 
+                ((permission['FromPort'] >= PORT1024 and permission['ToPort'] <= HISHESTPORT) and 
+                (any([range.get('CidrIp', '') == '0.0.0.0/0' or range.get('CidrIp', '') == '::/0' for range in permission['IpRanges']]) or 
+                any([range.get('CidrIpv6', '') == '::/0' for range in permission['Ipv6Ranges']]))), all_inbound_permissions))))
+
         instances.extend(instances_1024)
 
         instances_with_issue = set(instances)
