@@ -9,7 +9,7 @@ import gzip
 import re
 
 
-class Tester(interfaces.TesterInterface):
+class Tester:
     def __init__(self):
         self.slack_client = WebClient(token=os.environ.get("SLACK_USER_TOKEN"))
         self.team_info = self.slack_client.team_info()  # returns enterprise info rather than team
@@ -41,7 +41,8 @@ class Tester(interfaces.TesterInterface):
                self.email_display_policy_for_all_users() + \
                self.get_admin_analytics() + \
                self.get_inactive_channels() + \
-               self.public_file_sharing()
+               self.public_file_sharing() + \
+               self.user_groups_permission() 
 
     def get_public_file_sharing_enabled(self):
         test_name = "public_file_sharing_enabled"
@@ -211,7 +212,7 @@ class Tester(interfaces.TesterInterface):
 
     def list_all_guest_users(self) -> list:
         guest_users = []
-        result = self.slack_client.users_list(team_id=os.environ.get("TEAM_ID"))
+        result = self.slack_client.users_list(team_id="T03AVMVR6MA")
         for i in range(len(result["members"])):
             if result["members"][i]["is_restricted"]:  # check if is_restricted flag is true which indicates guest_user
                 guest_users.append(result["members"][i]["id"])
@@ -386,7 +387,7 @@ class Tester(interfaces.TesterInterface):
             if response.get('prefs')['can_thread']['type'][0] == "ra":  # any member of channel can reply
                 if response.get('prefs')['enable_at_channel']['enabled']:  # @channel is enabled only for admins
                     if response.get('prefs')['enable_at_here']['enabled']:  # @here is enabled only for admins
-                        return[{
+                        return [{
                             "item": channel_id,
                             "item_type": "channel_id",
                             "test_name": test_name,
@@ -394,7 +395,7 @@ class Tester(interfaces.TesterInterface):
                             "timestamp": time.time()
                         }]
         else:
-            return[{
+            return [{
                 "item": channel_id,
                 "item_type": "channel_id",
                 "test_name": test_name,
@@ -435,7 +436,8 @@ class Tester(interfaces.TesterInterface):
         hed = {'Authorization': 'Bearer ' + auth_token, 'Content-Type': 'text/html', 'encoding': 'ISO-8859-1'}
         prev_date = str(datetime.now().date() - timedelta(days=2))
         r = requests.get(
-            'https://slack.com/api/admin.analytics.getFile?type=public_channel&metadata_only=false&date={0}'.format(prev_date),
+            'https://slack.com/api/admin.analytics.getFile?type=public_channel&metadata_only=false&date={0}'.format(
+                prev_date),
             headers=hed)  # note: the date parameter only accepts date two days earlier than today's date
         # admin analytics logs are not generated two days later. Always search for two days earlier logs
         with open('myfile.txt.gz', 'wb') as fd:  # downloads analytics file as txt.gz format , downloaded to local drive
@@ -500,14 +502,42 @@ class Tester(interfaces.TesterInterface):
                         "test_result": "issue_found",
                         "timestamp": time.time()
 
-                        })
+                    })
             except KeyError:
                 result.append({
-                        "item": file[i]["id"],
-                        "item_type": "file_id",
-                        "test_name": test_name,
-                        "test_result": "no_issue_found",
-                        "timestamp": time.time()
+                    "item": file[i]["id"],
+                    "item_type": "file_id",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found",
+                    "timestamp": time.time()
 
-                        })
+                })
         return result
+
+    def user_groups_permission(self) -> list:
+        result = []
+        guest_users = self.list_all_guest_users()
+        test_name = 'check whether user group created by guest'
+        response = self.slack_client.usergroups_list(team_id=os.environ.get("TEAM_ID"))
+        # response = self.slack_client.usergroups_list(team_id=os.environ.get("TEAM_ID"))
+        for i in range(len(response.get('usergroups'))):
+            if response['usergroups'][i]["created_by"] in guest_users:
+                result.append({
+                    "item": response['usergroup'][i]['id'],
+                    "item_type": "usergroup_id",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found",
+                    "timestamp": time.time()
+                })
+            else:
+                result.append({
+                    "item": response['usergroup'][i]['id'],
+                    "item_type": "usergroup_id",
+                    "test_name": test_name,
+                    "test_result": "issue_found",
+                    "timestamp": time.time()
+                })
+
+        return result
+
+
