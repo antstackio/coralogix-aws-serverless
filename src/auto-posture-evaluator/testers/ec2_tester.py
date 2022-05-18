@@ -20,6 +20,9 @@ class Tester(interfaces.TesterInterface):
         self.aws_nfw_client = boto3.client('network-firewall')
         self.sensitive_instance_tag = os.environ.get('AUTOPOSTURE_EC2_SENSITIVE_TAG')
         self.per_region_max_cpu_count_diff = os.environ.get('AUTOPOSTURE_PER_REGION_MAX_CPU_COUNT_DIFF')
+   
+    def declare_tested_service(self) -> str:
+        return 'ec2'
 
     def declare_tested_provider(self) -> str:
         return 'aws'
@@ -501,6 +504,7 @@ class Tester(interfaces.TesterInterface):
         results = []
         instances = []
         PORT443 = 443
+
         instances_443 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= PORT443 and permission['ToPort'] >= PORT443) and permission['IpProtocol'] == 'tcp' and any([range.get('CidrIp', '') == '0.0.0.0/0' or range.get('CidrIp', '') == '::/0' for range in permission['IpRanges']])), all_inbound_permissions))))
         instances.extend(instances_443)
 
@@ -624,6 +628,7 @@ class Tester(interfaces.TesterInterface):
                 else:
                     result.append(self._get_result_object(region_names[i], "ec2_region", test_name, "no_issue_found"))
             else: pass
+
         return result
 
     def get_nearing_regional_limit_for_elastic_ip_addresses(self, region_names):
