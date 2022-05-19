@@ -544,7 +544,7 @@ class Tester:
 
     def single_workspace_owner(self) -> list:
         test_name = 'check whether single workspace owner or multiple'
-        response = self.slack_client.admin_teams_owners_list(team_id='T03AVMVR6MA')
+        response = self.slack_client.admin_teams_owners_list(team_id=os.environ.get('TEAM_ID'))
         if len(response.get('owner_ids') ) == 1:
             return [{
 
