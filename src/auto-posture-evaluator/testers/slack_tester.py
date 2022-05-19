@@ -1,7 +1,8 @@
 import os
 import time
 import interfaces
-from datetime import *
+from datetime import datetime
+from datetime import timedelta
 from slack_sdk import WebClient
 import requests
 import json
@@ -42,7 +43,8 @@ class Tester:
                self.get_admin_analytics() + \
                self.get_inactive_channels() + \
                self.public_file_sharing() + \
-               self.user_groups_permission() 
+               self.user_groups_permission() + \
+               self.single_workspace_owner(self)
 
     def get_public_file_sharing_enabled(self):
         test_name = "public_file_sharing_enabled"
@@ -539,5 +541,31 @@ class Tester:
                 })
 
         return result
+
+    def single_workspace_owner(self) -> list:
+        test_name = 'check whether single workspace owner or multiple'
+        response = self.slack_client.admin_teams_owners_list(team_id='T03AVMVR6MA')
+        if len(response.get('owner_ids') ) == 1:
+            return [{
+
+                "item": response.get('owner_ids')[0],
+                "item_type": "workspace_owner_id",
+                "test_name": test_name,
+                "test_result": "issue_found",
+                "timestamp": time.time()
+
+            }]
+        elif len(response.get('owner_ids')) > 1:
+            return [{
+
+                "item": response.get('owner_ids')[0],
+                "item_type": "one_of_the_workspace_owners_id_since_multiple",
+                "test_name": test_name,
+                "test_result": "issue_found",
+                "timestamp": time.time()
+
+            }]
+
+    
 
 
