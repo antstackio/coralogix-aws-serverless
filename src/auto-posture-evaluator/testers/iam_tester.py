@@ -3,7 +3,7 @@ import time
 import jmespath
 import interfaces
 import boto3
-import botocore
+from botocore.exceptions import ClientError
 import datetime as dt
 from datetime import datetime
 class Tester(interfaces.TesterInterface):
@@ -537,7 +537,38 @@ class Tester(interfaces.TesterInterface):
                     else:
                         result.append(self._append_iam_test_result(user_name, "iam_user", test_name, "no_issue_found"))
                 else:
-                    result.append(self._append_iam_test_result(user_name, "iam_user", test_name, "no_issue_found"))
+                    try:
+                        response = self.aws_iam_client.get_login_profile(UserName=user_name)
+                        create_date = response['LoginProfile']['CreateDate']
+                        time_diff = (current_date - create_date).days
+
+                        if time_diff >= credentials_unuse_threshold:
+                            result.append(self._append_iam_test_result(user_name, "iam_user", test_name, "issue_found"))
+                        else:
+                            result.append(self._append_iam_test_result(user_name, "iam_user", test_name, "no_issue_found"))
+                    except ClientError as c:
+                        # no login profile -> programmatic user
+                        response = self.aws_iam_client.list_access_keys(UserName=user_name)
+                        access_keys =  {'access_keys': response['AccessKeyMetadata']}
+                        access_keys = jmespath.search("access_keys[?Status=='Active']", access_keys)
+                        
+                        key_used = []
+                        for i in access_keys:
+                            access_key_id = i['AccessKeyId']
+                            create_date = i['CreateDate']
+
+                            response = self.aws_iam_client.get_access_key_last_used(AccessKeyId=access_key_id)
+                            access_key_last_used = response['AccessKeyLastUsed']
+                            last_used_date = access_key_last_used.get('LastUsedDate')
+                            if last_used_date is not None:
+                                key_used.append(last_used_date)
+                            else: key_used.append(create_date)
+                        
+                        r = list(map(lambda x: (current_date - x).days, key_used))
+                        if any([i >= credentials_unuse_threshold for i in r]):
+                            result.append(self._append_iam_test_result(user_name, "iam_user", test_name, "issue_found"))
+                        else:
+                            result.append(self._append_iam_test_result(user_name, "iam_user", test_name, "no_issue_found"))
         else: pass
         
         return result
