@@ -357,15 +357,18 @@ class Tester(interfaces.TesterInterface):
         if len(users) > 0:
             for user in users:
                 user_name = user['UserName']
-                response = self.aws_iam_client.list_user_policies(UserName=user_name)
-                policy_names = response['PolicyNames']
-                admin_access = False
-                for policy in policy_names:
-                    if policy == 'AdministratorAccess':
-                        admin_access = True
-                        result.append(self._append_iam_test_result(user_name, "iam_user", test_name, "issue_found"))
-                        break
-                if not admin_access:
+                policies = []
+                paginator = self.aws_iam_client.get_paginator('list_attached_user_policies')
+                response_iterator = paginator.paginate(UserName=user_name)
+
+                for page in response_iterator:
+                    policies.extend(page['AttachedPolicies'])
+                policies = list(map(lambda x: x['PolicyName'], policies))
+                admin_access = list(filter(lambda x: 'AdministratorAccess' in x, policies))
+
+                if admin_access:
+                    result.append(self._append_iam_test_result(user_name, "iam_user", test_name, "issue_found"))
+                else:
                     result.append(self._append_iam_test_result(user_name, "iam_user", test_name, "no_issue_found"))
         else: pass
         
