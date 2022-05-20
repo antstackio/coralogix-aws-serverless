@@ -436,7 +436,7 @@ class Tester:
     def get_admin_analytics(self) -> list:  # retrieves admin analytics (only for primary owners)
         auth_token = os.environ.get("SLACK_USER_TOKEN")
         hed = {'Authorization': 'Bearer ' + auth_token, 'Content-Type': 'text/html', 'encoding': 'ISO-8859-1'}
-        prev_date = str(datetime.now().date() - timedelta(days=2))
+        prev_date = str(datetime.now().date() - timedelta(days=3))
         r = requests.get(
             'https://slack.com/api/admin.analytics.getFile?type=public_channel&metadata_only=false&date={0}'.format(
                 prev_date),
