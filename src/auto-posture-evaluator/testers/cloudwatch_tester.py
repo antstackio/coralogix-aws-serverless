@@ -106,7 +106,7 @@ class Tester(interfaces.TesterInterface):
             return [self._get_result("RootAccountUsageEventCount", "cloudwatch_alarm", test_name, "issue_found")]
     
     def get_cloudtrail_configuration_changes_not_monitored(self):
-        test_name = "s3_bucket_policy_changes_not_monitored"
+        test_name = "cloudtrail_configuration_changes_not_monitored"
         alarms = self.aws_cloudwatch_client.describe_alarms_for_metric(MetricName='CloudTrailEventCount', Namespace='CloudTrailMetrics')
         if len(alarms['MetricAlarms']) > 0:
             return [self._get_result("CloudTrailEventCount", "cloudwatch_alarm", test_name, "no_issue_found")]
