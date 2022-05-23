@@ -646,7 +646,7 @@ class Tester(interfaces.TesterInterface):
             try:
                 public_access = self.aws_s3_client.get_public_access_block(Bucket=bucket_name)
                 conf = public_access["PublicAccessBlockConfiguration"]
-                if not conf["BlockPublicAcls"] and not conf["IgnorePublicAcls"] and not conf["BlockPublicPolicy"] and not conf["RestrictPublicBuckets"]:
+                if not conf["BlockPublicAcls"] or not conf["IgnorePublicAcls"] or not conf["BlockPublicPolicy"] or not conf["RestrictPublicBuckets"]:
                     issue_detected = True
             except botocore.exceptions.ClientError as ex:
                 if ex.response['Error']['Code'] == 'NoSuchPublicAccessBlockConfiguration':
