@@ -6,6 +6,8 @@ import boto3
 from botocore.exceptions import ClientError
 import datetime as dt
 from datetime import datetime
+
+
 class Tester(interfaces.TesterInterface):
     def __init__(self) -> None:
         self.aws_iam_client = boto3.client('iam')
@@ -62,7 +64,7 @@ class Tester(interfaces.TesterInterface):
 
         for page in response_iterator:
             users.extend(page['Users'])
-        
+
         return users
 
     def _append_iam_test_result(self, item, item_type, test_name, issue_status):
@@ -85,22 +87,21 @@ class Tester(interfaces.TesterInterface):
             password_policy = response['PasswordPolicy']
 
             password_length_threshold = int(self.password_length_threshold_policy) if self.password_length_threshold_policy else 14
-            
             if password_policy['MinimumPasswordLength'] >= password_length_threshold:
                 result.append(self._append_iam_test_result("password_policy@@" + self.account_id, "password_policy_record", test_name, "no_issue_found"))
             else:
                 result.append(self._append_iam_test_result("password_policy@@" + self.account_id, "password_policy_record", test_name, "issue_found"))
-        except self.aws_iam_client.exceptions.NoSuchEntityException as e:
+        except self.aws_iam_client.exceptions.NoSuchEntityException:
             result.append(self._append_iam_test_result("password_policy@@" + self.account_id, "password_policy_record", test_name, "issue_found"))
         return result
-    
+
     def get_hw_mfa_enabled_for_root_account(self):
         result = []
         test_name = "hardware_mfa_enabled_for_root_account"
 
         response = self.aws_iam_client.list_virtual_mfa_devices(AssignmentStatus='Assigned')
         virtual_devices = response['VirtualMFADevices']
-        
+
         if len(virtual_devices) > 0:
             for device in virtual_devices:
                 serial_number = device['SerialNumber']
@@ -112,7 +113,7 @@ class Tester(interfaces.TesterInterface):
                     result.append(self._append_iam_test_result("account_summary@@" + self.account_id, "account_summary_record", test_name, "issue_found"))
         else: pass
         return result
-    
+
     def get_mfa_enabled_for_root_account(self):
         result = []
         test_name = "mfa_is_enabled_for_root_account"
@@ -123,9 +124,8 @@ class Tester(interfaces.TesterInterface):
             result.append(self._append_iam_test_result("account_summary@@" + self.account_id, "account_summary_record", test_name, "no_issue_found"))
         else:
             result.append(self._append_iam_test_result("account_summary@@" + self.account_id, "account_summary_record", test_name, "issue_found"))
-        
         return result
-    
+
     def get_policy_does_not_have_user_attached(self):
         result = []
         test_name = "policy_does_not_have_a_user_attached_to_it"
@@ -144,8 +144,8 @@ class Tester(interfaces.TesterInterface):
         for policy in policies:
             policy_id = policy['PolicyId']
             policy_arn = policy['Arn']
-            response = self.aws_iam_client.list_entities_for_policy(PolicyArn=policy_arn,EntityFilter='User')
-            
+            response = self.aws_iam_client.list_entities_for_policy(PolicyArn=policy_arn, EntityFilter='User')
+
             attached_users = response['PolicyUsers']
             if len(attached_users) > 0:
                 result.append(self._append_iam_test_result(policy_id, "iam_policy", test_name, "issue_found"))
@@ -166,12 +166,11 @@ class Tester(interfaces.TesterInterface):
                 response = self.aws_iam_client.list_access_keys(UserName=user_name)
                 access_keys = response['AccessKeyMetadata']
                 old_access_keys = 0
-                
                 for key in access_keys:
                     create_date = key['CreateDate']
                     current_date = datetime.now(tz=dt.timezone.utc)
                     time_diff = (current_date - create_date).days
-                    
+
                     if time_diff > access_keys_max_age:
                         old_access_keys += 1
                     else: pass
@@ -180,7 +179,6 @@ class Tester(interfaces.TesterInterface):
                 else:
                     result.append(self._append_iam_test_result(user_name, "iam_user", test_name, "no_issue_found"))
         else: pass
-        
         return result
 
     def get_server_certificate_will_expire(self):
@@ -194,7 +192,7 @@ class Tester(interfaces.TesterInterface):
             certificates.extend(page['ServerCertificateMetadataList'])
 
         if len(certificates) > 0:
-            
+
             for certificate in certificates:
                 certificate_id = certificate['ServerCertificateId']
                 expiration_date = datetime.date(certificate['Expiration'])
@@ -207,7 +205,7 @@ class Tester(interfaces.TesterInterface):
                 else:
                     result.append(self._append_iam_test_result(certificate_id, "iam_server_certificate", test_name, "no_issue_found"))
         else: pass
-        
+
         return result
 
     def get_expired_ssl_tls_certtificate_removed(self):
@@ -241,7 +239,7 @@ class Tester(interfaces.TesterInterface):
         try:
             response = self.aws_iam_client.get_account_password_policy()
             password_policy = response['PasswordPolicy']
-            
+
             password_maximum_age_policy = int(self.password_maximum_age_policy) if self.password_maximum_age_policy else 90
             expire_passwords = password_policy.get('ExpirePasswords')
             if expire_passwords:
@@ -252,14 +250,14 @@ class Tester(interfaces.TesterInterface):
                     result.append(self._append_iam_test_result("password_policy@@" + self.account_id, "password_policy_record", test_name, "issue_found"))
             else:
                 result.append(self._append_iam_test_result("password_policy@@" + self.account_id, "password_policy_record", test_name, "issue_found"))
-        except self.aws_iam_client.exceptions.NoSuchEntityException as e:
+        except self.aws_iam_client.exceptions.NoSuchEntityException:
             result.append(self._append_iam_test_result("no_password_policy@@" + self.account_id, "password_policy_record", test_name, "issue_found"))
         return result
 
     def get_password_policy_requires_lowercase(self):
         result = []
         test_name = "password_requires_one_or_more_lowercase_characters"
-        
+
         try:
             response = self.aws_iam_client.get_account_password_policy()
             password_policy = response['PasswordPolicy']
@@ -268,7 +266,7 @@ class Tester(interfaces.TesterInterface):
                 result.append(self._append_iam_test_result("password_policy@@" + self.account_id, "password_policy_record", test_name, "no_issue_found"))
             else:
                 result.append(self._append_iam_test_result("password_policy@@" + self.account_id, "password_policy_record", test_name, "issue_found"))
-        except self.aws_iam_client.exceptions.NoSuchEntityException as e:
+        except self.aws_iam_client.exceptions.NoSuchEntityException:
             result.append(self._append_iam_test_result("no_password_policy@@" + self.account_id, "password_policy_record", test_name, "issue_found"))
         return result
 
@@ -284,10 +282,10 @@ class Tester(interfaces.TesterInterface):
                 result.append(self._append_iam_test_result("password_policy@@" + self.account_id, "password_policy_record", test_name, "no_issue_found"))
             else:
                 result.append(self._append_iam_test_result("password_policy@@" + self.account_id, "password_policy_record", test_name, "issue_found"))
-        except self.aws_iam_client.exceptions.NoSuchEntityException as e:
+        except self.aws_iam_client.exceptions.NoSuchEntityException:
             result.append(self._append_iam_test_result("no_password_policy@@" + self.account_id, "password_policy_record", test_name, "issue_found"))
         return result
-    
+
     def get_password_policy_requires_symbols(self):
         result = []
         test_name = "password_requires_one_or_more_symbols"
@@ -299,7 +297,7 @@ class Tester(interfaces.TesterInterface):
                 result.append(self._append_iam_test_result("password_policy@@" + self.account_id, "password_policy_record", test_name, "no_issue_found"))
             else:
                 result.append(self._append_iam_test_result("password_policy@@" + self.account_id, "password_policy_record", test_name, "issue_found"))
-        except self.aws_iam_client.exceptions.NoSuchEntityException as e:
+        except self.aws_iam_client.exceptions.NoSuchEntityException:
             result.append(self._append_iam_test_result("no_password_policy@@" + self.account_id, "password_policy_record", test_name, "issue_found"))
         return result
 
@@ -315,7 +313,7 @@ class Tester(interfaces.TesterInterface):
                 result.append(self._append_iam_test_result("password_policy@@" + self.account_id, "password_policy_record", test_name, "no_issue_found"))
             else:
                 result.append(self._append_iam_test_result("password_policy@@" + self.account_id, "password_policy_record", test_name, "issue_found"))
-        except self.aws_iam_client.exceptions.NoSuchEntityException as e:
+        except self.aws_iam_client.exceptions.NoSuchEntityException:
             result.append(self._append_iam_test_result("password_policy@@" + self.account_id, "password_policy_record", test_name, "issue_found"))
 
         return result
@@ -331,7 +329,7 @@ class Tester(interfaces.TesterInterface):
         for page in response_iterator:
             policies.extend(page['Policies'])
 
-        policy_dict =  { 'policies' : policies }
+        policy_dict = {'policies': policies}
         response = jmespath.search("policies[?PolicyName == 'AWSSupportAccess'].Arn[]", policy_dict)
         policy_arn = response[0]
         if len(response) > 0:
@@ -339,13 +337,13 @@ class Tester(interfaces.TesterInterface):
                 PolicyArn=policy_arn,
                 EntityFilter='Role'
             )
-            support_role =  response['PolicyRoles']
+            support_role = response['PolicyRoles']
             if len(support_role) > 0:
                 result.append(self._append_iam_test_result("support_role@@" + self.account_id, "iam_support_role", test_name, "no_issue_found"))
             else:
                 result.append(self._append_iam_test_result("support_role@@" + self.account_id, "iam_support_role", test_name, "issue_found"))
         else: pass
-        
+
         return result
 
     def get_priviledged_user_has_admin_permissions(self):
@@ -353,7 +351,7 @@ class Tester(interfaces.TesterInterface):
         test_name = "priviledged_user_has_admin_permissions"
 
         users = self.iam_users
-        
+
         if len(users) > 0:
             for user in users:
                 user_name = user['UserName']
@@ -371,7 +369,7 @@ class Tester(interfaces.TesterInterface):
                 else:
                     result.append(self._append_iam_test_result(user_name, "iam_user", test_name, "no_issue_found"))
         else: pass
-        
+
         return result
 
     def get_password_reuse_policy(self):
@@ -387,7 +385,7 @@ class Tester(interfaces.TesterInterface):
                 result.append(self._append_iam_test_result("password_policy@@" + self.account_id, "password_policy_record", test_name, "no_issue_found"))
             else:
                 result.append(self._append_iam_test_result("password_policy@@" + self.account_id, "password_policy_record", test_name, "issue_found"))
-        except self.aws_iam_client.exceptions.NoSuchEntityException as e:
+        except self.aws_iam_client.exceptions.NoSuchEntityException:
             result.append(self._append_iam_test_result("no_password_policy@@" + self.account_id, "password_policy_record", test_name, "issue_found"))
         return result
 
@@ -397,32 +395,32 @@ class Tester(interfaces.TesterInterface):
 
         response = self.aws_iam_client.get_account_summary()
         root_access_key_present = response['SummaryMap']['AccountAccessKeysPresent']
-        
+
         if root_access_key_present:
             result.append(self._append_iam_test_result("root_account@@" + self.account_id, "iam_root_account", test_name, "issue_found"))
         else:
             result.append(self._append_iam_test_result("root_account@@" + self.account_id, "iam_root_account", test_name, "no_issue_found"))
-        
+
         return result
 
     def get_mfa_enabled_for_all_iam_users(self):
         result = []
         users = self.iam_users
         test_name = "mfa_is_enabled_for_all_iam_users_with_console_password"
-        
+
         if len(users) > 0:
             for user in users:
                 user_name = user['UserName']
                 paginator = self.aws_iam_client.get_paginator('list_mfa_devices')
                 response_paginator = paginator.paginate(UserName=user_name)
                 mfa_devices = []
-            
+
                 for page in response_paginator:
                     mfa_devices.extend(page['MFADevices'])
-            
+
                 if len(mfa_devices) > 0:
                     result.append(self._append_iam_test_result(user_name, "iam_user", test_name, "no_issue_found"))
-                else: 
+                else:
                     result.append(self._append_iam_test_result(user_name, "iam_user", test_name, "issue_found"))
         else: pass
 
@@ -434,11 +432,11 @@ class Tester(interfaces.TesterInterface):
         test_name = "role_uses_trusted_principals"
 
         paginator = self.aws_iam_client.get_paginator('list_policies')
-        response_iterator =  paginator.paginate(PaginationConfig={'PageSize': 50})
+        response_iterator = paginator.paginate(PaginationConfig={'PageSize': 50})
 
         for page in response_iterator:
             policies.extend(page['Policies'])
-        
+
         for policy in policies:
             policy_id = policy['PolicyId']
             policy_arn = policy['Arn']
@@ -458,12 +456,12 @@ class Tester(interfaces.TesterInterface):
         result = []
         test_name = "access_keys_are_not_created_for_IAM_user_during_initial_setup"
         users = self.iam_users
-        
+
         if len(users) > 0:
             for user in users:
                 user_name = user['UserName']
                 user_created_at = user['CreateDate']
-                response = self.aws_iam_client.list_access_keys(UserName = user_name)
+                response = self.aws_iam_client.list_access_keys(UserName=user_name)
                 access_key_metadata = response['AccessKeyMetadata']
 
                 if len(access_key_metadata) > 0:
@@ -498,11 +496,11 @@ class Tester(interfaces.TesterInterface):
         test_name = "policy_with_admin_privilege_not_created"
 
         paginator = self.aws_iam_client.get_paginator('list_policies')
-        response_iterator =  paginator.paginate(PaginationConfig={'PageSize': 50})
+        response_iterator = paginator.paginate(PaginationConfig={'PageSize': 50})
 
         for page in response_iterator:
             policies.extend(page['Policies'])
-        
+
         for policy in policies:
             policy_id = policy['PolicyId']
             policy_arn = policy['Arn']
@@ -512,11 +510,11 @@ class Tester(interfaces.TesterInterface):
             policy_document = response['PolicyVersion']['Document']['Statement']
 
             for policy in policy_document:
-                if(type(policy) is not dict or not policy.get('Action')): continue
-                if ((policy.get('Resource') and (policy['Resource']=='*' and policy['Action']=='*')) \
-                    or (type(policy['Action']) is str and policy['Action']=='*:*') \
-                    or (type(policy['Action']) is list and any([True if action=='*:*' else False for action in policy['Action']]))):
-                    result.append(self._append_iam_test_result(policy_id, "iam_policy", test_name, "issue_found"))  
+                if (type(policy) is not dict or not policy.get('Action')): continue
+                if ((policy.get('Resource') and (policy['Resource'] == '*' and policy['Action'] == '*'))
+                    or (type(policy['Action']) is str and policy['Action'] == '*:*')
+                        or (type(policy['Action']) is list and any([True if action == '*:*' else False for action in policy['Action']]))):
+                    result.append(self._append_iam_test_result(policy_id, "iam_policy", test_name, "issue_found"))
                 else:
                     result.append(self._append_iam_test_result(policy_id, "iam_policy", test_name, "no_issue_found"))
         return result
@@ -525,9 +523,9 @@ class Tester(interfaces.TesterInterface):
         result = []
         users = self.iam_users
         test_name = "iam_user_credentials_unused_for_45_days_or_more"
-        
+
         credentials_unuse_threshold = int(self.iam_user_credentials_unuse_threshold) if self.iam_user_credentials_unuse_threshold else 45
-        
+
         if len(users) > 0:
             for user in users:
                 user_name = user['UserName']
@@ -549,12 +547,12 @@ class Tester(interfaces.TesterInterface):
                             result.append(self._append_iam_test_result(user_name, "iam_user", test_name, "issue_found"))
                         else:
                             result.append(self._append_iam_test_result(user_name, "iam_user", test_name, "no_issue_found"))
-                    except ClientError as c:
+                    except ClientError:
                         # no login profile -> programmatic user
                         response = self.aws_iam_client.list_access_keys(UserName=user_name)
-                        access_keys =  {'access_keys': response['AccessKeyMetadata']}
+                        access_keys = {'access_keys': response['AccessKeyMetadata']}
                         access_keys = jmespath.search("access_keys[?Status=='Active']", access_keys)
-                        
+
                         key_used = []
                         for i in access_keys:
                             access_key_id = i['AccessKeyId']
@@ -566,14 +564,14 @@ class Tester(interfaces.TesterInterface):
                             if last_used_date is not None:
                                 key_used.append(last_used_date)
                             else: key_used.append(create_date)
-                        
+
                         r = list(map(lambda x: (current_date - x).days, key_used))
                         if any([i >= credentials_unuse_threshold for i in r]):
                             result.append(self._append_iam_test_result(user_name, "iam_user", test_name, "issue_found"))
                         else:
                             result.append(self._append_iam_test_result(user_name, "iam_user", test_name, "no_issue_found"))
         else: pass
-        
+
         return result
 
     def get_more_than_one_active_access_key_for_a_single_user(self):
@@ -583,12 +581,11 @@ class Tester(interfaces.TesterInterface):
 
         for user in users:
             user_name = user['UserName']
-            user_id = user['UserId']
             response = self.aws_iam_client.list_access_keys(UserName=user_name)
 
-            access_keys =  {'access_keys': response['AccessKeyMetadata']}
+            access_keys = {'access_keys': response['AccessKeyMetadata']}
             response = jmespath.search("access_keys[?Status=='Active'].AccessKeyId", access_keys)
-            
+
             if len(response) > 1:
                 result.append(self._append_iam_test_result(user_name, "iam_user", test_name, "issue_found"))
             else:
@@ -601,8 +598,8 @@ class Tester(interfaces.TesterInterface):
         test_name = "iam_access_analyzer_is_disabled"
 
         response = self.aws_access_analyzer_client.list_analyzers()
-        analyzers = {"analyzer" : response['analyzers']}
-        
+        analyzers = {"analyzer": response['analyzers']}
+
         query_result = jmespath.search("analyzer[?status=='ACTIVE'].arn", analyzers)
         if len(query_result) > 0:
             result.append(self._append_iam_test_result("access_analyzers@@" + self.account_id, "iam_access_analyzers", test_name, "no_issue_found"))
@@ -620,7 +617,7 @@ class Tester(interfaces.TesterInterface):
             paginator = self.aws_iam_client.get_paginator('list_server_certificates')
             response_iterator = paginator.paginate(PaginationConfig={'PageSize': 50})
             for page in response_iterator:
-                certificates.extend(page['ServerCertificateMetadataList'])  
+                certificates.extend(page['ServerCertificateMetadataList'])
         else:
             response = self.aws_iam_client.list_server_certificates()
             certificates.extend(response['ServerCertificateMetadataList'])
@@ -630,7 +627,7 @@ class Tester(interfaces.TesterInterface):
             issue_found = False
             upload_date = certificate['UploadDate']
 
-            if upload_date.year < 2014 or (upload_date.year == 2014 and upload_date.month<4):
+            if upload_date.year < 2014 or (upload_date.year == 2014 and upload_date.month < 4):
                 issue_found = True
             if issue_found:
                 result.append(self._append_iam_test_result(name, "server_certificate", test_name, "issue_found"))
@@ -655,7 +652,7 @@ class Tester(interfaces.TesterInterface):
                 else:
                     result.append(self._append_iam_test_result(user_name, "iam_user", test_name, "issue_found"))
         else: pass
-        
+
         return result
 
     def detect_no_iam_user_present(self):
