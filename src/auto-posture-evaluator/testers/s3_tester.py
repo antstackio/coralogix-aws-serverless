@@ -1,6 +1,6 @@
+from functools import reduce
 import json
 import time
-from unittest import result
 import boto3
 import botocore.exceptions
 import interfaces
@@ -27,31 +27,32 @@ class Tester(interfaces.TesterInterface):
         return 'aws'
 
     def run_tests(self) -> list:
-        return \
-            self.detect_write_enabled_buckets(self.s3_buckets) + \
-            self.detect_publicly_accessible_s3_buckets_by_acl(self.s3_buckets) + \
-            self.detect_non_versioned_s3_buckets(self.s3_buckets) + \
-            self.detect_not_encrypted_s3_buckets(self.s3_buckets) + \
-            self.detect_full_control_allowed_s3_buckets(self.s3_buckets) + \
-            self.detect_buckets_without_mfa_delete_s3_buckets(self.s3_buckets) + \
-            self.detect_buckets_without_block_public_access_set(self.s3_buckets) + \
-            self.detect_publicly_accessible_s3_buckets_by_policy(self.s3_buckets) + \
-            self.detect_bucket_content_listable_by_users(self.s3_buckets) + \
-            self.detect_bucket_content_permissions_viewable_by_users(self.s3_buckets) + \
-            self.detect_bucket_content_permissions_modifiable_by_users(self.s3_buckets) + \
-            self.detect_bucket_content_writable_by_anonymous(self.s3_buckets) + \
-            self.detect_buckets_without_logging_set(self.s3_buckets) + \
-            self.detect_buckets_accessible_by_http_url(self.s3_buckets) + \
-            self.detect_buckets_accessible_by_https_url(self.s3_buckets) + \
-            self.detect_bucket_logging_disabled(self.s3_buckets) + \
-            self.detect_bucket_not_encrypted_with_cmk(self.s3_buckets) + \
-            self.detect_block_public_access_setting_disabled() + \
-            self.detect_bucket_not_configured_with_block_public_access(self.s3_buckets) + \
-            self.detect_buckets_with_global_upload_and_delete_permission(self.s3_buckets) + \
-            self.detect_bucket_has_global_list_acl_permission_through_acl(self.s3_buckets) + \
-            self.detect_bucket_has_global_put_permissions_enabled_via_bucket_policy(self.s3_buckets) + \
-            self.detect_bucket_has_global_list_permissions_enabled_via_bucket_policy(self.s3_buckets) + \
-            self.detect_bucket_has_global_get_permissions_enabled_via_bucket_policy(self.s3_buckets)
+        # return \
+        #     self.detect_write_enabled_buckets(self.s3_buckets) + \
+        #     self.detect_publicly_accessible_s3_buckets_by_acl(self.s3_buckets) + \
+        #     self.detect_non_versioned_s3_buckets(self.s3_buckets) + \
+        #     self.detect_not_encrypted_s3_buckets(self.s3_buckets) + \
+        #     self.detect_full_control_allowed_s3_buckets(self.s3_buckets) + \
+        #     self.detect_buckets_without_mfa_delete_s3_buckets(self.s3_buckets) + \
+        #     self.detect_buckets_without_block_public_access_set(self.s3_buckets) + \
+        #     self.detect_publicly_accessible_s3_buckets_by_policy(self.s3_buckets) + \
+        #     self.detect_bucket_content_listable_by_users(self.s3_buckets) + \
+        #     self.detect_bucket_content_permissions_viewable_by_users(self.s3_buckets) + \
+        #     self.detect_bucket_content_permissions_modifiable_by_users(self.s3_buckets) + \
+        #     self.detect_bucket_content_writable_by_anonymous(self.s3_buckets) + \
+        #     self.detect_buckets_without_logging_set(self.s3_buckets) + \
+        #     self.detect_buckets_accessible_by_http_url(self.s3_buckets) + \
+        #     self.detect_buckets_accessible_by_https_url(self.s3_buckets) + \
+        #     self.detect_bucket_logging_disabled(self.s3_buckets) + \
+        #     self.detect_bucket_not_encrypted_with_cmk(self.s3_buckets) + \
+        #     self.detect_block_public_access_setting_disabled() + \
+        #     self.detect_bucket_not_configured_with_block_public_access(self.s3_buckets) + \
+        #     self.detect_buckets_with_global_upload_and_delete_permission(self.s3_buckets) + \
+        #     self.detect_bucket_has_global_list_acl_permission_through_acl(self.s3_buckets) + \
+        #     self.detect_bucket_has_global_put_permissions_enabled_via_bucket_policy(self.s3_buckets) + \
+        #     self.detect_bucket_has_global_list_permissions_enabled_via_bucket_policy(self.s3_buckets) + \
+        #     self.detect_bucket_has_global_get_permissions_enabled_via_bucket_policy(self.s3_buckets)
+        return self.detect_bucket_has_global_delete_permissions_enabled_via_bucket_policy(self.s3_buckets)
 
     def detect_write_enabled_buckets(self, buckets_list):
         return self._detect_buckets_with_permissions_matching(buckets_list, "WRITE", "write_enabled_s3_buckets")
@@ -963,4 +964,81 @@ class Tester(interfaces.TesterInterface):
                     "test_name": test_name,
                     "test_result": "no_issue_found"
                 })
+        return result
+
+    def detect_bucket_has_global_delete_permissions_enabled_via_bucket_policy(self, buckets_list):
+        result = []
+        test_name = "bucket_has_global_delete_permissions_enabled_via_bucket_policy"
+        buckets = buckets_list["Buckets"]
+        for bucket_meta in buckets:
+            bucket_name = bucket_meta['Name']
+
+            try:
+                response = self._get_bucket_policy(bucket_name=bucket_name)
+                policies = response['Policy']
+
+                policy_obj = json.loads(policies)
+                policy_statements = policy_obj['Statement']
+
+                filtered_result = list(filter(lambda x: x['Effect'] == 'Allow', policy_statements))
+                if filtered_result:
+                    filtered_principal = list(filter(lambda x: x['Principal'] == '*' or x['Principal'] == {"AWS": "*"}, filtered_result))
+                    if filtered_principal:
+                        all_actions = []
+                        for i in filtered_principal:
+                            actions = i['Action']
+                            if isinstance(actions, str): all_actions.append(actions)
+                            else: all_actions.extend(actions)
+                        delete_actions = list(filter(lambda x: x == '*' or x == 's3:*' or x.startswith('s3:Delete'), all_actions))
+                        print(bucket_name, all_actions, delete_actions, sep=' :: ')
+                        if delete_actions:
+                            result.append({
+                                "user": self.user_id,
+                                "account_arn": self.account_arn,
+                                "account": self.account_id,
+                                "timestamp": time.time(),
+                                "item": bucket_name,
+                                "item_type": "s3_bucket",
+                                "test_name": test_name,
+                                "test_result": "issue_found"
+                            })
+                        else:
+                            result.append({
+                                "user": self.user_id,
+                                "account_arn": self.account_arn,
+                                "account": self.account_id,
+                                "timestamp": time.time(),
+                                "item": bucket_name,
+                                "item_type": "s3_bucket",
+                                "test_name": test_name,
+                                "test_result": "no_issue_found"
+                            })
+                    else:
+                        result.append({
+                            "user": self.user_id,
+                            "account_arn": self.account_arn,
+                            "account": self.account_id,
+                            "timestamp": time.time(),
+                            "item": bucket_name,
+                            "item_type": "s3_bucket",
+                            "test_name": test_name,
+                            "test_result": "no_issue_found"
+                        })
+                else:
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": bucket_name,
+                        "item_type": "s3_bucket",
+                        "test_name": test_name,
+                        "test_result": "no_issue_found"
+                    })
+            except botocore.exceptions.ClientError as c:
+                if c.response['Error']['Code'] == 'NoSuchBucketPolicy':
+                    pass
+                else:
+                    raise c
+
         return result
