@@ -663,7 +663,3 @@ class Tester(interfaces.TesterInterface):
             result.append(self._append_iam_test_result("iam_users_present@@" + self.account_id, "iam_user", test_name, "issue_found"))
 
         return result
-
-
-Tester().run_tests()
-print("Finish")
