@@ -160,6 +160,7 @@ class Tester(interfaces.TesterInterface):
 
         users = self.iam_users
         access_keys_max_age = int(self.access_key_maximum_age) if self.access_key_maximum_age else 90
+        current_date = datetime.now(tz=dt.timezone.utc)
         if len(users) > 0:
             for user in users:
                 user_name = user['UserName']
@@ -168,7 +169,6 @@ class Tester(interfaces.TesterInterface):
                 old_access_keys = 0
                 for key in access_keys:
                     create_date = key['CreateDate']
-                    current_date = datetime.now(tz=dt.timezone.utc)
                     time_diff = (current_date - create_date).days
 
                     if time_diff > access_keys_max_age:
@@ -190,13 +190,12 @@ class Tester(interfaces.TesterInterface):
         certificates = []
         for page in response_iterator:
             certificates.extend(page['ServerCertificateMetadataList'])
-
+        current_date = datetime.date(datetime.now())
         if len(certificates) > 0:
 
             for certificate in certificates:
                 certificate_id = certificate['ServerCertificateId']
                 expiration_date = datetime.date(certificate['Expiration'])
-                current_date = datetime.date(datetime.now())
                 time_diff = (expiration_date - current_date).days
                 if time_diff < 0:
                     result.append(self._append_iam_test_result(certificate_id, "iam_server_certificate", test_name, "issue_found"))
@@ -217,12 +216,11 @@ class Tester(interfaces.TesterInterface):
         certificates = []
         for page in response_iterator:
             certificates.extend(page['ServerCertificateMetadataList'])
-
+        current_date = datetime.date(datetime.now())
         if len(certificates) > 0:
             for certificate in certificates:
                 certificate_id = certificate['ServerCertificateId']
                 expiration_date = datetime.date(certificate['Expiration'])
-                current_date = datetime.date(datetime.now())
                 time_diff = (expiration_date - current_date).days
                 if time_diff < 0:
                     result.append(self._append_iam_test_result(certificate_id, "iam_server_certificate", test_name, "issue_found"))
@@ -525,13 +523,12 @@ class Tester(interfaces.TesterInterface):
         test_name = "iam_user_credentials_unused_for_45_days_or_more"
 
         credentials_unuse_threshold = int(self.iam_user_credentials_unuse_threshold) if self.iam_user_credentials_unuse_threshold else 45
-
+        current_date = datetime.now(tz=dt.timezone.utc)
         if len(users) > 0:
             for user in users:
                 user_name = user['UserName']
                 password_last_used = user.get('PasswordLastUsed')
                 if password_last_used is not None:
-                    current_date = datetime.now(tz=dt.timezone.utc)
                     time_diff = (current_date - password_last_used).days
                     if time_diff >= credentials_unuse_threshold:
                         result.append(self._append_iam_test_result(user_name, "iam_user", test_name, "issue_found"))
@@ -666,3 +663,7 @@ class Tester(interfaces.TesterInterface):
             result.append(self._append_iam_test_result("iam_users_present@@" + self.account_id, "iam_user", test_name, "issue_found"))
 
         return result
+
+
+Tester().run_tests()
+print("Finish")
