@@ -177,19 +177,33 @@ class Tester(interfaces.TesterInterface):
             if cluster_state == "TERMINATING" or cluster_state == "TERMINATED" or cluster_state == "TERMINATED_WITH_ERRORS": pass
             else:
                 response = self.aws_emr_client.describe_cluster(ClusterId=cluster_id)
-                security_conf_name = response["Cluster"]["SecurityConfiguration"]
-                security_conf = self.aws_emr_client.describe_security_configuration(Name=security_conf_name)
-                security_conf = json.loads(security_conf)
-                security_conf = security_conf["SecurityConfiguration"]
-                kms_key = security_conf.get("EncryptionConfiguration").get("AtRestEncryptionConfiguration").get("S3EncryptionConfiguration").get("AwsKmsKey")
-                if kms_key:
-                    kms_response = self.aws_kms_client.list_aliases(KeyId=kms_key)
-                    for alias in kms_response['Aliases']:
-                        if alias['AliasName'] == 'alias/aws/emr':
-                            issue_found = True
-                            break
-                else:
-                    issue_found = True
+                cluster_info = response["Cluster"]
+                security_conf = cluster_info.get("SecurityConfiguration")
+
+                if security_conf is not None:
+                    security_conf = self.aws_emr_client.describe_security_configuration(Name=security_conf)
+                    security_conf_json = response['SecurityConfiguration']
+                    security_conf_obj = json.loads(security_conf_json)
+                    encryption_conf = security_conf_obj.get("EncryptionConfiguration")
+
+                    if encryption_conf is not None:
+                        at_rest_encryption_conf = encryption_conf.get("AtRestEncryptionConfiguration")
+                        if at_rest_encryption_conf is not None:
+                            local_disk_encryption_conf = at_rest_encryption_conf.get("LocalDiskEncryptionConfiguration")
+                            if local_disk_encryption_conf is not None:
+                                kms_key = local_disk_encryption_conf.get("AwsKmsKey")
+                                if kms_key:
+                                    kms_response = self.aws_kms_client.list_aliases(KeyId=kms_key)
+                                    for alias in kms_response['Aliases']:
+                                        if alias['AliasName'] == 'alias/aws/emr':
+                                            issue_found = True
+                                            break
+                                else:
+                                    issue_found = True
+                            else: pass
+                        else: pass
+                    else: pass
+                else: pass
             if issue_found:
                 result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "issue_found"))
             else:
