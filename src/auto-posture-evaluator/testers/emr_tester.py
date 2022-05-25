@@ -3,6 +3,7 @@ import boto3
 import interfaces
 import json
 
+
 class Tester(interfaces.TesterInterface):
     def __init__(self) -> None:
         self.user_id = boto3.client('sts').get_caller_identity().get('UserId')
@@ -17,7 +18,7 @@ class Tester(interfaces.TesterInterface):
 
     def declare_tested_service(self) -> str:
         return "emr"
-    
+
     def run_tests(self) -> list:
         return \
             self.emr_cluster_should_have_a_security_configuration() + \
@@ -29,7 +30,7 @@ class Tester(interfaces.TesterInterface):
             self.emr_cluster_should_have_encryption_in_transit_enabled() + \
             self.emr_cluster_should_use_kms_for_s3_cse() + \
             self.emr_cluster_encryption_should_be_enabled()
-    
+
     def _get_all_emr_clusters(self):
         clusters = []
         paginator = self.aws_emr_client.get_paginator('list_clusters')
@@ -37,9 +38,9 @@ class Tester(interfaces.TesterInterface):
 
         for page in response_iterator:
             clusters.extend(page['Clusters'])
-            
+
         return clusters
-    
+
     def _append_emr_cluster_test_result(self, item, item_type, test_name, issue_status):
         return {
             "user": self.user_id,
@@ -72,7 +73,7 @@ class Tester(interfaces.TesterInterface):
                     result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "no_issue_found"))
                 else:
                     result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "issue_found"))
-        
+
         return result
 
     def emr_cluster_should_use_kerberos_authentication(self):
@@ -96,9 +97,9 @@ class Tester(interfaces.TesterInterface):
                     result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "no_issue_found"))
                 else:
                     result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "issue_found"))
-        
+
         return result
-    
+
     def emr_in_transit_and_at_rest_encryption_enabled(self):
         result = []
         test_name = "emr_in_transit_and_at_rest_encryption_enabled"
@@ -120,7 +121,7 @@ class Tester(interfaces.TesterInterface):
                     result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "no_issue_found"))
                 else:
                     result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "issue_found"))
-        
+
         return result
 
     def emr_cluster_should_use_kms_for_s3_sse(self):
@@ -136,16 +137,32 @@ class Tester(interfaces.TesterInterface):
             if cluster_state == "TERMINATING" or cluster_state == "TERMINATED" or cluster_state == "TERMINATED_WITH_ERRORS": pass
             else:
                 response = self.aws_emr_client.describe_cluster(ClusterId=cluster_id)
-                security_conf_name = response["Cluster"]["SecurityConfiguration"]
-                security_conf = self.aws_emr_client.describe_security_configuration(Name=security_conf_name)
-                security_conf = json.loads(security_conf)
-                security_conf = security_conf["SecurityConfiguration"]
-                if security_conf.get("EncryptionConfiguration").get("AtRestEncryptionConfiguration").get("S3EncryptionConfiguration").get("EncryptionMode")=="SSE-KMS":
-                    result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "no_issue_found"))
-                else:
-                    result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "issue_found"))
+                cluster_info = response["Cluster"]
+                security_conf = cluster_info.get("SecurityConfiguration")
+
+                if security_conf is not None:
+                    response = self.aws_emr_client.describe_security_configuration(Name=security_conf)
+                    security_conf_json = response['SecurityConfiguration']
+                    security_conf_obj = json.loads(security_conf_json)
+                    encryption_conf = security_conf_obj.get("EncryptionConfiguration")
+                    if encryption_conf is not None:
+                        at_rest_encrypt_config = encryption_conf.get("AtRestEncryptionConfiguration")
+                        if at_rest_encrypt_config is not None:
+                            s3_encrypt_config = at_rest_encrypt_config.get("S3EncryptionConfiguration")
+                            if s3_encrypt_config is not None:
+                                encryption_mode = s3_encrypt_config.get("EncryptionMode")
+                                if encryption_mode is not None:
+                                    if encryption_mode == "SSE-KMS":
+                                        result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "no_issue_found"))
+                                    else:
+                                        result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "issue_found"))
+                                else: pass
+                            else: pass
+                        else: pass
+                    else: pass
+                else: pass
         return result
-    
+
     def emr_cluster_should_have_local_disk_encryption_with_cmk(self):
         test_name = "emr_cluster_should_have_local_disk_encryption_with_cmk"
         result = []
@@ -178,7 +195,7 @@ class Tester(interfaces.TesterInterface):
             else:
                 result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "no_issue_found"))
         return result
-    
+
     def emr_cluster_should_upload_logs_to_s3(self):
         result = []
         test_name = "emr_cluster_should_upload_logs_to_s3"
@@ -196,7 +213,7 @@ class Tester(interfaces.TesterInterface):
                 result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "no_issue_found"))
             else:
                 result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "issue_found"))
-        
+
         return result
 
     def emr_cluster_should_have_local_disk_encryption(self):
@@ -245,7 +262,7 @@ class Tester(interfaces.TesterInterface):
                 else:
                     result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "issue_found"))
         return result
-    
+
     def emr_cluster_should_use_kms_for_s3_cse(self):
         result = []
         test_name = "emr_cluster_should_use_kms_for_s3_cse"
@@ -293,12 +310,12 @@ class Tester(interfaces.TesterInterface):
                 if security_configuration is not None:
                     response = self.aws_emr_client.describe_security_configuration(Name=security_configuration)
                     security_configuration_details = json.loads(response['SecurityConfiguration'])
-                    
+
                     if security_configuration_details.get("EncryptionConfiguration").get("EnableAtRestEncryption") and security_configuration_details.get("EncryptionConfiguration").get("EnableInTransitEncryption"):
                         result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "no_issue_found"))
                     else:
                         result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "issue_found"))
                 else:
                     result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "issue_found"))
-        
+
         return result
