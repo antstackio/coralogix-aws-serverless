@@ -426,27 +426,23 @@ class Tester(interfaces.TesterInterface):
 
     def get_role_uses_trused_principals(self):
         result = []
-        policies = []
         test_name = "role_uses_trusted_principals"
 
-        paginator = self.aws_iam_client.get_paginator('list_policies')
-        response_iterator = paginator.paginate(PaginationConfig={'PageSize': 50})
-
+        paginator = self.aws_iam_client.get_paginator('list_roles')
+        response_iterator = paginator.paginate()
+        roles = []
         for page in response_iterator:
-            policies.extend(page['Policies'])
+            roles.extend(page['Roles'])
 
-        for policy in policies:
-            policy_id = policy['PolicyId']
-            policy_arn = policy['Arn']
+        for r in roles:
+            role_name = r['RoleName']
+            assume_role_policy = r['AssumeRolePolicyDocument']
+            statements = assume_role_policy['Statement']
 
-            response = self.aws_iam_client.list_entities_for_policy(PolicyArn=policy_arn)
-            policy_users = response['PolicyUsers']
-            policy_groups = response['PolicyGroups']
-            policy_roles = response['PolicyRoles']
-            if (len(policy_groups) > 0 or len(policy_roles) > 0) and len(policy_users) == 0:
-                result.append(self._append_iam_test_result(policy_id, "iam_policy", test_name, "no_issue_found"))
+            if any([statement['Principal'] == '*' or statement['Principal'] == {"AWS": "*"} for statement in statements]):
+                result.append(self._append_iam_test_result(role_name, "iam_role", test_name, "issue_found"))
             else:
-                result.append(self._append_iam_test_result(policy_id, "iam_policy", test_name, "issue_found"))
+                result.append(self._append_iam_test_result(role_name, "iam_role", test_name, "issue_found"))
 
         return result
 
