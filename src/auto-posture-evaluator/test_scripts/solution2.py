@@ -37,42 +37,6 @@ for cookie in cookies:
 print(cookies_dict)
 
 
-
-# cookies = {
-#     '_gcl_au': '1.1.1542836719.1650613053',
-#     '_rdt_uuid': '1650613053787.81cb135e-b2c1-4cbe-8cc1-026801ba561a',
-#     '_cs_c': '1',
-#     '__qca': 'P0-709187251-1651150244744',
-#     '_lc2_fpi': 'e00b11ac9c9b--01g1sx7y9tb76150z67nzzr14m',
-#     '__adroll_fpc': '9bba03567c37846d30288e10dc4bb945-1651210713991',
-#     '_fbp': 'fb.1.1651210714318.719127099',
-#     'shown_ssb_redirect_page': '1',
-#     'shown_download_ssb_modal': '1',
-#     'show_download_ssb_banner': '1',
-#     'no_download_ssb_banner': '1',
-#     'documentation_banner_cookie': '1',
-#     'optimizelyEndUserId': 'oeu1651478650447r0.1835736783103279',
-#     '__pdst': 'c95fa726ea3048d8b748b4391965c23d',
-#     '_ga': 'GA1.4.1410203528.1650613054',
-#     'utm': '%7B%22utm_source%22%3A%22in-prod%22%2C%22utm_medium%22%3A%22inprod-btn_app_install-index-c%22%7D',
-#     'b': '.9f2cc801d2e6c2f3c68fdb0d48a535db',
-#     '__zlcmid': '19wkv2zTr9VfL7Z',
-#     '_gid': 'GA1.2.609856375.1653277312',
-#     'ec': 'enQtMzU1NDk0NzQ4MTYzOS01NTZjNGQ1N2M4NTc3OTY5YjU1NGI0ZmUzYmNkMmNmYzdhYjZhNTRjNDQwYjNiZTdjNjIzMDlhOWZlZDBjNDYx',
-#     'DriftPlaybook': 'B',
-#     'PageCount': '2',
-#     'OptanonConsent': 'isGpcEnabled=0&datestamp=Wed+May+25+2022+10%3A33%3A12+GMT%2B0530+(India+Standard+Time)&version=6.22.0&isIABGlobal=false&hosts=&consentId=ee5603e9-4cd8-4b2e-8d21-ec2631fdb661&interactionCount=1&landingPath=NotLandingPage&groups=C0004%3A1%2CC0002%3A1%2CC0003%3A1%2CC0001%3A1&AwaitingReconsent=false',
-#     '_ga': 'GA1.1.1410203528.1650613054',
-#     '_cs_id': '958a8adc-e2c9-a66d-dbfc-293b893ec0aa.1651150244.115.1653454992.1653454992.1.1685314244623',
-#     '__ar_v4': 'KDMBLDIYHFHI5NUNKGJ4LV%3A20220501%3A7%7C4UHU5P4P3FESHLUMNBLWAU%3A20220429%3A58%7CQCM34G7NBZEHHATIFDIUBJ%3A20220429%3A58%7CK2HN2U4VSJGOVKC2WJLQNH%3A20220429%3A50%7CAQ63PRL2SFHGJD4OJ7DH42%3A20220501%3A1',
-#     '_li_dcdm_c': '.slack.com',
-#     '_ga_QTJQME5M5D': 'GS1.1.1653454985.80.1.1653454996.49',
-#     'x': '9f2cc801d2e6c2f3c68fdb0d48a535db.1653456759',
-#     'd': 'xoxd-rBL2RqsGXeXZlkxniNuypM8VN0UV1FeKVWW12wIzfXUOU0bLMurHWS0zbC%2FPugAcdoD3E5r6piNwBpI8FULqOGLciB5WKlp4mYdmH1LA714jaAAHeGnzSN%2BnEp5A0zSdbL2qUnaQnKjoJD6C5l%2Fa882a4%2BLwLu8upVvmLqaWZkZwNPAPBfuwbCrpMA%3D%3D',
-#     'd-s': '1653456768',
-#     'lc': '1653456768',
-# }
-
 headers = {
     'authority': 'els1489b.enterprise.slack.com',
     'accept': '*/*',
@@ -101,7 +65,7 @@ data = '------WebKitFormBoundaryHV5FiRmQTKpLPunm\r\nContent-Disposition: form-da
 
 response = requests.post('https://slack.com/api/enterprise.prefs.get', headers=headers, data=data, cookies=cookies_dict)
 enterprise_prefs = json.loads(response.text)
-
+print(enterprise_prefs)
 # below are just examples 
 
 # attempting un-approachable tickets from monday because of unavailability of APIs
