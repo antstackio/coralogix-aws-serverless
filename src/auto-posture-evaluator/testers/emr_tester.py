@@ -252,15 +252,25 @@ class Tester(interfaces.TesterInterface):
             if cluster_state == "TERMINATING" or cluster_state == "TERMINATED" or cluster_state == "TERMINATED_WITH_ERRORS": pass
             else:
                 response = self.aws_emr_client.describe_cluster(ClusterId=cluster_id)
-                security_conf_name = response["Cluster"]["SecurityConfiguration"]
-                security_conf = self.aws_emr_client.describe_security_configuration(Name=security_conf_name)
-                security_conf = json.loads(security_conf)
-                security_conf = security_conf["SecurityConfiguration"]
-                encryption_enabled = security_conf.get("EncryptionConfiguration").get("EnableInTransitEncryption")
-                if encryption_enabled:
-                    result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "no_issue_found"))
-                else:
-                    result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "issue_found"))
+                cluster_info = response["Cluster"]
+                security_conf = cluster_info.get("SecurityConfiguration")
+
+                if security_conf is not None:
+                    security_conf = self.aws_emr_client.describe_security_configuration(Name=security_conf)
+                    security_conf_json = response['SecurityConfiguration']
+                    security_conf_obj = json.loads(security_conf_json)
+                    encryption_conf = security_conf_obj.get("EncryptionConfiguration")
+
+                    if encryption_conf is not None:
+                        encryption_enabled = encryption_conf.get("EnableInTransitEncryption")
+                        if encryption_enabled is not None:
+                            if encryption_enabled:
+                                result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "no_issue_found"))
+                            else:
+                                result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "issue_found"))
+                        else: pass
+                    else: pass
+                else: pass
         return result
 
     def emr_cluster_should_use_kms_for_s3_cse(self):
