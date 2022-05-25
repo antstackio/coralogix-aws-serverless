@@ -2,6 +2,7 @@ import time
 import boto3
 import interfaces
 
+
 class Tester(interfaces.TesterInterface):
     def __init__(self) -> None:
         self.user_id = boto3.client('sts').get_caller_identity().get('UserId')
@@ -12,15 +13,15 @@ class Tester(interfaces.TesterInterface):
 
     def declare_tested_provider(self) -> str:
         return "aws"
-    
-    def declare_tested_provider(self) -> str:
+
+    def declare_tested_service(self) -> str:
         return "dms"
 
     def run_tests(self) -> list:
         return \
             self.get_replication_instances_have_auto_minor_version_upgrade_enabled() + \
             self.get_multi_az_is_enabled()
-    
+
     def _get_dms_instances(self):
         dms_instances = []
 
@@ -28,7 +29,7 @@ class Tester(interfaces.TesterInterface):
         response_iterator = paginator.paginate()
         for page in response_iterator:
             dms_instances.extend(page["ReplicationInstances"])
-        
+
         return dms_instances
 
     def _append_ems_test_result(self, item, item_type, test_name, issue_status):
@@ -42,7 +43,7 @@ class Tester(interfaces.TesterInterface):
             "test_name": test_name,
             "test_result": issue_status
         }
-    
+
     def get_replication_instances_have_auto_minor_version_upgrade_enabled(self):
         test_name = "replication_instances_should_have_auto_minor_version_upgrade"
         result = []
@@ -72,5 +73,5 @@ class Tester(interfaces.TesterInterface):
                 result.append(self._append_ems_test_result(instance_identifier, "dms_replication_instance", test_name, "no_issue_found"))
             else:
                 result.append(self._append_ems_test_result(instance_identifier, "dms_replication_instance", test_name, "issue_found"))
-            
+
         return result
