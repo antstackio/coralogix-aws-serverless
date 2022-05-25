@@ -1,7 +1,7 @@
 # found another API which is nowhere mentioned in official documentation of Slack
 # found out that in order to access this API , cookie information is required and since cookies cannot be hardcoded
 # we need to obtain cookies everytime we want to perform a query since they have an expiration date / time
-# used selenium for this purpose and now this API is accessible giving access to many setting flags.
+# used selenium for this purpose and now this API is accessible giving access to many setting flags required to solve tickets
 
 
 # for non-approachable slack tickets in monday
