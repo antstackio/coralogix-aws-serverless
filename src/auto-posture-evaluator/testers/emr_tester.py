@@ -317,18 +317,25 @@ class Tester(interfaces.TesterInterface):
             if cluster_state == "TERMINATING" or cluster_state == "TERMINATED" or cluster_state == "TERMINATED_WITH_ERRORS": pass
             else:
                 response = self.aws_emr_client.describe_cluster(ClusterId=cluster_id)
-                cluster_obj = response['Cluster']
-                security_configuration = cluster_obj.get('SecurityConfiguration')
+                cluster_info = response["Cluster"]
+                security_conf = cluster_info.get("SecurityConfiguration")
 
-                if security_configuration is not None:
-                    response = self.aws_emr_client.describe_security_configuration(Name=security_configuration)
-                    security_configuration_details = json.loads(response['SecurityConfiguration'])
+                if security_conf is not None:
+                    response = self.aws_emr_client.describe_security_configuration(Name=security_conf)
+                    security_conf_json = response['SecurityConfiguration']
+                    security_conf_obj = json.loads(security_conf_json)
+                    encryption_conf = security_conf_obj.get("EncryptionConfiguration")
 
-                    if security_configuration_details.get("EncryptionConfiguration").get("EnableAtRestEncryption") and security_configuration_details.get("EncryptionConfiguration").get("EnableInTransitEncryption"):
-                        result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "no_issue_found"))
-                    else:
-                        result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "issue_found"))
-                else:
-                    result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "issue_found"))
+                    if encryption_conf is not None:
+                        in_transit_encryption = encryption_conf.get("EnableInTransitEncryption")
+                        at_rest_encryption = encryption_conf.get("EnableAtRestEncryption")
 
+                        if in_transit_encryption is not None and at_rest_encryption is not None:
+                            if in_transit_encryption and at_rest_encryption:
+                                result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "no_issue_found"))
+                            else:
+                                result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "issue_found"))
+                        else: pass
+                    else: pass
+                else: result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "issue_found"))
         return result
