@@ -276,17 +276,30 @@ class Tester(interfaces.TesterInterface):
             if cluster_state == "TERMINATING" or cluster_state == "TERMINATED" or cluster_state == "TERMINATED_WITH_ERRORS": pass
             else:
                 response = self.aws_emr_client.describe_cluster(ClusterId=cluster_id)
-                cluster_obj = response['Cluster']
-                security_configuration = cluster_obj.get('SecurityConfiguration')
 
-                if security_configuration is not None:
-                    response = self.aws_emr_client.describe_security_configuration(Name=security_configuration)
-                    security_configuration_details = json.loads(response['SecurityConfiguration'])
+                cluster_info = response["Cluster"]
+                security_conf = cluster_info.get("SecurityConfiguration")
 
-                    if security_configuration_details.get("EncryptionConfiguration").get("AtRestEncryptionConfiguration").get("S3EncryptionConfiguration").get("EncryptionMode") == "CSE-KMS":
-                        result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "no_issue_found"))
-                    else:
-                        result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "issue_found"))
+                if security_conf is not None:
+                    response = self.aws_emr_client.describe_security_configuration(Name=security_conf)
+                    security_conf_json = response['SecurityConfiguration']
+                    security_conf_obj = json.loads(security_conf_json)
+                    encryption_conf = security_conf_obj.get("EncryptionConfiguration")
+                    if encryption_conf is not None:
+                        at_rest_encrypt_config = encryption_conf.get("AtRestEncryptionConfiguration")
+                        if at_rest_encrypt_config is not None:
+                            s3_encrypt_config = at_rest_encrypt_config.get("S3EncryptionConfiguration")
+                            if s3_encrypt_config is not None:
+                                encryption_mode = s3_encrypt_config.get("EncryptionMode")
+                                if encryption_mode is not None:
+                                    if encryption_mode == "CSE-KMS":
+                                        result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "no_issue_found"))
+                                    else:
+                                        result.append(self._append_emr_cluster_test_result(cluster_id, "emr_cluster", test_name, "issue_found"))
+                                else: pass
+                            else: pass
+                        else: pass
+                    else: pass
                 else: pass
 
         return result
