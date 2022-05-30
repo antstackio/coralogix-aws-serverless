@@ -118,3 +118,18 @@ class Tester(interfaces.TesterInterface):
                     self._append_dms_test_result(dms_replica_instance_dict, test_name, 'no_issue_found'))
         return dms_public_accessible
 
+    def detect_replication_instances_have_auto_minor_version_upgrade_enabled(self):
+        test_name = "replication_instances_should_have_auto_minor_version_upgrade"
+        result = []
+
+        replication_instances = self.all_dms_replica_instances
+        for instance in replication_instances:
+            instance_identifier = instance['ReplicationInstanceIdentifier']
+            auto_minor_version_upgrade = instance['AutoMinorVersionUpgrade']
+
+            if auto_minor_version_upgrade:
+                result.append(self._append_ems_test_result(instance_identifier, "dms_replication_instance", test_name, "no_issue_found"))
+            else:
+                result.append(self._append_ems_test_result(instance_identifier, "dms_replication_instance", test_name, "issue_found"))
+
+        return result
