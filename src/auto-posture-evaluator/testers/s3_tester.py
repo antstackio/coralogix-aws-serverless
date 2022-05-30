@@ -1,4 +1,3 @@
-from functools import reduce
 import json
 import time
 import boto3
@@ -65,8 +64,8 @@ class Tester(interfaces.TesterInterface):
             cur_bucket_permissions = self._get_bucket_acl(bucket_name)
             for grantee in cur_bucket_permissions.grants:
                 if grantee["Grantee"]["Type"] == "Group" and (
-                        grantee["Grantee"]["URI"] == "http://acs.amazonaws.com/groups/global/AllUsers" or
-                        grantee["Grantee"]["URI"] == "http://acs.amazonaws.com/groups/global/AuthenticatedUsers"):
+                        grantee["Grantee"]["URI"] == "http://acs.amazonaws.com/groups/global/AllUsers"
+                        or grantee["Grantee"]["URI"] == "http://acs.amazonaws.com/groups/global/AuthenticatedUsers"):
                     result.append({
                         "user": self.user_id,
                         "account_arn": self.account_arn,
@@ -203,7 +202,7 @@ class Tester(interfaces.TesterInterface):
                 if not public_access_block_kill_switch["PublicAccessBlockConfiguration"]["BlockPublicAcls"] or \
                     not public_access_block_kill_switch["PublicAccessBlockConfiguration"]["IgnorePublicAcls"] or \
                     not public_access_block_kill_switch["PublicAccessBlockConfiguration"]["BlockPublicPolicy"] or \
-                    not public_access_block_kill_switch["PublicAccessBlockConfiguration"]["RestrictPublicBuckets"]:
+                        not public_access_block_kill_switch["PublicAccessBlockConfiguration"]["RestrictPublicBuckets"]:
                     result.append({
                         "user": self.user_id,
                         "account_arn": self.account_arn,
@@ -561,7 +560,7 @@ class Tester(interfaces.TesterInterface):
                         key_id = rule['ApplyServerSideEncryptionByDefault']['KMSMasterKeyID']
                         try:
                             kms_response = self.aws_kms_client.list_aliases(KeyId=key_id)
-                        except:
+                        except Exception:
                             issue_detected = True
                             break
                         for alias in kms_response['Aliases']:
@@ -598,7 +597,7 @@ class Tester(interfaces.TesterInterface):
                 })
 
         return result
-    
+
     def detect_block_public_access_setting_disabled(self):
         test_name = "block_public_access_setting_disabled"
         result = []
@@ -701,17 +700,17 @@ class Tester(interfaces.TesterInterface):
                     break
             if not issue_found:
                 result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": bucket_name,
-                        "item_type": "s3_bucket",
-                        "test_name": test_name,
-                        "test_result": "no_issue_found"
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": bucket_name,
+                    "item_type": "s3_bucket",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
                 })
         return result
-             
+
     def detect_bucket_has_global_list_acl_permission_through_acl(self, buckets_list):
         test_name = "bucket_has_global_list_acl_permission_through_acl"
         result = []
@@ -735,17 +734,17 @@ class Tester(interfaces.TesterInterface):
                     break
             if not issue_found:
                 result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": bucket_name,
-                        "item_type": "s3_bucket",
-                        "test_name": test_name,
-                        "test_result": "no_issue_found"
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": bucket_name,
+                    "item_type": "s3_bucket",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
                 })
         return result
-    
+
     def detect_bucket_has_global_list_permissions_enabled_via_bucket_policy(self, buckets_list):
         result = []
         test_name = "bucket_has_global_list_permissions_enabled_via_bucket_policy"
@@ -756,7 +755,7 @@ class Tester(interfaces.TesterInterface):
                 bucket_policy = self._get_bucket_policy(bucket_name)
                 policy_statements = json.loads(bucket_policy['Policy'])['Statement']
                 for statement in policy_statements:
-                    if statement["Effect"] == "Allow" and (statement["Principal"] == '*' or statement["Principal"] == {"AWS": "*"}) and (any([("List" in action or action=="s3:*") for action in statement["Action"]]) or "List" in statement["Action"] or statement["Action"]=="s3:*"):
+                    if statement["Effect"] == "Allow" and (statement["Principal"] == '*' or statement["Principal"] == {"AWS": "*"}) and (any([("List" in action or action == "s3:*") for action in statement["Action"]]) or "List" in statement["Action"] or statement["Action"] == "s3:*"):
                         result.append({
                             "user": self.user_id,
                             "account_arn": self.account_arn,
@@ -798,7 +797,7 @@ class Tester(interfaces.TesterInterface):
                 bucket_policy = self._get_bucket_policy(bucket_name)
                 policy_statements = json.loads(bucket_policy['Policy'])['Statement']
                 for statement in policy_statements:
-                    if statement["Effect"] == "Allow" and (statement["Principal"] == '*' or statement["Principal"] == {"AWS": "*"}) and (any([("Get" in action or action=="s3:*") for action in statement["Action"]]) or "Get" in statement["Action"] or statement["Action"]=="s3:*"):
+                    if statement["Effect"] == "Allow" and (statement["Principal"] == '*' or statement["Principal"] == {"AWS": "*"}) and (any([("Get" in action or action == "s3:*") for action in statement["Action"]]) or "Get" in statement["Action"] or statement["Action"] == "s3:*"):
                         result.append({
                             "user": self.user_id,
                             "account_arn": self.account_arn,
@@ -930,7 +929,7 @@ class Tester(interfaces.TesterInterface):
                         "test_result": "issue_found"
                     })
                     issue_detected = True
-            except:
+            except Exception:
                 continue
             if not issue_detected:
                 result.append({
