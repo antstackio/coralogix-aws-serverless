@@ -133,3 +133,19 @@ class Tester(interfaces.TesterInterface):
                 result.append(self._append_ems_test_result(instance_identifier, "dms_replication_instance", test_name, "issue_found"))
 
         return result
+
+    def detect_multi_az_is_enabled(self):
+        test_name = "replication_instance_should_use_multi_AZ_deployment"
+        result = []
+
+        replication_instances = self.dms_instances
+        for instance in replication_instances:
+            instance_identifier = instance['ReplicationInstanceIdentifier']
+            multi_az = instance['MultiAZ']
+
+            if multi_az:
+                result.append(self._append_ems_test_result(instance_identifier, "dms_replication_instance", test_name, "no_issue_found"))
+            else:
+                result.append(self._append_ems_test_result(instance_identifier, "dms_replication_instance", test_name, "issue_found"))
+
+        return result
