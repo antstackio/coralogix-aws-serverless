@@ -124,13 +124,12 @@ class Tester(interfaces.TesterInterface):
 
         replication_instances = self.all_dms_replica_instances
         for instance in replication_instances:
-            instance_identifier = instance['ReplicationInstanceIdentifier']
             auto_minor_version_upgrade = instance['AutoMinorVersionUpgrade']
 
             if auto_minor_version_upgrade:
-                result.append(self._append_ems_test_result(instance_identifier, "dms_replication_instance", test_name, "no_issue_found"))
+                result.append(self._append_ems_test_result(instance, "dms_replication_instance", test_name, "no_issue_found"))
             else:
-                result.append(self._append_ems_test_result(instance_identifier, "dms_replication_instance", test_name, "issue_found"))
+                result.append(self._append_ems_test_result(instance, "dms_replication_instance", test_name, "issue_found"))
 
         return result
 
@@ -140,12 +139,11 @@ class Tester(interfaces.TesterInterface):
 
         replication_instances = self.dms_instances
         for instance in replication_instances:
-            instance_identifier = instance['ReplicationInstanceIdentifier']
             multi_az = instance['MultiAZ']
 
             if multi_az:
-                result.append(self._append_ems_test_result(instance_identifier, "dms_replication_instance", test_name, "no_issue_found"))
+                result.append(self._append_ems_test_result(instance, "dms_replication_instance", test_name, "no_issue_found"))
             else:
-                result.append(self._append_ems_test_result(instance_identifier, "dms_replication_instance", test_name, "issue_found"))
+                result.append(self._append_ems_test_result(instance, "dms_replication_instance", test_name, "issue_found"))
 
         return result
