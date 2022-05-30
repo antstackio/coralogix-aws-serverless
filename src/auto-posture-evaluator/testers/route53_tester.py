@@ -17,7 +17,7 @@ class Tester(interfaces.TesterInterface):
         self.user_id = boto3.client('sts').get_caller_identity().get('UserId')
         self.account_arn = boto3.client('sts').get_caller_identity().get('Arn')
         self.account_id = boto3.client('sts').get_caller_identity().get('Account')
-        self.route53_region = os.environ("AUTOPOSTURE_ROUTE53_DOMAINS_REGION") if os.environ.get("AUTOPOSTURE_ROUTE53_DOMAINS_REGION") else "us-east-1"
+        self.route53_region = os.environ["AUTOPOSTURE_ROUTE53_DOMAINS_REGION"] if os.environ.get("AUTOPOSTURE_ROUTE53_DOMAINS_REGION") else "us-east-1"
         self.aws_route53_domain_client = boto3.client('route53domains', region_name=self.route53_region)
         self.route53_domains = self._get_all_route53_domains()
 
