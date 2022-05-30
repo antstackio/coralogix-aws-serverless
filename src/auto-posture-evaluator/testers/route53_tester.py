@@ -1,3 +1,4 @@
+import os
 import time
 import boto3
 import re
@@ -16,7 +17,8 @@ class Tester(interfaces.TesterInterface):
         self.user_id = boto3.client('sts').get_caller_identity().get('UserId')
         self.account_arn = boto3.client('sts').get_caller_identity().get('Arn')
         self.account_id = boto3.client('sts').get_caller_identity().get('Account')
-        self.aws_route53_domain_client = boto3.client('route53domains')
+        self.route53_region = os.environ("AUTOPOSTURE_ROUTE53_DOMAINS_REGION") if os.environ.get("AUTOPOSTURE_ROUTE53_DOMAINS_REGION") else "us-east-1"
+        self.aws_route53_domain_client = boto3.client('route53domains', region_name=self.route53_region)
         self.route53_domains = self._get_all_route53_domains()
 
     def declare_tested_service(self) -> str:
@@ -106,7 +108,7 @@ class Tester(interfaces.TesterInterface):
 
         for page in response_iterator:
             domains.extend(page['Domains'])
-        
+
         return domains
 
     def route53_domain_expiry_in_7_days(self):
@@ -151,21 +153,21 @@ class Tester(interfaces.TesterInterface):
         test_name = "domain_is_not_locked_for_transfer"
 
         domains = self.route53_domains
-        
+
         for domain in domains:
             domain_name = domain['DomainName']
             transfer_lock = domain['TransferLock']
 
             if transfer_lock:
                 result.append({
-                   "user": self.user_id,
+                    "user": self.user_id,
                     "account_arn": self.account_arn,
                     "account": self.account_id,
                     "test_name": test_name,
                     "item": domain_name,
                     "item_type": "domain_name",
                     "timestamp": time.time(),
-                    "test_result": "no_issue_found" 
+                    "test_result": "no_issue_found"
                 })
             else:
                 result.append({
@@ -178,7 +180,7 @@ class Tester(interfaces.TesterInterface):
                     "timestamp": time.time(),
                     "test_result": "issue_found"
                 })
-        
+
         return result
 
     def detect_domain_auto_renewal_disabled(self):
@@ -200,7 +202,7 @@ class Tester(interfaces.TesterInterface):
                     "item": domain_name,
                     "item_type": "domain_name",
                     "timestamp": time.time(),
-                    "test_result": "no_issue_found" 
+                    "test_result": "no_issue_found"
                 })
             else:
                 result.append({
@@ -211,7 +213,7 @@ class Tester(interfaces.TesterInterface):
                     "item": domain_name,
                     "item_type": "domain_name",
                     "timestamp": time.time(),
-                    "test_result": "issue_found" 
+                    "test_result": "issue_found"
                 })
         return result
 
@@ -235,7 +237,7 @@ class Tester(interfaces.TesterInterface):
                     "item": domain_name,
                     "item_type": "domain_name",
                     "timestamp": time.time(),
-                    "test_result": "issue_found" 
+                    "test_result": "issue_found"
                 })
             else:
                 result.append({
@@ -246,7 +248,7 @@ class Tester(interfaces.TesterInterface):
                     "item": domain_name,
                     "item_type": "domain_name",
                     "timestamp": time.time(),
-                    "test_result": "no_issue_found" 
+                    "test_result": "no_issue_found"
                 })
-        
+
         return result
