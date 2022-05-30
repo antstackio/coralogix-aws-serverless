@@ -21,8 +21,10 @@ class Tester(interfaces.TesterInterface):
 
     def run_tests(self) -> list:
         return self.detect_dms_certificate_is_not_expired() + \
-               self.detect_dms_endpoint_should_use_ssl() + \
-               self.detect_dms_replication_instance_should_not_be_publicly_accessible()
+            self.detect_dms_endpoint_should_use_ssl() + \
+            self.detect_dms_replication_instance_should_not_be_publicly_accessible() + \
+            self.detect_replication_instances_have_auto_minor_version_upgrade_enabled() + \
+            self.detect_multi_az_is_enabled()
 
     def _append_dms_test_result(self, dms_data, test_name, issue_status):
         return {
@@ -127,9 +129,9 @@ class Tester(interfaces.TesterInterface):
             auto_minor_version_upgrade = instance['AutoMinorVersionUpgrade']
 
             if auto_minor_version_upgrade:
-                result.append(self._append_ems_test_result(instance, "dms_replication_instance", test_name, "no_issue_found"))
+                result.append(self._append_dms_test_result(instance, test_name, "no_issue_found"))
             else:
-                result.append(self._append_ems_test_result(instance, "dms_replication_instance", test_name, "issue_found"))
+                result.append(self._append_dms_test_result(instance, test_name, "issue_found"))
 
         return result
 
@@ -137,13 +139,13 @@ class Tester(interfaces.TesterInterface):
         test_name = "replication_instance_should_use_multi_AZ_deployment"
         result = []
 
-        replication_instances = self.dms_instances
+        replication_instances = self.all_dms_replica_instances
         for instance in replication_instances:
             multi_az = instance['MultiAZ']
 
             if multi_az:
-                result.append(self._append_ems_test_result(instance, "dms_replication_instance", test_name, "no_issue_found"))
+                result.append(self._append_dms_test_result(instance, test_name, "no_issue_found"))
             else:
-                result.append(self._append_ems_test_result(instance, "dms_replication_instance", test_name, "issue_found"))
+                result.append(self._append_dms_test_result(instance, test_name, "issue_found"))
 
         return result
