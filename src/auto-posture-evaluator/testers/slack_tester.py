@@ -23,30 +23,30 @@ class Tester:
         return 'slack'
 
     def run_tests(self) -> list:
-        return self.get_public_file_sharing_enabled() + \
-               self.get_apps_with_no_privacy_policy() + \
-               self.get_apps_with_no_description() + \
-               self.get_number_of_workspace_admins_more_than_conf() + \
-               self.get_number_of_workspace_owners_more_than_conf() + \
-               self.get_list_userids() + \
-               self.get_all_session_details() + \
-               self.list_all_guest_users() + \
-               self.two_factor_auth_enforce() + \
-               self.require_app_approval() + \
-               self.get_all_admin_users() + \
-               self.get_archive_channel_by_admin() + \
-               self.msg_edit_window() + \
-               self.check_if_file_upload_disabled() + \
-               self.restrict_post_at_general_to_admins() + \
-               self.check_default_channel() + \
-               self.email_display_policy_for_all_users() + \
-               self.get_admin_analytics() + \
-               self.get_inactive_channels() + \
-               self.public_file_sharing() + \
-               self.user_groups_permission() + \
-               self.single_workspace_owner(self)
+        return self.slack_get_public_file_sharing_enabled() + \
+               self.slack_get_apps_with_no_privacy_policy() + \
+               self.slack_get_apps_with_no_description() + \
+               self.slack_get_number_of_workspace_admins_more_than_conf() + \
+               self.slack_get_number_of_workspace_owners_more_than_conf() + \
+               self.slack_get_list_userids() + \
+               self.slack_get_all_session_details() + \
+               self.slack_list_all_guest_users() + \
+               self.slack_two_factor_auth_enforce() + \
+               self.slack_require_app_approval() + \
+               self.slack_get_all_admin_users() + \
+               self.slack_get_archive_channel_by_admin() + \
+               self.slack_msg_edit_window() + \
+               self.slack_check_if_file_upload_disabled() + \
+               self.slack_restrict_post_at_general_to_admins() + \
+               self.slack_check_default_channel() + \
+               self.slack_email_display_policy_for_all_users() + \
+               self.slack_get_admin_analytics() + \
+               self.slack_get_inactive_channels() + \
+               self.slack_public_file_sharing() + \
+               self.slack_user_groups_permission() + \
+               self.slack_single_workspace_owner(self)
 
-    def get_public_file_sharing_enabled(self):
+    def slack_get_public_file_sharing_enabled(self):
         test_name = "public_file_sharing_enabled"
         response = self.slack_client.files_list(team_id=os.environ.get("TEAM_ID"))
         print(response)
@@ -72,7 +72,7 @@ class Tester:
                 })
         return result
 
-    def get_apps_with_no_privacy_policy(self):
+    def slack_get_apps_with_no_privacy_policy(self):
         test_name = "apps_with_no_privacy_policy"
         response = self.slack_client.admin_apps_approved_list(team_id=os.environ.get("TEAM_ID"))
         result = []
@@ -97,7 +97,7 @@ class Tester:
                 })
         return result
 
-    def get_apps_with_no_description(self):
+    def slack_get_apps_with_no_description(self):
         test_name = "apps_with_no_description"
         response = self.slack_client.admin_apps_approved_list(team_id=os.environ.get("TEAM_ID"))
         apps = response["approved_apps"]
@@ -128,7 +128,7 @@ class Tester:
                 })
         return result
 
-    def get_number_of_workspace_admins_more_than_conf(self):
+    def slack_get_number_of_workspace_admins_more_than_conf(self):
         test_name = "number_of_workspace_admins_more_than_conf"
         response = self.slack_client.admin_users_list(team_id=os.environ.get("TEAM_ID"))
         admin_count = 0
@@ -153,7 +153,7 @@ class Tester:
             "test_result": "no_issue_found"
         }]
 
-    def get_number_of_workspace_owners_more_than_conf(self):
+    def slack_get_number_of_workspace_owners_more_than_conf(self):
         test_name = "number_of_workspace_owners_more_than_conf"
         response = self.slack_client.admin_teams_owners_list(team_id=os.environ.get("TEAM_ID"))
         owner_count = len(response.get('owner_ids', 0))
@@ -176,7 +176,7 @@ class Tester:
                 "test_result": "no_issue_found"
             }]
 
-    def get_list_userids(self) -> list:
+    def slack_get_list_userids(self) -> list:
         users = []
         result = self.slack_client.users_list(team_id=os.environ.get("TEAM_ID"))
         for i in range(len(result["members"])):
@@ -186,7 +186,7 @@ class Tester:
 
         return users  # returns list of users in the organization including guest users and admins
 
-    def get_all_session_details(self) -> list:
+    def slack_get_all_session_details(self) -> list:
         result = []
         users = self.get_list_userids()
         test_name = "users_with_session_timeout"
@@ -212,7 +212,7 @@ class Tester:
 
         return result
 
-    def list_all_guest_users(self) -> list:
+    def slack_list_all_guest_users(self) -> list:
         guest_users = []
         result = self.slack_client.users_list(team_id="T03AVMVR6MA")
         for i in range(len(result["members"])):
@@ -221,7 +221,7 @@ class Tester:
 
         return guest_users
 
-    def two_factor_auth_enforce(self) -> list:
+    def slack_two_factor_auth_enforce(self) -> list:
         users = self.get_list_userids()
         result = []
         test_name = 'users without two factor auth'
@@ -250,7 +250,7 @@ class Tester:
 
         return result
 
-    def require_app_approval(self) -> list:
+    def slack_require_app_approval(self) -> list:
         result = []
         test_name = 'list apps which have admin approval'
         response = self.slack_client.admin_apps_approved_list(team_id=os.environ.get("TEAM_ID"))
@@ -275,7 +275,7 @@ class Tester:
 
         return result
 
-    def get_all_admin_users(self) -> list:
+    def slack_get_all_admin_users(self) -> list:
         admin_list = []
         response = self.slack_client.admin_users_list(team_id=os.environ.get("TEAM_ID"))
         for i in range(len(response['users'])):
@@ -284,7 +284,7 @@ class Tester:
 
         return admin_list
 
-    def get_archive_channel_by_admin(self) -> list:
+    def slack_get_archive_channel_by_admin(self) -> list:
         result = []
         test_name = 'check whether channel archived by admin'
         response = self.slack_client.conversations_list(team_id=os.environ.get("TEAM_ID"))
@@ -311,7 +311,7 @@ class Tester:
 
         return result
 
-    def msg_edit_window(self) -> list:
+    def slack_msg_edit_window(self) -> list:
         # returns issue found if editing is disabled , no issue found if time window for editing is allowed
         test_name = 'reasonable time window for message editing/deletion'
         response = self.slack_client.team_preferences_list()
@@ -332,7 +332,7 @@ class Tester:
                 "timestamp": time.time()
             }]
 
-    def check_if_file_upload_disabled(self) -> list:
+    def slack_check_if_file_upload_disabled(self) -> list:
         test_name = 'check if file upload is disabled'
         response = self.slack_client.team_preferences_list()
         if response.get('disable_file_uploads') == "allow_all":
@@ -352,7 +352,7 @@ class Tester:
                 "timestamp": time.time()
             }]
 
-    def check_default_channel(self) -> list:
+    def slack_check_default_channel(self) -> list:
         test_name = 'check_default_channel_is_#general'
         response = self.slack_client.admin_teams_settings_info(team_id=os.environ.get("TEAM_ID"))
         is_def = response.get('team')['default_channels'][0]  # only one channel can be default channel
@@ -379,7 +379,7 @@ class Tester:
                         "timestamp": time.time()
                     }]
 
-    def restrict_post_at_general_to_admins(self) -> list:
+    def slack_restrict_post_at_general_to_admins(self) -> list:
         # only admins can post, users can reply, nobody else can use @everyone, @channel and @here except admins
         test_name = 'restricting admins to post in general'
         gen_channel_id = self.slack_client.conversations_list(team_id=os.environ.get("TEAM_ID"))
@@ -406,7 +406,7 @@ class Tester:
 
             }]
 
-    def email_display_policy_for_all_users(self) -> list:
+    def slack_email_display_policy_for_all_users(self) -> list:
         # if email being displayed , shows just one username (error case)
         # not to be presumed that email is not being shown for others, email is displayed for every other user
         test_name = 'email being displayed in members slack profiles'
@@ -433,7 +433,7 @@ class Tester:
 
             }]
 
-    def get_admin_analytics(self) -> list:  # retrieves admin analytics (only for primary owners)
+    def slack_get_admin_analytics(self) -> list:  # retrieves admin analytics (only for primary owners)
         auth_token = os.environ.get("SLACK_USER_TOKEN")
         hed = {'Authorization': 'Bearer ' + auth_token, 'Content-Type': 'text/html', 'encoding': 'ISO-8859-1'}
         prev_date = str(datetime.now().date() - timedelta(days=3))
@@ -455,7 +455,7 @@ class Tester:
 
         return channel_data  # contains JSON data of admin analytics
 
-    def get_inactive_channels(self) -> list:
+    def slack_get_inactive_channels(self) -> list:
         # method looks into admin analytics file and obtains inactive channels under the particular enterprise
         test_name = 'list inactive channel IDs'
         result = []
@@ -488,7 +488,7 @@ class Tester:
 
         return result
 
-    def public_file_sharing(self) -> list:
+    def slack_public_file_sharing(self) -> list:
         # if public file URL creation is turned on , then permalink_public in files.list API appears , else disappears
         test_name = 'public file sharing URL creation enabled or not'
         result = []
@@ -516,7 +516,7 @@ class Tester:
                 })
         return result
 
-    def user_groups_permission(self) -> list:
+    def slack_user_groups_permission(self) -> list:
         result = []
         guest_users = self.list_all_guest_users()
         test_name = 'check whether user group created by guest'
@@ -542,7 +542,7 @@ class Tester:
 
         return result
 
-    def single_workspace_owner(self) -> list:
+    def slack_single_workspace_owner(self) -> list:
         test_name = 'check whether single workspace owner or multiple'
         response = self.slack_client.admin_teams_owners_list(team_id=os.environ.get('TEAM_ID'))
         if len(response.get('owner_ids') ) == 1:
