@@ -1,7 +1,7 @@
 import time
 import boto3
 import interfaces
-import json
+import json,re
 
 
 def _format_string_to_json(text):
@@ -23,7 +23,10 @@ class Tester(interfaces.TesterInterface):
         return 'aws'
 
     def run_tests(self) -> list:
-        return self.detect_sqs_server_side_encryption() + self.detect_sqs_public_accessible_queues()
+        return self.detect_sqs_server_side_encryption() + \
+               self.detect_sqs_public_accessible_queues() + \
+               self.detect_sqs_not_encrypted_with_kms_customer_master_keys() + \
+               self.detect_sqs_cross_account_access()
 
     def _append_sqs_test_result(self, sqs_url, test_name, issue_status) -> dict:
         return {
@@ -107,7 +110,7 @@ class Tester(interfaces.TesterInterface):
 
     def _get_sse_enabled_and_disabled_queue(self, queue_result_dict) -> list:
         result = []
-        test_name = "sqs_has_server_side_encryption"
+        test_name = "aws_sqs_has_server_side_encryption"
         for queue_url in queue_result_dict:
             result.extend(self._find_sse_for_all_queues(queue_url, test_name))
             for dl_queue_url in self._return_all_dead_letter_sqs(queue_url):
@@ -116,7 +119,7 @@ class Tester(interfaces.TesterInterface):
 
     def _get_policy_for_queues(self, queue_result_dict) -> list:
         result = []
-        test_name = "sqs_public_accessibility"
+        test_name = "aws_sqs_public_accessibility"
         for queue_url in queue_result_dict:
             result.extend(self._get_all_public_accessibility_for_all_queues(queue_url, test_name))
             for dl_queue_url in self._return_all_dead_letter_sqs(queue_url):
@@ -128,4 +131,60 @@ class Tester(interfaces.TesterInterface):
 
     def detect_sqs_public_accessible_queues(self) -> list:
         return self._get_policy_for_queues(self._return_all_the_sqs())
+
+    def detect_sqs_cross_account_access(self) -> list:
+        result = []
+        test_name = 'aws_sqs_cross_account_access'
+        client_organizations = boto3.client('organizations')
+        try:
+            resp = client_organizations.list_accounts()
+            all_account_obj = ['Accounts'] in resp and resp['Accounts'] or []
+            all_accounts = []
+            for accounts_dict in all_account_obj:
+                all_accounts.append(accounts_dict)
+            if not all_accounts:
+                all_accounts = [self.account_id]
+        except:
+            all_accounts = [self.account_id]
+
+        for queue_url in self._return_all_the_sqs():
+            response = self.aws_sqs_client.get_queue_attributes(
+                QueueUrl=queue_url,
+                AttributeNames=['Policy'])
+            issue_found = False
+            if 'Attributes' in response and response['Attributes'] and 'Policy' in response['Attributes']:
+                policy_dict = _format_string_to_json(response['Attributes']['Policy'])
+                if 'Statement' in policy_dict and policy_dict['Statement']:
+                    for statement_dict in policy_dict['Statement']:
+                        if 'Principal' in statement_dict and statement_dict['Principal'] == '*':
+                            issue_found = True
+                        if issue_found:
+                            break
+                        for aws_account_info in statement_dict['Principal']['AWS']:
+                            try:
+                                account_id_to_compare = (re.search(r'\b\d{12}\b', aws_account_info)).group(0)
+                                if account_id_to_compare not in all_accounts:
+                                    issue_found = True
+                                    break
+                            except:
+                                pass
+            if issue_found:
+                result.append(self._append_sqs_test_result(queue_url, test_name, "issue_found"))
+            else:
+                result.append(self._append_sqs_test_result(queue_url, test_name, "no_issue_found"))
+        return result
+
+    def detect_sqs_not_encrypted_with_kms_customer_master_keys(self):
+        result = []
+        test_name = 'aws_sqs_not_encrypted_with_kms_customer_master_keys'
+        for queue_url in self._return_all_the_sqs():
+            response = self.aws_sqs_client.get_queue_attributes(
+                QueueUrl=queue_url,
+                AttributeNames=['KmsMasterKeyId'])
+            if 'Attributes' in response and response['Attributes'] and 'KmsMasterKeyId' in response['Attributes'] and \
+                    response['Attributes']['KmsMasterKeyId']:
+                result.append(self._append_sqs_test_result(queue_url, test_name, "no_issue_found"))
+            else:
+                result.append(self._append_sqs_test_result(queue_url, test_name, "issue_found"))
+        return result
 
