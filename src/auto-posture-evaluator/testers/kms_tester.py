@@ -2,13 +2,15 @@ import interfaces
 import boto3
 import time
 
+
 class Tester(interfaces.TesterInterface):
     def __init__(self) -> None:
         self.aws_kms_client = boto3.client('kms')
         self.user_id = boto3.client('sts').get_caller_identity().get('UserId')
         self.account_arn = boto3.client('sts').get_caller_identity().get('Arn')
-        self.account_id = boto3.client('sts').get_caller_identity().get('Account') 
+        self.account_id = boto3.client('sts').get_caller_identity().get('Account')
         self.kms_keys = []
+
     def declare_tested_provider(self) -> str:
         return 'aws'
 
@@ -20,7 +22,7 @@ class Tester(interfaces.TesterInterface):
         return \
             self.get_rotation_for_cmks_is_enabled(self.kms_keys) + \
             self.get_kms_cmk_pending_deletion(self.kms_keys)
-    
+
     def _get_result_object(self, item, item_type, test_name, issue_status):
         return {
             "user": self.user_id,
@@ -46,14 +48,14 @@ class Tester(interfaces.TesterInterface):
             response = self.aws_kms_client.list_keys()
             keys.extend(response['Keys'])
         return keys
-    
+
     def get_rotation_for_cmks_is_enabled(self, keys):
         result = []
-        test_name = "rotation_for_cmks_is_enabled"
+        test_name = "aws_kms_rotation_for_cmks_is_enabled"
 
         for key in keys:
             key_id = key['KeyId']
-            response = self.aws_kms_client.get_key_rotation_status(KeyId = key_id)
+            response = self.aws_kms_client.get_key_rotation_status(KeyId=key_id)
             rotation_status = response['KeyRotationEnabled']
             if rotation_status:
                 result.append(self._get_result_object(key_id, "kms_policy", test_name, "no_issue_found"))
@@ -63,11 +65,11 @@ class Tester(interfaces.TesterInterface):
 
     def get_kms_cmk_pending_deletion(self, keys):
         result = []
-        test_name = "kms_cmk_pending_deletion"
+        test_name = "aws_kms_cmk_pending_deletion"
 
         for key in keys:
             key_id = key['KeyId']
-            response = self.aws_kms_client.describe_key(KeyId = key_id)
+            response = self.aws_kms_client.describe_key(KeyId=key_id)
             rotation_status = response['KeyMetadata']['KeyState']
             if rotation_status == 'PendingDeletion':
                 result.append(self._get_result_object(key_id, "kms_policy", test_name, "issue_found"))
