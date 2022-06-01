@@ -45,7 +45,7 @@ class Tester(interfaces.TesterInterface):
 
     def codebuild_project_build_artifacts_should_be_encrypted(self):
         result = []
-        test_name = "codebuild_project_build_output_artifacts_should_be_encrypted"
+        test_name = "aws_codebuild_project_build_output_artifacts_should_be_encrypted"
 
         projects = self.codebuild_projects
 
