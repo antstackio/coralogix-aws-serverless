@@ -21,8 +21,10 @@ class Tester(interfaces.TesterInterface):
 
     def run_tests(self) -> list:
         return self.detect_dms_certificate_is_not_expired() + \
-               self.detect_dms_endpoint_should_use_ssl() + \
-               self.detect_dms_replication_instance_should_not_be_publicly_accessible()
+            self.detect_dms_endpoint_should_use_ssl() + \
+            self.detect_dms_replication_instance_should_not_be_publicly_accessible() + \
+            self.detect_replication_instances_have_auto_minor_version_upgrade_enabled() + \
+            self.detect_multi_az_is_enabled()
 
     def _append_dms_test_result(self, dms_data, test_name, issue_status):
         return {
@@ -63,7 +65,7 @@ class Tester(interfaces.TesterInterface):
 
     def detect_dms_endpoint_should_use_ssl(self):
         ssl_endpoint_result = []
-        test_name = 'dms_endpoint_should_use_ssl'
+        test_name = 'aws_dms_endpoint_should_use_ssl'
         for dms_replica_instance_dict in self.all_dms_replica_instances:
             dms_connection_response = self.aws_dms_client.describe_connections(Filters=[
                 {
@@ -94,7 +96,7 @@ class Tester(interfaces.TesterInterface):
     def detect_dms_certificate_is_not_expired(self):
         dms_certificates = self._return_all_dms_certificates()
         issue_found = False
-        test_name = 'dms_certificate_is_not_expired'
+        test_name = 'aws_dms_certificate_is_not_expired'
         if not dms_certificates:
             issue_found = True
         for dms_certificate_dict in dms_certificates:
@@ -108,7 +110,7 @@ class Tester(interfaces.TesterInterface):
 
     def detect_dms_replication_instance_should_not_be_publicly_accessible(self):
         dms_public_accessible = []
-        test_name = 'dms_replication_instance_should_not_be_publicly_accessible'
+        test_name = 'aws_dms_replication_instance_should_not_be_publicly_accessible'
         for dms_replica_instance_dict in self.all_dms_replica_instances:
             if dms_replica_instance_dict['PubliclyAccessible']:
                 dms_public_accessible.append(
@@ -118,3 +120,32 @@ class Tester(interfaces.TesterInterface):
                     self._append_dms_test_result(dms_replica_instance_dict, test_name, 'no_issue_found'))
         return dms_public_accessible
 
+    def detect_replication_instances_have_auto_minor_version_upgrade_enabled(self):
+        test_name = "replication_instances_should_have_auto_minor_version_upgrade"
+        result = []
+
+        replication_instances = self.all_dms_replica_instances
+        for instance in replication_instances:
+            auto_minor_version_upgrade = instance['AutoMinorVersionUpgrade']
+
+            if auto_minor_version_upgrade:
+                result.append(self._append_dms_test_result(instance, test_name, "no_issue_found"))
+            else:
+                result.append(self._append_dms_test_result(instance, test_name, "issue_found"))
+
+        return result
+
+    def detect_multi_az_is_enabled(self):
+        test_name = "replication_instance_should_use_multi_AZ_deployment"
+        result = []
+
+        replication_instances = self.all_dms_replica_instances
+        for instance in replication_instances:
+            multi_az = instance['MultiAZ']
+
+            if multi_az:
+                result.append(self._append_dms_test_result(instance, test_name, "no_issue_found"))
+            else:
+                result.append(self._append_dms_test_result(instance, test_name, "issue_found"))
+
+        return result
