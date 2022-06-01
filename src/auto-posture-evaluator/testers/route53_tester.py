@@ -40,6 +40,7 @@ class Tester(interfaces.TesterInterface):
 
     def detect_dangling_dns_records(self):
         result = []
+        test_name = "aws_route53_dangling_dns_records"
         # Filtering the list to get the list of public zones only
         public_zones = [zone for zone in self.hosted_zones['HostedZones'] if not zone['Config']['PrivateZone']]
         for cur_zone in public_zones:
@@ -80,7 +81,7 @@ class Tester(interfaces.TesterInterface):
                             "item_type": "dns_record",
                             "dns_record": record_name,
                             "record": record,
-                            "test_name": 'dangling_dns_records',
+                            "test_name": test_name,
                             "dangling_ip": dangling_ip_address,
                             "zone": cur_zone["Id"],
                             "timestamp": time.time(),
@@ -91,7 +92,7 @@ class Tester(interfaces.TesterInterface):
                         "user": self.user_id,
                         "account_arn": self.account_arn,
                         "account": self.account_id,
-                        "test_name": 'dangling_dns_records',
+                        "test_name": test_name,
                         "item": record_name,
                         "item_type": "dns_record",
                         "record": record,
@@ -113,7 +114,7 @@ class Tester(interfaces.TesterInterface):
 
     def route53_domain_expiry_in_7_days(self):
         result = []
-        test_name = "route53_domain_expiry_in_7_days"
+        test_name = "aws_route53_domain_expiry_in_7_days"
 
         domains = self.route53_domains
 
@@ -150,7 +151,7 @@ class Tester(interfaces.TesterInterface):
 
     def detect_domain_is_not_locked_for_transfer(self):
         result = []
-        test_name = "domain_is_not_locked_for_transfer"
+        test_name = "aws_route53_domain_is_not_locked_for_transfer"
 
         domains = self.route53_domains
 
@@ -185,7 +186,7 @@ class Tester(interfaces.TesterInterface):
 
     def detect_domain_auto_renewal_disabled(self):
         result = []
-        test_name = "domain_auto_renewal_disabled"
+        test_name = "aws_route53_domain_auto_renewal_disabled"
 
         domains = self.route53_domains
 
@@ -219,7 +220,7 @@ class Tester(interfaces.TesterInterface):
 
     def detect_domain_expired(self):
         result = []
-        test_name = "domain_expired"
+        test_name = "aws_route53_domain_expired"
 
         domains = self.route53_domains
 
