@@ -61,6 +61,7 @@ class Tester(interfaces.TesterInterface):
                 result.append(self._get_result_object(key_id, "kms_policy", test_name, "no_issue_found"))
             else:
                 result.append(self._get_result_object(key_id, "kms_policy", test_name, "issue_found"))
+
         return result
 
     def get_kms_cmk_pending_deletion(self, keys):
