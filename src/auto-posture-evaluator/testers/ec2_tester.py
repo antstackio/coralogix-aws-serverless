@@ -111,7 +111,7 @@ class Tester(interfaces.TesterInterface):
                 inbound_rules.append(rule)
         return inbound_rules
     
-    def _get_all_outbound_permissions_by_security_groups(self, security_groups) -> List[Dict]:
+    def get_all_outbound_permissions_by_security_groups(self, security_groups) -> List[Dict]:
         outbound_rules = []
         for security_group in security_groups:
             rules = security_group.ip_permissions_egress
