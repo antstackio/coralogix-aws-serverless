@@ -1,6 +1,5 @@
 import json
 import time
-from unittest import result
 import boto3
 import botocore.exceptions
 import interfaces
@@ -57,7 +56,7 @@ class Tester(interfaces.TesterInterface):
         return self._detect_buckets_with_permissions_matching(buckets_list, "WRITE", "write_enabled_s3_buckets")
 
     def detect_publicly_accessible_s3_buckets_by_acl(self, buckets_list):
-        test_name = "publicly_accessible_s3_buckets_by_acl"
+        test_name = "aws_s3_publicly_accessible_s3_buckets_by_acl"
         result = []
         for bucket_meta in buckets_list["Buckets"]:
             issue_detected = False
@@ -65,8 +64,8 @@ class Tester(interfaces.TesterInterface):
             cur_bucket_permissions = self._get_bucket_acl(bucket_name)
             for grantee in cur_bucket_permissions.grants:
                 if grantee["Grantee"]["Type"] == "Group" and (
-                        grantee["Grantee"]["URI"] == "http://acs.amazonaws.com/groups/global/AllUsers" or
-                        grantee["Grantee"]["URI"] == "http://acs.amazonaws.com/groups/global/AuthenticatedUsers"):
+                        grantee["Grantee"]["URI"] == "http://acs.amazonaws.com/groups/global/AllUsers"
+                        or grantee["Grantee"]["URI"] == "http://acs.amazonaws.com/groups/global/AuthenticatedUsers"):
                     result.append({
                         "user": self.user_id,
                         "account_arn": self.account_arn,
@@ -93,7 +92,7 @@ class Tester(interfaces.TesterInterface):
         return result
 
     def detect_non_versioned_s3_buckets(self, buckets_list):
-        test_name = "non_versioned_s3_buckets"
+        test_name = "aws_s3_non_versioned_s3_buckets"
         result = []
         for bucket_meta in buckets_list["Buckets"]:
             bucket_name = bucket_meta["Name"]
@@ -123,7 +122,7 @@ class Tester(interfaces.TesterInterface):
         return result
 
     def detect_not_encrypted_s3_buckets(self, buckets_list):
-        test_name = "not_encrypted_s3_buckets"
+        test_name = "aws_s3_not_encrypted_buckets"
         result = []
         for bucket_meta in buckets_list["Buckets"]:
             issue_detected = False
@@ -163,7 +162,7 @@ class Tester(interfaces.TesterInterface):
         return self._detect_buckets_with_permissions_matching(buckets_list, "FULL_CONTROL", "full_control_allowed_s3_buckets")
 
     def detect_buckets_without_mfa_delete_s3_buckets(self, buckets_list):
-        test_name = "no_delete_mfa_s3_buckets"
+        test_name = "aws_s3_no_delete_mfa_buckets"
         result = []
         for bucket_meta in buckets_list["Buckets"]:
             bucket_name = bucket_meta["Name"]
@@ -193,7 +192,7 @@ class Tester(interfaces.TesterInterface):
         return result
 
     def detect_buckets_without_block_public_access_set(self, buckets_list):
-        test_name = "no_block_public_access_set"
+        test_name = "aws_s3_no_block_public_access_set"
         result = []
         for bucket_meta in buckets_list["Buckets"]:
             issue_detected = False
@@ -203,7 +202,7 @@ class Tester(interfaces.TesterInterface):
                 if not public_access_block_kill_switch["PublicAccessBlockConfiguration"]["BlockPublicAcls"] or \
                     not public_access_block_kill_switch["PublicAccessBlockConfiguration"]["IgnorePublicAcls"] or \
                     not public_access_block_kill_switch["PublicAccessBlockConfiguration"]["BlockPublicPolicy"] or \
-                    not public_access_block_kill_switch["PublicAccessBlockConfiguration"]["RestrictPublicBuckets"]:
+                        not public_access_block_kill_switch["PublicAccessBlockConfiguration"]["RestrictPublicBuckets"]:
                     result.append({
                         "user": self.user_id,
                         "account_arn": self.account_arn,
@@ -247,7 +246,7 @@ class Tester(interfaces.TesterInterface):
         return result
 
     def detect_publicly_accessible_s3_buckets_by_policy(self, buckets_list):
-        test_name = "publicly_accessible_s3_buckets_by_policy"
+        test_name = "aws_s3_publicly_accessible_s3_buckets_by_policy"
         result = []
         for bucket_meta in buckets_list["Buckets"]:
             issue_detected = False
@@ -289,7 +288,7 @@ class Tester(interfaces.TesterInterface):
         return result
 
     def detect_bucket_content_listable_by_users(self, buckets_list):
-        test_name = "s3_bucket_content_listable_by_users"
+        test_name = "aws_s3_bucket_content_listable_by_users"
         result = []
         for bucket_meta in buckets_list["Buckets"]:
             issue_detected = False
@@ -332,7 +331,7 @@ class Tester(interfaces.TesterInterface):
         return result
 
     def detect_bucket_content_permissions_viewable_by_users(self, buckets_list):
-        test_name = "s3_bucket_content_permissions_viewable_by_users"
+        test_name = "aws_s3_bucket_content_permissions_viewable_by_users"
         result = []
         for bucket_meta in buckets_list["Buckets"]:
             issue_detected = False
@@ -375,7 +374,7 @@ class Tester(interfaces.TesterInterface):
         return result
 
     def detect_bucket_content_permissions_modifiable_by_users(self, buckets_list):
-        test_name = "s3_bucket_content_permissions_modifiable_by_users"
+        test_name = "aws_s3_bucket_content_permissions_modifiable_by_users"
         result = []
         for bucket_meta in buckets_list["Buckets"]:
             issue_detected = False
@@ -418,7 +417,7 @@ class Tester(interfaces.TesterInterface):
         return result
 
     def detect_bucket_content_writable_by_anonymous(self, buckets_list):
-        test_name = "s3_bucket_content_writable_by_anonymous"
+        test_name = "aws_s3_bucket_content_writable_by_anonymous"
         result = []
         for bucket_meta in buckets_list["Buckets"]:
             issue_detected = False
@@ -461,7 +460,7 @@ class Tester(interfaces.TesterInterface):
         return result
 
     def detect_buckets_without_logging_set(self, buckets_list):
-        test_name = "no_logging_policy_set"
+        test_name = "aws_s3_no_logging_policy_set"
         result = []
         for bucket_meta in buckets_list["Buckets"]:
             issue_detected = False
@@ -497,21 +496,21 @@ class Tester(interfaces.TesterInterface):
         return result
 
     def detect_buckets_accessible_by_http_url(self, buckets_list):
-        test_name = "publicly_accessible_s3_buckets_by_http_url"
+        test_name = "aws_s3_publicly_accessible_s3_buckets_by_http_url"
         protocol = "http"
         result = self._test_bucket_url_access(buckets_list, protocol, test_name)
 
         return result
 
     def detect_buckets_accessible_by_https_url(self, buckets_list):
-        test_name = "publicly_accessible_s3_buckets_by_https_url"
+        test_name = "aws_s3_publicly_accessible_s3_buckets_by_https_url"
         protocol = "https"
         result = self._test_bucket_url_access(buckets_list, protocol, test_name)
 
         return result
 
     def detect_bucket_logging_disabled(self, buckets_list):
-        test_name = "bucket_logging_disabled"
+        test_name = "aws_s3_bucket_logging_disabled"
         result = []
         for bucket in buckets_list["Buckets"]:
             bucket_name = bucket["Name"]
@@ -541,7 +540,7 @@ class Tester(interfaces.TesterInterface):
         return result
 
     def detect_bucket_not_encrypted_with_cmk(self, buckets_list):
-        test_name = "bucket_not_encrypted_with_cmk"
+        test_name = "aws_s3_bucket_not_encrypted_with_cmk"
         result = []
         for bucket in buckets_list["Buckets"]:
             issue_detected = False
@@ -561,7 +560,7 @@ class Tester(interfaces.TesterInterface):
                         key_id = rule['ApplyServerSideEncryptionByDefault']['KMSMasterKeyID']
                         try:
                             kms_response = self.aws_kms_client.list_aliases(KeyId=key_id)
-                        except:
+                        except Exception:
                             issue_detected = True
                             break
                         for alias in kms_response['Aliases']:
@@ -598,15 +597,16 @@ class Tester(interfaces.TesterInterface):
                 })
 
         return result
-    
+
     def detect_block_public_access_setting_disabled(self):
-        test_name = "block_public_access_setting_disabled"
+        test_name = "aws_s3_block_public_access_setting_disabled"
         result = []
         issue_detected = False
         try:
             public_access_setting = self.aws_s3_control_client.get_public_access_block(AccountId=self.account_id)
             conf = public_access_setting["PublicAccessBlockConfiguration"]
-            if not conf["BlockPublicAcls"] and not conf["IgnorePublicAcls"] and not conf["BlockPublicPolicy"] and not conf["RestrictPublicBuckets"]:
+
+            if not conf["BlockPublicAcls"] or not conf["IgnorePublicAcls"] or not conf["BlockPublicPolicy"] or not conf["RestrictPublicBuckets"]:
                 issue_detected = True
         except botocore.exceptions.ClientError as ex:
             if ex.response['Error']['Code'] == 'NoSuchPublicAccessBlockConfiguration':
@@ -638,7 +638,7 @@ class Tester(interfaces.TesterInterface):
         return result
 
     def detect_bucket_not_configured_with_block_public_access(self, buckets_list):
-        test_name = "bucket_not_configured_with_block_public_access"
+        test_name = "aws_s3_bucket_not_configured_with_block_public_access"
         result = []
         for bucket in buckets_list["Buckets"]:
             bucket_name = bucket["Name"]
@@ -646,7 +646,7 @@ class Tester(interfaces.TesterInterface):
             try:
                 public_access = self.aws_s3_client.get_public_access_block(Bucket=bucket_name)
                 conf = public_access["PublicAccessBlockConfiguration"]
-                if not conf["BlockPublicAcls"] and not conf["IgnorePublicAcls"] and not conf["BlockPublicPolicy"] and not conf["RestrictPublicBuckets"]:
+                if not conf["BlockPublicAcls"] or not conf["IgnorePublicAcls"] or not conf["BlockPublicPolicy"] or not conf["RestrictPublicBuckets"]:
                     issue_detected = True
             except botocore.exceptions.ClientError as ex:
                 if ex.response['Error']['Code'] == 'NoSuchPublicAccessBlockConfiguration':
@@ -678,7 +678,7 @@ class Tester(interfaces.TesterInterface):
         return result
 
     def detect_buckets_with_global_upload_and_delete_permission(self, buckets_list):
-        test_name = "buckets_with_global_upload_and_delete_permission"
+        test_name = "aws_s3_buckets_with_global_upload_and_delete_permission"
         result = []
         for bucket_meta in buckets_list["Buckets"]:
             bucket_name = bucket_meta["Name"]
@@ -700,19 +700,19 @@ class Tester(interfaces.TesterInterface):
                     break
             if not issue_found:
                 result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": bucket_name,
-                        "item_type": "s3_bucket",
-                        "test_name": test_name,
-                        "test_result": "no_issue_found"
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": bucket_name,
+                    "item_type": "s3_bucket",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
                 })
         return result
-             
+
     def detect_bucket_has_global_list_acl_permission_through_acl(self, buckets_list):
-        test_name = "bucket_has_global_list_acl_permission_through_acl"
+        test_name = "aws_s3_bucket_has_global_list_acl_permission_through_acl"
         result = []
         for bucket_meta in buckets_list["Buckets"]:
             bucket_name = bucket_meta["Name"]
@@ -734,20 +734,20 @@ class Tester(interfaces.TesterInterface):
                     break
             if not issue_found:
                 result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": bucket_name,
-                        "item_type": "s3_bucket",
-                        "test_name": test_name,
-                        "test_result": "no_issue_found"
+                    "user": self.user_id,
+                    "account_arn": self.account_arn,
+                    "account": self.account_id,
+                    "timestamp": time.time(),
+                    "item": bucket_name,
+                    "item_type": "s3_bucket",
+                    "test_name": test_name,
+                    "test_result": "no_issue_found"
                 })
         return result
-    
+
     def detect_bucket_has_global_list_permissions_enabled_via_bucket_policy(self, buckets_list):
         result = []
-        test_name = "bucket_has_global_list_permissions_enabled_via_bucket_policy"
+        test_name = "aws_s3_bucket_has_global_list_permissions_enabled_via_bucket_policy"
         for bucket_meta in buckets_list["Buckets"]:
             issue_detected = False
             bucket_name = bucket_meta["Name"]
@@ -755,7 +755,7 @@ class Tester(interfaces.TesterInterface):
                 bucket_policy = self._get_bucket_policy(bucket_name)
                 policy_statements = json.loads(bucket_policy['Policy'])['Statement']
                 for statement in policy_statements:
-                    if statement["Effect"] == "Allow" and (statement["Principal"] == '*' or statement["Principal"] == {"AWS": "*"}) and (any([("List" in action or action=="s3:*") for action in statement["Action"]]) or "List" in statement["Action"] or statement["Action"]=="s3:*"):
+                    if statement["Effect"] == "Allow" and (statement["Principal"] == '*' or statement["Principal"] == {"AWS": "*"}) and (any([("List" in action or action == "s3:*") for action in statement["Action"]]) or "List" in statement["Action"] or statement["Action"] == "s3:*"):
                         result.append({
                             "user": self.user_id,
                             "account_arn": self.account_arn,
@@ -789,7 +789,7 @@ class Tester(interfaces.TesterInterface):
 
     def detect_bucket_has_global_get_permissions_enabled_via_bucket_policy(self, buckets_list):
         result = []
-        test_name = "bucket_has_global_get_permissions_enabled_via_bucket_policy"
+        test_name = "aws_s3_bucket_has_global_get_permissions_enabled_via_bucket_policy"
         for bucket_meta in buckets_list["Buckets"]:
             issue_detected = False
             bucket_name = bucket_meta["Name"]
@@ -797,7 +797,7 @@ class Tester(interfaces.TesterInterface):
                 bucket_policy = self._get_bucket_policy(bucket_name)
                 policy_statements = json.loads(bucket_policy['Policy'])['Statement']
                 for statement in policy_statements:
-                    if statement["Effect"] == "Allow" and (statement["Principal"] == '*' or statement["Principal"] == {"AWS": "*"}) and (any([("Get" in action or action=="s3:*") for action in statement["Action"]]) or "Get" in statement["Action"] or statement["Action"]=="s3:*"):
+                    if statement["Effect"] == "Allow" and (statement["Principal"] == '*' or statement["Principal"] == {"AWS": "*"}) and (any([("Get" in action or action == "s3:*") for action in statement["Action"]]) or "Get" in statement["Action"] or statement["Action"] == "s3:*"):
                         result.append({
                             "user": self.user_id,
                             "account_arn": self.account_arn,
@@ -831,15 +831,53 @@ class Tester(interfaces.TesterInterface):
 
     def detect_bucket_has_global_put_permissions_enabled_via_bucket_policy(self, buckets_list):
         result = []
-        test_name = "bucket_has_global_put_permissions_enabled_via_bucket_policy"
-        for bucket_meta in buckets_list["Buckets"]:
-            issue_detected = False
+        test_name = "aws_s3_bucket_has_global_put_permissions_enabled_via_bucket_policy"
+        buckets = buckets_list["Buckets"]
+
+        for bucket_meta in buckets:
             bucket_name = bucket_meta["Name"]
+
             try:
-                bucket_policy = self._get_bucket_policy(bucket_name)
-                policy_statements = json.loads(bucket_policy['Policy'])['Statement']
-                for statement in policy_statements:
-                    if statement["Effect"] == "Allow" and (statement["Principal"] == '*' or statement["Principal"] == {"AWS": "*"}) and (any([("Put" in action or action=="s3:*") for action in statement["Action"]]) or "Put" in statement["Action"] or statement["Action"]=="s3:*"):
+                response = self._get_bucket_policy(bucket_name=bucket_name)
+                policies = response['Policy']
+
+                policy_obj = json.loads(policies)
+                policy_statements = policy_obj['Statement']
+
+                filtered_result = list(filter(lambda x: x['Effect'] == 'Allow', policy_statements))
+                if filtered_result:
+                    filtered_principal = list(filter(lambda x: x['Principal'] == '*' or x['Principal'] == {"AWS": "*"}, filtered_result))
+                    if filtered_principal:
+                        all_actions = []
+                        for i in filtered_principal:
+                            actions = i['Action']
+                            if isinstance(actions, str): all_actions.append(actions)
+                            else: all_actions.extend(actions)
+                        put_actions = list(filter(lambda x: x == '*' or x == 's3:*' or x.startswith('s3:Put'), all_actions))
+                        if put_actions:
+                            result.append({
+                                "user": self.user_id,
+                                "account_arn": self.account_arn,
+                                "account": self.account_id,
+                                "timestamp": time.time(),
+                                "item": bucket_name,
+                                "item_type": "s3_bucket",
+                                "test_name": test_name,
+                                "policy": policy_obj,
+                                "test_result": "issue_found"
+                            })
+                        else:
+                            result.append({
+                                "user": self.user_id,
+                                "account_arn": self.account_arn,
+                                "account": self.account_id,
+                                "timestamp": time.time(),
+                                "item": bucket_name,
+                                "item_type": "s3_bucket",
+                                "test_name": test_name,
+                                "test_result": "no_issue_found"
+                            })
+                    else:
                         result.append({
                             "user": self.user_id,
                             "account_arn": self.account_arn,
@@ -848,10 +886,19 @@ class Tester(interfaces.TesterInterface):
                             "item": bucket_name,
                             "item_type": "s3_bucket",
                             "test_name": test_name,
-                            "policy": bucket_policy,
-                            "test_result": "issue_found"
+                            "test_result": "no_issue_found"
                         })
-                        issue_detected = True
+                else:
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": bucket_name,
+                        "item_type": "s3_bucket",
+                        "test_name": test_name,
+                        "test_result": "no_issue_found"
+                    })
             except botocore.exceptions.ClientError as ex:
                 if ex.response['Error']['Code'] == 'NoSuchBucketPolicy':
                     # No policy means the bucket content is not listable by policy
@@ -859,16 +906,6 @@ class Tester(interfaces.TesterInterface):
                 else:
                     raise ex
 
-            if not issue_detected:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": bucket_name,
-                    "item_type": "s3_bucket",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"})
         return result
 
     def _test_bucket_url_access(self, buckets_list, protocol, test_name):
@@ -892,7 +929,7 @@ class Tester(interfaces.TesterInterface):
                         "test_result": "issue_found"
                     })
                     issue_detected = True
-            except:
+            except Exception:
                 continue
             if not issue_detected:
                 result.append({
@@ -962,4 +999,80 @@ class Tester(interfaces.TesterInterface):
                     "test_name": test_name,
                     "test_result": "no_issue_found"
                 })
+        return result
+
+    def detect_bucket_has_global_delete_permissions_enabled_via_bucket_policy(self, buckets_list):
+        result = []
+        test_name = "aws_s3_bucket_has_global_delete_permissions_enabled_via_bucket_policy"
+        buckets = buckets_list["Buckets"]
+        for bucket_meta in buckets:
+            bucket_name = bucket_meta['Name']
+
+            try:
+                response = self._get_bucket_policy(bucket_name=bucket_name)
+                policies = response['Policy']
+
+                policy_obj = json.loads(policies)
+                policy_statements = policy_obj['Statement']
+
+                filtered_result = list(filter(lambda x: x['Effect'] == 'Allow', policy_statements))
+                if filtered_result:
+                    filtered_principal = list(filter(lambda x: x['Principal'] == '*' or x['Principal'] == {"AWS": "*"}, filtered_result))
+                    if filtered_principal:
+                        all_actions = []
+                        for i in filtered_principal:
+                            actions = i['Action']
+                            if isinstance(actions, str): all_actions.append(actions)
+                            else: all_actions.extend(actions)
+                        delete_actions = list(filter(lambda x: x == '*' or x == 's3:*' or x.startswith('s3:Delete'), all_actions))
+                        if delete_actions:
+                            result.append({
+                                "user": self.user_id,
+                                "account_arn": self.account_arn,
+                                "account": self.account_id,
+                                "timestamp": time.time(),
+                                "item": bucket_name,
+                                "item_type": "s3_bucket",
+                                "test_name": test_name,
+                                "test_result": "issue_found"
+                            })
+                        else:
+                            result.append({
+                                "user": self.user_id,
+                                "account_arn": self.account_arn,
+                                "account": self.account_id,
+                                "timestamp": time.time(),
+                                "item": bucket_name,
+                                "item_type": "s3_bucket",
+                                "test_name": test_name,
+                                "test_result": "no_issue_found"
+                            })
+                    else:
+                        result.append({
+                            "user": self.user_id,
+                            "account_arn": self.account_arn,
+                            "account": self.account_id,
+                            "timestamp": time.time(),
+                            "item": bucket_name,
+                            "item_type": "s3_bucket",
+                            "test_name": test_name,
+                            "test_result": "no_issue_found"
+                        })
+                else:
+                    result.append({
+                        "user": self.user_id,
+                        "account_arn": self.account_arn,
+                        "account": self.account_id,
+                        "timestamp": time.time(),
+                        "item": bucket_name,
+                        "item_type": "s3_bucket",
+                        "test_name": test_name,
+                        "test_result": "no_issue_found"
+                    })
+            except botocore.exceptions.ClientError as c:
+                if c.response['Error']['Code'] == 'NoSuchBucketPolicy':
+                    pass
+                else:
+                    raise c
+
         return result
