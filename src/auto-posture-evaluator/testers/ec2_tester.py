@@ -5,6 +5,7 @@ import boto3
 import botocore.exceptions
 import interfaces
 
+
 class Tester(interfaces.TesterInterface):
     def __init__(self) -> None:
         self.aws_ec2_client = boto3.client('ec2')
@@ -20,7 +21,7 @@ class Tester(interfaces.TesterInterface):
         self.aws_nfw_client = boto3.client('network-firewall')
         self.sensitive_instance_tag = os.environ.get('AUTOPOSTURE_EC2_SENSITIVE_TAG')
         self.per_region_max_cpu_count_diff = os.environ.get('AUTOPOSTURE_PER_REGION_MAX_CPU_COUNT_DIFF')
-   
+
     def declare_tested_service(self) -> str:
         return 'ec2'
 
@@ -74,7 +75,7 @@ class Tester(interfaces.TesterInterface):
             self.detect_classic_ec2_instances() + \
             self.get_security_group_should_allow_access_to_specific_private_networks_only() + \
             self.get_network_firewall_used()
-    
+
     def _get_result_object(self, item, item_type, test_name, issue_status):
         return {
             "user": self.user_id,
@@ -110,7 +111,7 @@ class Tester(interfaces.TesterInterface):
                 rule['security_group'] = security_group
                 inbound_rules.append(rule)
         return inbound_rules
-    
+
     def _get_all_outbound_permissions_by_security_groups(self, security_groups) -> List[Dict]:
         outbound_rules = []
         for security_group in security_groups:
@@ -128,7 +129,7 @@ class Tester(interfaces.TesterInterface):
 
         for i in instances_with_issue:
             result.append(self._get_result_object(i, "ec2_security_group", test_name, "issue_found"))
-        
+
         for i in instances_with_no_issue:
             result.append(self._get_result_object(i, "ec2_security_group", test_name, "no_issue_found"))
         return result
