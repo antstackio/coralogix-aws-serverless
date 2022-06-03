@@ -34,7 +34,7 @@ class Tester(interfaces.TesterInterface):
 
         return \
             self.aws_ec2_get_inbound_http_access(all_inbound_permissions) + \
-            self.aws_ec2get_inbound_https_access(all_inbound_permissions) + \
+            self.aws_ec2_get_inbound_https_access(all_inbound_permissions) + \
             self.aws_ec2_get_inbound_mongodb_access(all_inbound_permissions) + \
             self.aws_ec2_get_inbound_mysql_access(all_inbound_permissions) + \
             self.aws_ec2_get_inbound_mssql_access(all_inbound_permissions) + \
