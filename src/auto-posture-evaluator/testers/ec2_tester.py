@@ -2,7 +2,6 @@ import os
 import time
 from typing import Dict, List, Set
 import boto3
-import botocore.exceptions
 import interfaces
 
 
@@ -123,7 +122,8 @@ class Tester(interfaces.TesterInterface):
 
     def _get_inbound_port_access(self, all_inbound_permissions, target_port, test_name, protocol="tcp") -> List[Dict]:
         result = []
-        instances = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == "-1") or ((permission['FromPort'] <= target_port and permission['ToPort'] >= target_port) and permission['IpProtocol'] == protocol), all_inbound_permissions))))
+        instances = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == "-1") or ((permission['FromPort']
+                         <= target_port and permission['ToPort'] >= target_port) and permission['IpProtocol'] == protocol), all_inbound_permissions))))
         instances_with_issue = set(instances)
         instances_with_no_issue = self.set_security_group.difference(instances_with_issue)
 
@@ -140,7 +140,7 @@ class Tester(interfaces.TesterInterface):
         for region in regions['Regions']:
             region_names.append(region['RegionName'])
         return region_names
-    
+
     def _get_all_ec2_instances(self, client, filters=[]) -> List:
         instances = []
         can_paginate = client.can_paginate('describe_instances')
@@ -151,13 +151,13 @@ class Tester(interfaces.TesterInterface):
             for page in response_iterator:
                 reservations.extend(page['Reservations'])
             for reservation in reservations:
-                instances.extend(reservation['Instances'])        
+                instances.extend(reservation['Instances'])
         else:
             response = client.describe_instances(Filters=filters)
             for reservation in response['Reservations']:
                 instances.extend(reservation['Instances'])
         return instances
-    
+
     def _get_service_clients_for_all_regions(self, client_name):
         regions = self._get_ec2_region_names()
         clients = []
@@ -172,15 +172,15 @@ class Tester(interfaces.TesterInterface):
     def get_inbound_https_access(self, all_inbound_permissions) -> List:
         test_name = "aws_ec2_inbound_https_access_restricted"
         return self._get_inbound_port_access(all_inbound_permissions, 443, test_name)
-    
+
     def get_inbound_mongodb_access(self, all_inbound_permissions) -> List:
         test_name = "aws_ec2_inbound_mongodb_access_restricted"
         return self._get_inbound_port_access(all_inbound_permissions, 27017, test_name)
-    
+
     def get_inbound_mysql_access(self, all_inbound_permissions) -> List:
         test_name = "aws_ec2_inbound_mysql_access_restricted"
         return self._get_inbound_port_access(all_inbound_permissions, 3306, test_name)
-    
+
     def get_inbound_mssql_access(self, all_inbound_permissions) -> List:
         test_name = "aws_ec2_inbound_mssql_access_restricted"
         return self._get_inbound_port_access(all_inbound_permissions, 1433, test_name)
@@ -192,7 +192,7 @@ class Tester(interfaces.TesterInterface):
     def get_inbound_rdp_access(self, all_inbound_permissions) -> List:
         test_name = "aws_ec2_inbound_rdp_access_restricted"
         return self._get_inbound_port_access(all_inbound_permissions, 3389, test_name)
-    
+
     def get_inbound_postgresql_access(self, all_inbound_permissions) -> List:
         test_name = "aws_ec2_inbound_postgresql_access_restricted"
         return self._get_inbound_port_access(all_inbound_permissions, 5432, test_name)
@@ -205,11 +205,14 @@ class Tester(interfaces.TesterInterface):
         SESSIONPORT = 139
         DATAGRAMPORT = 138
 
-        instancse_137 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= NAMERESPORT and permission['ToPort'] >= NAMERESPORT) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
+        instancse_137 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1')
+                             or ((permission['FromPort'] <= NAMERESPORT and permission['ToPort'] >= NAMERESPORT) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
         instances.extend(instancse_137)
-        instancse_139 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= SESSIONPORT and permission['ToPort'] >= SESSIONPORT) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
+        instancse_139 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1')
+                             or ((permission['FromPort'] <= SESSIONPORT and permission['ToPort'] >= SESSIONPORT) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
         instances.extend(instancse_139)
-        instances_138 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= DATAGRAMPORT and permission['ToPort'] >= DATAGRAMPORT) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
+        instances_138 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort']
+                             <= DATAGRAMPORT and permission['ToPort'] >= DATAGRAMPORT) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
         instances.extend(instances_138)
 
         instances_with_issue = set(instances)
@@ -220,20 +223,21 @@ class Tester(interfaces.TesterInterface):
 
         for i in instances_with_no_issue:
             result.append(self._get_result_object(i, "ec2_security_group", test_name, "no_issue_found"))
-        
+
         return result
 
     def get_inbound_dns_access(self, all_inbound_permissions):
         test_name = "aws_ec2_inbound_dns_access_restricted"
         result = []
         target_port = 53
-        instances = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == "-1") or ((permission['FromPort'] <= target_port and permission['ToPort'] >= target_port) and (permission['IpProtocol'] == "tcp" or permission['IpProtocol'] == "udp")), all_inbound_permissions))))
+        instances = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == "-1") or ((permission['FromPort']
+                         <= target_port and permission['ToPort'] >= target_port) and (permission['IpProtocol'] == "tcp" or permission['IpProtocol'] == "udp")), all_inbound_permissions))))
         instances_with_issue = set(instances)
         instances_with_no_issue = self.set_security_group.difference(instances_with_issue)
         for i in instances_with_issue:
             result.append(self._get_result_object(i, "ec2_security_group", test_name, "issue_found"))
 
-        for i in instances_with_no_issue:    
+        for i in instances_with_no_issue:
             result.append(self._get_result_object(i, "ec2_security_group", test_name, "no_issue_found"))
         return result
 
@@ -250,16 +254,21 @@ class Tester(interfaces.TesterInterface):
         PORT139 = 139
         PORT445 = 445
         PORT3020 = 3020
-        
-        instancse_137 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= PORT137 and permission['ToPort'] >= PORT137) and permission['IpProtocol'] == 'udp'), all_inbound_permissions))))
+
+        instancse_137 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1')
+                             or ((permission['FromPort'] <= PORT137 and permission['ToPort'] >= PORT137) and permission['IpProtocol'] == 'udp'), all_inbound_permissions))))
         instances.extend(instancse_137)
-        instancse_138 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= PORT138 and permission['ToPort'] >= PORT138) and permission['IpProtocol'] == 'udp'), all_inbound_permissions))))
+        instancse_138 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1')
+                             or ((permission['FromPort'] <= PORT138 and permission['ToPort'] >= PORT138) and permission['IpProtocol'] == 'udp'), all_inbound_permissions))))
         instances.extend(instancse_138)
-        instancse_139 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= PORT139 and permission['ToPort'] >= PORT139) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
+        instancse_139 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1')
+                             or ((permission['FromPort'] <= PORT139 and permission['ToPort'] >= PORT139) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
         instances.extend(instancse_139)
-        instancse_445 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= PORT445 and permission['ToPort'] >= PORT445) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
+        instancse_445 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1')
+                             or ((permission['FromPort'] <= PORT445 and permission['ToPort'] >= PORT445) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
         instances.extend(instancse_445)
-        instancse_3020 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= PORT3020 and permission['ToPort'] >= PORT3020) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
+        instancse_3020 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1')
+                              or ((permission['FromPort'] <= PORT3020 and permission['ToPort'] >= PORT3020) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
         instances.extend(instancse_3020)
 
         instances_with_issue = set(instances)
@@ -267,21 +276,23 @@ class Tester(interfaces.TesterInterface):
 
         for i in instances_with_issue:
             result.append(self._get_result_object(i, "ec2_security_group", test_name, "issue_found"))
-        
+
         for i in instances_with_no_issue:
             result.append(self._get_result_object(i, "ec2_security_group", test_name, "no_issue_found"))
-        
+
         return result
-    
+
     def get_inbound_elasticsearch_access(self, all_inbound_permissions):
         test_name = "aws_ec2_inbound_elasticsearch_access_restricted"
         results = []
         instances = []
         PORT9200 = 9200
         PORT9300 = 9300
-        instances_9200 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= PORT9200 and permission['ToPort'] >= PORT9200) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
+        instances_9200 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1')
+                              or ((permission['FromPort'] <= PORT9200 and permission['ToPort'] >= PORT9200) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
         instances.extend(instances_9200)
-        instances_9300 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= PORT9300 and permission['ToPort'] >= PORT9300) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
+        instances_9300 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1')
+                              or ((permission['FromPort'] <= PORT9300 and permission['ToPort'] >= PORT9300) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
         instances.extend(instances_9300)
 
         instances_with_issue = set(instances)
@@ -289,32 +300,34 @@ class Tester(interfaces.TesterInterface):
 
         for i in instances_with_issue:
             results.append(self._get_result_object(i, "ec2_security_group", test_name, "issue_found"))
-        
+
         for i in instances_with_no_issue:
             results.append(self._get_result_object(i, "ec2_security_group", test_name, "no_issue_found"))
-    
+
         return results
-    
+
     def get_inbound_smtp_access(self, all_inbound_permissions):
         test_name = "aws_ec2_inbound_smtp_access_restricted"
         result = []
         PORT25 = 25
         PORT587 = 587
         instances = []
-        instances_25 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= PORT25 and permission['ToPort'] >= PORT25) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
+        instances_25 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1')
+                            or ((permission['FromPort'] <= PORT25 and permission['ToPort'] >= PORT25) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
         instances.extend(instances_25)
-        instances_587 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= PORT587 and permission['ToPort'] >= PORT587) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
+        instances_587 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1')
+                             or ((permission['FromPort'] <= PORT587 and permission['ToPort'] >= PORT587) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
         instances.extend(instances_587)
-        
+
         instances_with_issue = set(instances)
         instances_with_no_issue = self.set_security_group.difference(instances_with_issue)
 
         for i in instances_with_issue:
             result.append(self._get_result_object(i, "ec2_security_group", test_name, "issue_found"))
-        
+
         for i in instances_with_no_issue:
             result.append(self._get_result_object(i, "ec2_security_group", test_name, "no_issue_found"))
-        
+
         return result
 
     def get_inbound_rpc_access(self, all_inbound_permissions):
@@ -327,20 +340,22 @@ class Tester(interfaces.TesterInterface):
         instances = []
         DATAPORT = 20
         COMMANDPORT = 21
-        instances_20 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= DATAPORT and permission['ToPort'] >= DATAPORT) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
+        instances_20 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1')
+                            or ((permission['FromPort'] <= DATAPORT and permission['ToPort'] >= DATAPORT) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
         instances.extend(instances_20)
-        instances_21 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= COMMANDPORT and permission['ToPort'] >= COMMANDPORT) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
+        instances_21 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1')
+                            or ((permission['FromPort'] <= COMMANDPORT and permission['ToPort'] >= COMMANDPORT) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
         instances.extend(instances_21)
 
         instances_with_issue = set(instances)
         instances_with_no_issue = self.set_security_group.difference(instances_with_issue)
-        
+
         for i in instances_with_issue:
             result.append(self._get_result_object(i, "ec2_security_group", test_name, "issue_found"))
-        
+
         for i in instances_with_no_issue:
             result.append(self._get_result_object(i, "ec2_security_group", test_name, "no_issue_found"))
-        
+
         return result
 
     def get_inbound_udp_netbios(self, all_inbound_permissions):
@@ -351,11 +366,14 @@ class Tester(interfaces.TesterInterface):
         DATAGRAMPORT = 138
         SESSIONPORT = 139
 
-        instancse_137 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= NAMERESPORT and permission['ToPort'] >= NAMERESPORT) and permission['IpProtocol'] == 'udp'), all_inbound_permissions))))
+        instancse_137 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1')
+                             or ((permission['FromPort'] <= NAMERESPORT and permission['ToPort'] >= NAMERESPORT) and permission['IpProtocol'] == 'udp'), all_inbound_permissions))))
         instances.extend(instancse_137)
-        instancse_138 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= DATAGRAMPORT and permission['ToPort'] >= DATAGRAMPORT) and permission['IpProtocol'] == 'udp'), all_inbound_permissions))))
+        instancse_138 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort']
+                             <= DATAGRAMPORT and permission['ToPort'] >= DATAGRAMPORT) and permission['IpProtocol'] == 'udp'), all_inbound_permissions))))
         instances.extend(instancse_138)
-        instance_139 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= SESSIONPORT and permission['ToPort'] >= SESSIONPORT) and permission['IpProtocol'] == 'udp'), all_inbound_permissions))))
+        instance_139 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1')
+                            or ((permission['FromPort'] <= SESSIONPORT and permission['ToPort'] >= SESSIONPORT) and permission['IpProtocol'] == 'udp'), all_inbound_permissions))))
         instances.extend(instance_139)
 
         instances_with_issue = set(instances)
@@ -363,10 +381,10 @@ class Tester(interfaces.TesterInterface):
 
         for i in instances_with_issue:
             result.append(self._get_result_object(i, "ec2_security_group", test_name, "issue_found"))
-        
+
         for i in instances_with_no_issue:
             result.append(self._get_result_object(i, "ec2_security_group", test_name, "no_issue_found"))
-        
+
         return result
 
     def get_outbound_access_to_all_ports(self, all_outbound_permissions):
@@ -377,21 +395,21 @@ class Tester(interfaces.TesterInterface):
         for outbound_permission in all_outbound_permissions:
             if outbound_permission['IpProtocol'] == '-1':
                 security_groups.append(outbound_permission['security_group'].id)
-        
+
         security_groups_with_issues = set(security_groups)
         security_groups_with_no_issues = self.set_security_group.difference(security_groups_with_issues)
         for i in security_groups_with_issues:
             result.append(self._get_result_object(i, "ec2_security_group", test_name, "issue_found"))
-        
+
         for i in security_groups_with_no_issues:
             result.append(self._get_result_object(i, "ec2_security_group", test_name, "no_issue_found"))
 
-        return result 
+        return result
 
     def get_vpc_default_security_group_restrict_traffic(self):
         test_name = "aws_ec2_vpc_default_security_group_restrict_all_traffic"
         result = []
-        
+
         all_vpcs = []
         for vpc in self.vpcs:
             all_vpcs.append(vpc['VpcId'])
@@ -408,17 +426,17 @@ class Tester(interfaces.TesterInterface):
 
                 if len(ingress_results) != 0 or len(egress_results) != 0:
                     vpcs_with_issue.append(security_group.vpc_id)
-        
+
         vpcs_with_issue = set(vpcs_with_issue)
         vpcs_with_no_issue = all_vpcs.difference(vpcs_with_issue)
 
         for vpc in vpcs_with_issue:
             result.append(self._get_result_object(vpc, "aws_vpc", test_name, "issue_found"))
-        
+
         for vpc in vpcs_with_no_issue:
             result.append(self._get_result_object(vpc, "aws_vpc", test_name, "no_issue_found"))
         return result
-    
+
     def get_inbound_oracle_access(self, all_inbound_permissions):
         test_name = "aws_ec2_inbound_oracle_access_restricted"
         PORT1521 = 1521
@@ -428,11 +446,14 @@ class Tester(interfaces.TesterInterface):
         result = []
         instances = []
 
-        instances_1521 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] =='-1') or (permission['FromPort'] <= PORT1521 and permission['ToPort'] >= PORT1521 and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
+        instances_1521 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or (permission['FromPort']
+                              <= PORT1521 and permission['ToPort'] >= PORT1521 and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))))
         instances.extend(instances_1521)
-        instances_2483 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] =='-1') or (permission['FromPort'] <= PORT2483 and permission['ToPort'] >= PORT2483), all_inbound_permissions))))
+        instances_2483 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1')
+                              or (permission['FromPort'] <= PORT2483 and permission['ToPort'] >= PORT2483), all_inbound_permissions))))
         instances.extend(instances_2483)
-        instances_2484 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] =='-1') or (permission['FromPort'] <= PORT2484 and permission['ToPort'] >= PORT2484), all_inbound_permissions))))
+        instances_2484 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1')
+                              or (permission['FromPort'] <= PORT2484 and permission['ToPort'] >= PORT2484), all_inbound_permissions))))
         instances.extend(instances_2484)
 
         instances_with_issue = set(instances)
@@ -443,13 +464,14 @@ class Tester(interfaces.TesterInterface):
 
         for i in instances_with_no_issue:
             result.append(self._get_result_object(i, "ec2_security_group", test_name, "no_issue_found"))
-        
+
         return result
 
     def get_inbound_icmp_access(self, all_inbound_permissions):
         test_name = "aws_ec2_inbound_icmp_access_restricted"
         result = []
-        instances = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: permission['IpProtocol'] == "icmp" or permission['IpProtocol'] == "-1" or permission['IpProtocol'] == "icmpv6", all_inbound_permissions))))
+        instances = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: permission['IpProtocol']
+                         == "icmp" or permission['IpProtocol'] == "-1" or permission['IpProtocol'] == "icmpv6", all_inbound_permissions))))
         instances_with_issue = set(instances)
         instances_with_no_issue = self.set_security_group.difference(instances_with_issue)
         for i in instances_with_issue:
@@ -482,15 +504,15 @@ class Tester(interfaces.TesterInterface):
 
         for s in security_groups_with_issue:
             result.append(self._get_result_object(s, "ec2_security_group", test_name, "issue_found"))
-        
+
         for s in security_groups_with_no_issue:
             result.append(self._get_result_object(s, "ec2_security_group", test_name, "no_issue_found"))
         return result
-    
+
     def get_instance_uses_metadata_service_version_2(self, instances):
         test_name = "aws_ec2_instance_uses_metadata_service_version_2"
         result = []
-        
+
         for instance in instances:
             instance_id = instance['InstanceId']
             if instance['MetadataOptions']['HttpTokens'] == 'optional':
@@ -506,7 +528,8 @@ class Tester(interfaces.TesterInterface):
         instances = []
         PORT443 = 443
 
-        instances_443 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= PORT443 and permission['ToPort'] >= PORT443) and permission['IpProtocol'] == 'tcp' and any([range.get('CidrIp', '') == '0.0.0.0/0' or range.get('CidrIp', '') == '::/0' for range in permission['IpRanges']])), all_inbound_permissions))))
+        instances_443 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or ((permission['FromPort'] <= PORT443 and permission['ToPort'] >= PORT443)
+                             and permission['IpProtocol'] == 'tcp' and any([range.get('CidrIp', '') == '0.0.0.0/0' or range.get('CidrIp', '') == '::/0' for range in permission['IpRanges']])), all_inbound_permissions))))
         instances.extend(instances_443)
 
         instances_with_issue = set(instances)
@@ -514,10 +537,10 @@ class Tester(interfaces.TesterInterface):
 
         for i in instances_with_issue:
             results.append(self._get_result_object(i, "ec2_security_group", test_name, "issue_found"))
-        
+
         for i in instances_with_no_issue:
             results.append(self._get_result_object(i, "ec2_security_group", test_name, "no_issue_found"))
-    
+
         return results
 
     def get_security_group_allows_inbound_access_from_ports_higher_than_1024(self, all_inbound_permissions):
@@ -526,10 +549,10 @@ class Tester(interfaces.TesterInterface):
         instances = []
         PORT1024 = 1024
         HISHESTPORT = 65535
-        instances_1024 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1') or 
-                ((permission['FromPort'] >= PORT1024 and permission['ToPort'] <= HISHESTPORT) and 
-                (any([range.get('CidrIp', '') == '0.0.0.0/0' or range.get('CidrIp', '') == '::/0' for range in permission['IpRanges']]) or 
-                any([range.get('CidrIpv6', '') == '::/0' for range in permission['Ipv6Ranges']]))), all_inbound_permissions))))
+        instances_1024 = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == '-1')
+                                                                                or ((permission['FromPort'] >= PORT1024 and permission['ToPort'] <= HISHESTPORT)
+                                                                                    and (any([range.get('CidrIp', '') == '0.0.0.0/0' or range.get('CidrIp', '') == '::/0' for range in permission['IpRanges']])
+                                                                                         or any([range.get('CidrIpv6', '') == '::/0' for range in permission['Ipv6Ranges']]))), all_inbound_permissions))))
 
         instances.extend(instances_1024)
 
@@ -538,10 +561,10 @@ class Tester(interfaces.TesterInterface):
 
         for i in instances_with_issue:
             results.append(self._get_result_object(i, "ec2_security_group", test_name, "issue_found"))
-        
+
         for i in instances_with_no_issue:
             results.append(self._get_result_object(i, "ec2_security_group", test_name, "no_issue_found"))
-    
+
         return results
 
     def get_unrestricted_admin_port_access_in_network_acl(self):
@@ -558,7 +581,7 @@ class Tester(interfaces.TesterInterface):
         else:
             response = self.aws_ec2_client.describe_network_acls(Filters=filters)
             acls.extend(response)
-        
+
         for acl in acls:
             issue_found = False
             for entry in acl['Entries']:
@@ -580,7 +603,7 @@ class Tester(interfaces.TesterInterface):
             paginator = self.aws_ec2_client.get_paginator('describe_internet_gateways')
             response_iterator = paginator.paginate(PaginationConfig={'PageSize': 50})
             for response in response_iterator:
-                gateways.extend(response['InternetGateways'])        
+                gateways.extend(response['InternetGateways'])
         else:
             response = self.aws_ec2_client.describe_internet_gateways()
             for response in response['InternetGateways']:
@@ -599,7 +622,7 @@ class Tester(interfaces.TesterInterface):
                 result.append(self._get_result_object(instance_id, "ec2_instance", test_name, "no_issue_found"))
 
         return result
-    
+
     def get_sensitive_instance_tenancy_not_dedicated(self, instances):
         test_name = "aws_ec2_sensitive_instance_tenancy_not_dedicated"
         result = []
@@ -609,7 +632,7 @@ class Tester(interfaces.TesterInterface):
             instance_id = instance['InstanceId']
             if instance_tags is not None:
                 if any([tag['Value'] == sensitive_tag for tag in instance_tags]) and \
-                    instance['Placement']['Tenancy'] != 'dedicated':
+                        instance['Placement']['Tenancy'] != 'dedicated':
                     result.append(self._get_result_object(instance_id, "ec2_instance", test_name, "issue_found"))
                 else:
                     result.append(self._get_result_object(instance_id, "ec2_instance", test_name, "no_issue_found"))
@@ -624,7 +647,7 @@ class Tester(interfaces.TesterInterface):
             response = clients[i].describe_configuration_recorder_status()
             configuration_records_status = response.get('ConfigurationRecordersStatus')
             if configuration_records_status is not None:
-                if len(configuration_records_status) == 0 or configuration_records_status[0]['recording'] == False:
+                if len(configuration_records_status) == 0 or configuration_records_status[0]['recording'] is False:
                     result.append(self._get_result_object(region_names[i], "ec2_region", test_name, "issue_found"))
                 else:
                     result.append(self._get_result_object(region_names[i], "ec2_region", test_name, "no_issue_found"))
@@ -648,7 +671,7 @@ class Tester(interfaces.TesterInterface):
                     result.append(self._get_result_object(region_names[i], "ec2_region", test_name, "no_issue_found"))
             else: pass
         return result
-    
+
     def get_ec2_instance_iam_role_not_enabled(self, instances):
         test_name = "aws_ec2_instance_iam_role_not_enabled"
         result = []
@@ -660,7 +683,7 @@ class Tester(interfaces.TesterInterface):
             else:
                 result.append(self._get_result_object(instance_id, "ec2_instance", test_name, "no_issue_found"))
         return result
- 
+
     def _get_all_vpcs(self):
         vpcs = []
         paginator = self.aws_ec2_client.get_paginator('describe_vpcs')
@@ -668,20 +691,21 @@ class Tester(interfaces.TesterInterface):
 
         for page in response_iterator:
             vpcs.extend(page['Vpcs'])
-    
+
         return vpcs
-    
+
     def get_security_group_allows_inbound_traffic(self, all_inbound_permissions):
         test_name = "aws_ec2_security_group_allows_all_inbound_traffic"
         result = []
-        instances = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: any([range.get('CidrIp', '') == '0.0.0.0/0' or range.get('CidrIp', '') == '::/0' for range in permission['IpRanges']]), all_inbound_permissions))))
-        
+        instances = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: any([range.get('CidrIp', '')
+                         == '0.0.0.0/0' or range.get('CidrIp', '') == '::/0' for range in permission['IpRanges']]), all_inbound_permissions))))
+
         instances_with_issue = set(instances)
         instances_with_no_issue = self.set_security_group.difference(instances_with_issue)
 
         for i in instances_with_issue:
             result.append(self._get_result_object(i, "ec2_security_group", test_name, "issue_found"))
-        
+
         for i in instances_with_no_issue:
             result.append(self._get_result_object(i, "ec2_security_group", test_name, "no_issue_found"))
         return result
@@ -694,7 +718,7 @@ class Tester(interfaces.TesterInterface):
         instances_with_no_issue = set(list(map(lambda x: x['InstanceId'], instances))).difference(instances_with_issue)
         for i in instances_with_issue:
             result.append(self._get_result_object(i, "ec2_instance", test_name, "issue_found"))
-    
+
         for i in instances_with_no_issue:
             result.append(self._get_result_object(i, "ec2_instance", test_name, "no_issue_found"))
         return result
@@ -707,7 +731,7 @@ class Tester(interfaces.TesterInterface):
         instances_with_no_issue = set(list(map(lambda x: x['InstanceId'], instances))).difference(instances_with_issue)
         for i in instances_with_issue:
             result.append(self._get_result_object(i, "ec2_instance", test_name, "issue_found"))
-        
+
         for i in instances_with_no_issue:
             result.append(self._get_result_object(i, "ec2_instance", test_name, "no_issue_found"))
         return result
@@ -720,7 +744,7 @@ class Tester(interfaces.TesterInterface):
         instances_with_no_issue = set(list(map(lambda x: x['InstanceId'], instances))).difference(instances_with_issue)
         for i in instances_with_issue:
             result.append(self._get_result_object(i, "ec2_instance", test_name, "issue_found"))
-        
+
         for i in instances_with_no_issue:
             result.append(self._get_result_object(i, "ec2_instance", test_name, "no_issue_found"))
         return result
@@ -733,7 +757,7 @@ class Tester(interfaces.TesterInterface):
         instances_with_no_issue = set(list(map(lambda x: x['InstanceId'], instances))).difference(instances_with_issue)
         for i in instances_with_issue:
             result.append(self._get_result_object(i, "ec2_instance", test_name, "issue_found"))
-        
+
         for i in instances_with_no_issue:
             result.append(self._get_result_object(i, "ec2_instance", test_name, "no_issue_found"))
         return result
@@ -771,16 +795,17 @@ class Tester(interfaces.TesterInterface):
                 result.append(self._get_result_object(public_ip, "elastic_IP", test_name, "no_issue_found"))
             else:
                 result.append(self._get_result_object(public_ip, "elastic_IP", test_name, "issue_found"))
-        
+
         return result
 
     def get_unrestricted_mysql_access(self, all_inbound_permissions):
         result = []
         test_name = "aws_ec2_unrestricted_mysql_access"
 
-        filtered_port = list(filter(lambda permission: (permission['IpProtocol'] == "-1") or 
-                                                    ((permission['FromPort'] <= 3306 and permission['ToPort'] >= 3306) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))
-        instances = list(map(lambda x: x['security_group'].id, list(filter(lambda permission: any([ip_range.get("CidrIp", "") == "0.0.0.0/0"  or ip_range.get("CidrIp", "") == "::/0" for ip_range in permission['IpRanges']]), filtered_port))))
+        filtered_port = list(filter(lambda permission: (permission['IpProtocol'] == "-1")
+                                    or ((permission['FromPort'] <= 3306 and permission['ToPort'] >= 3306) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))
+        instances = list(map(lambda x: x['security_group'].id, list(filter(lambda permission: any([ip_range.get("CidrIp", "")
+                         == "0.0.0.0/0" or ip_range.get("CidrIp", "") == "::/0" for ip_range in permission['IpRanges']]), filtered_port))))
 
         instances_with_issue = set(instances)
         instances_with_no_issue = self.set_security_group.difference(instances_with_issue)
@@ -789,7 +814,7 @@ class Tester(interfaces.TesterInterface):
             result.append(self._get_result_object(instance, "ec2_security_group", test_name, "issue_found"))
         for instance in instances_with_no_issue:
             result.append(self._get_result_object(instance, "ec2_security_group", test_name, "no_issue_found"))
-        
+
         return result
 
     def detect_classic_ec2_instances(self):
@@ -806,13 +831,13 @@ class Tester(interfaces.TesterInterface):
                 result.append(self._get_result_object(instance_id, "ec2_instance", test_name, "no_issue_found"))
             else:
                 result.append(self._get_result_object(instance_id, "ec2_instance", test_name, "issue_found"))
-        
+
         return result
-    
+
     def get_security_group_should_allow_access_to_specific_private_networks_only(self):
         test_name = "aws_ec2_security_group_should_allow_access_to_specific_private_networks_only"
         result = []
-        security_groups = self.aws_ec2_client.describe_security_groups(Filters=[{'Name':'ip-permission.cidr', 'Values': ['10.0.0.0/8','172.16.0.0/12','192.168.0.0/16']}])
+        security_groups = self.aws_ec2_client.describe_security_groups(Filters=[{'Name': 'ip-permission.cidr', 'Values': ['10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16']}])
         instances_with_issue = set(list(map(lambda x: x['GroupId'], security_groups['SecurityGroups'])))
         instances_with_no_issue = self.set_security_group.difference(instances_with_issue)
         for i in instances_with_issue:
@@ -820,7 +845,7 @@ class Tester(interfaces.TesterInterface):
         for i in instances_with_no_issue:
             result.append(self._get_result_object(i, "ec2_security_group", test_name, "no_issue_found"))
         return result
-    
+
     def get_network_firewall_used(self):
         result = []
         test_name = "aws_ec2_network_firewall_used"
@@ -900,5 +925,3 @@ class Tester(interfaces.TesterInterface):
         else: pass
 
         return result
-
-
