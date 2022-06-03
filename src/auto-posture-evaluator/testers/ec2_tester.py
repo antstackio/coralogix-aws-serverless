@@ -33,47 +33,47 @@ class Tester(interfaces.TesterInterface):
         region_names = self._get_ec2_region_names()
 
         return \
-            self.aws_ec2_get_inbound_http_access(all_inbound_permissions) + \
-            self.aws_ec2_get_inbound_https_access(all_inbound_permissions) + \
-            self.aws_ec2_get_inbound_mongodb_access(all_inbound_permissions) + \
-            self.aws_ec2_get_inbound_mysql_access(all_inbound_permissions) + \
-            self.aws_ec2_get_inbound_mssql_access(all_inbound_permissions) + \
-            self.aws_ec2_get_inbound_ssh_access(all_inbound_permissions) + \
-            self.aws_ec2_get_inbound_rdp_access(all_inbound_permissions) + \
-            self.aws_ec2_get_inbound_dns_access(all_inbound_permissions) + \
-            self.aws_ec2_get_inbound_telnet_access(all_inbound_permissions) + \
-            self.aws_ec2_get_inbound_rpc_access(all_inbound_permissions) + \
-            self.aws_ec2_get_inbound_icmp_access(all_inbound_permissions) + \
-            self.aws_ec2_get_security_group_allows_ingress_from_anywhere(all_inbound_permissions) + \
-            self.aws_ec2_get_vpc_default_security_group_restrict_traffic() + \
-            self.aws_ec2_get_outbound_access_to_all_ports(all_outbound_permissions) + \
-            self.aws_ec2_get_inbound_oracle_access(all_inbound_permissions) + \
-            self.aws_ec2_get_inbound_ftp_access(all_inbound_permissions) + \
-            self.aws_ec2_get_inbound_smtp_access(all_inbound_permissions) + \
-            self.aws_ec2_get_inbound_elasticsearch_access(all_inbound_permissions) + \
-            self.aws_ec2_get_inbound_tcp_netbios_access(all_inbound_permissions) + \
-            self.aws_ec2_get_inbound_udp_netbios(all_inbound_permissions) + \
-            self.aws_ec2_get_inbound_cifs_access(all_inbound_permissions) + \
-            self.aws_ec2_get_instance_uses_metadata_service_version_2(self.ec2_instances) + \
-            self.aws_ec2_get_security_group_allows_https_access(all_inbound_permissions) + \
-            self.aws_ec2_get_security_group_allows_inbound_access_from_ports_higher_than_1024(all_inbound_permissions) + \
-            self.aws_ec2_get_unrestricted_admin_port_access_in_network_acl() + \
-            self.aws_ec2_get_internet_gateway_presence_detected(self.ec2_instances) + \
-            self.aws_ec2_get_sensitive_instance_tenancy_not_dedicated(self.ec2_instances) + \
-            self.aws_ec2_get_aws_config_not_enabled_for_all_regions(region_names) + \
-            self.aws_ec2_get_nearing_regional_limit_for_elastic_ip_addresses(region_names) + \
-            self.aws_ec2_get_ec2_instance_iam_role_not_enabled(self.ec2_instances) + \
-            self.aws_ec2_get_security_group_allows_inbound_traffic(all_inbound_permissions) + \
-            self.aws_ec2_get_instance_with_upcoming_system_maintenance_scheduled_event(self.ec2_instances) + \
-            self.aws_ec2_get_instance_with_upcoming_instance_stop_scheduled_event(self.ec2_instances) + \
-            self.aws_ec2_get_instance_with_upcoming_instance_reboot_scheduled_event(self.ec2_instances) + \
-            self.aws_ec2_get_instance_with_upcoming_system_reboot_scheduled_event(self.ec2_instances) + \
-            self.aws_ec2_get_region_nearing_limits_of_ec2_instances(region_names) + \
-            self.aws_ec2_get_elastic_ip_in_use() + \
-            self.aws_ec2_get_unrestricted_mysql_access(all_inbound_permissions) + \
-            self.aws_ec2_detect_classic_ec2_instances() + \
-            self.aws_ec2_get_security_group_should_allow_access_to_specific_private_networks_only() + \
-            self.aws_ec2_get_network_firewall_used()
+            self.get_inbound_http_access(all_inbound_permissions) + \
+            self.get_inbound_https_access(all_inbound_permissions) + \
+            self.get_inbound_mongodb_access(all_inbound_permissions) + \
+            self.get_inbound_mysql_access(all_inbound_permissions) + \
+            self.get_inbound_mssql_access(all_inbound_permissions) + \
+            self.get_inbound_ssh_access(all_inbound_permissions) + \
+            self.get_inbound_rdp_access(all_inbound_permissions) + \
+            self.get_inbound_dns_access(all_inbound_permissions) + \
+            self.get_inbound_telnet_access(all_inbound_permissions) + \
+            self.get_inbound_rpc_access(all_inbound_permissions) + \
+            self.get_inbound_icmp_access(all_inbound_permissions) + \
+            self.get_security_group_allows_ingress_from_anywhere(all_inbound_permissions) + \
+            self.get_vpc_default_security_group_restrict_traffic() + \
+            self.get_outbound_access_to_all_ports(all_outbound_permissions) + \
+            self.get_inbound_oracle_access(all_inbound_permissions) + \
+            self.get_inbound_ftp_access(all_inbound_permissions) + \
+            self.get_inbound_smtp_access(all_inbound_permissions) + \
+            self.get_inbound_elasticsearch_access(all_inbound_permissions) + \
+            self.get_inbound_tcp_netbios_access(all_inbound_permissions) + \
+            self.get_inbound_udp_netbios(all_inbound_permissions) + \
+            self.get_inbound_cifs_access(all_inbound_permissions) + \
+            self.get_instance_uses_metadata_service_version_2(self.ec2_instances) + \
+            self.get_security_group_allows_https_access(all_inbound_permissions) + \
+            self.get_security_group_allows_inbound_access_from_ports_higher_than_1024(all_inbound_permissions) + \
+            self.get_unrestricted_admin_port_access_in_network_acl() + \
+            self.get_internet_gateway_presence_detected(self.ec2_instances) + \
+            self.get_sensitive_instance_tenancy_not_dedicated(self.ec2_instances) + \
+            self.get_aws_config_not_enabled_for_all_regions(region_names) + \
+            self.get_nearing_regional_limit_for_elastic_ip_addresses(region_names) + \
+            self.get_ec2_instance_iam_role_not_enabled(self.ec2_instances) + \
+            self.get_security_group_allows_inbound_traffic(all_inbound_permissions) + \
+            self.get_instance_with_upcoming_system_maintenance_scheduled_event(self.ec2_instances) + \
+            self.get_instance_with_upcoming_instance_stop_scheduled_event(self.ec2_instances) + \
+            self.get_instance_with_upcoming_instance_reboot_scheduled_event(self.ec2_instances) + \
+            self.get_instance_with_upcoming_system_reboot_scheduled_event(self.ec2_instances) + \
+            self.get_region_nearing_limits_of_ec2_instances(region_names) + \
+            self.get_elastic_ip_in_use() + \
+            self.get_unrestricted_mysql_access(all_inbound_permissions) + \
+            self.detect_classic_ec2_instances() + \
+            self.get_security_group_should_allow_access_to_specific_private_networks_only() + \
+            self.get_network_firewall_used()
     
     def _get_result_object(self, item, item_type, test_name, issue_status):
         return {
@@ -164,40 +164,40 @@ class Tester(interfaces.TesterInterface):
             clients.append(boto3.client(client_name, region_name=region))
         return clients
 
-    def aws_ec2_get_inbound_http_access(self, all_inbound_permissions) -> List:
-        test_name = "ec2_inbound_http_access_restricted"
+    def get_inbound_http_access(self, all_inbound_permissions) -> List:
+        test_name = "aws_ec2_inbound_http_access_restricted"
         return self._get_inbound_port_access(all_inbound_permissions, 80, test_name)
 
-    def aws_ec2_get_inbound_https_access(self, all_inbound_permissions) -> List:
-        test_name = "ec2_inbound_https_access_restricted"
+    def get_inbound_https_access(self, all_inbound_permissions) -> List:
+        test_name = "aws_ec2_inbound_https_access_restricted"
         return self._get_inbound_port_access(all_inbound_permissions, 443, test_name)
     
-    def aws_ec2_get_inbound_mongodb_access(self, all_inbound_permissions) -> List:
-        test_name = "ec2_inbound_mongodb_access_restricted"
+    def get_inbound_mongodb_access(self, all_inbound_permissions) -> List:
+        test_name = "aws_ec2_inbound_mongodb_access_restricted"
         return self._get_inbound_port_access(all_inbound_permissions, 27017, test_name)
     
-    def aws_ec2_get_inbound_mysql_access(self, all_inbound_permissions) -> List:
-        test_name = "ec2_inbound_mysql_access_restricted"
+    def get_inbound_mysql_access(self, all_inbound_permissions) -> List:
+        test_name = "aws_ec2_inbound_mysql_access_restricted"
         return self._get_inbound_port_access(all_inbound_permissions, 3306, test_name)
     
-    def aws_ec2_get_inbound_mssql_access(self, all_inbound_permissions) -> List:
-        test_name = "ec2_inbound_mssql_access_restricted"
+    def get_inbound_mssql_access(self, all_inbound_permissions) -> List:
+        test_name = "aws_ec2_inbound_mssql_access_restricted"
         return self._get_inbound_port_access(all_inbound_permissions, 1433, test_name)
 
-    def aws_ec2_get_inbound_ssh_access(self, all_inbound_permissions) -> List:
-        test_name = "ec2_inbound_ssh_access_restricted"
+    def get_inbound_ssh_access(self, all_inbound_permissions) -> List:
+        test_name = "aws_ec2_inbound_ssh_access_restricted"
         return self._get_inbound_port_access(all_inbound_permissions, 22, test_name)
 
-    def aws_ec2_get_inbound_rdp_access(self, all_inbound_permissions) -> List:
-        test_name = "ec2_inbound_rdp_access_restricted"
+    def get_inbound_rdp_access(self, all_inbound_permissions) -> List:
+        test_name = "aws_ec2_inbound_rdp_access_restricted"
         return self._get_inbound_port_access(all_inbound_permissions, 3389, test_name)
     
-    def aws_ec2_get_inbound_postgresql_access(self, all_inbound_permissions) -> List:
-        test_name = "ec2_inbound_postgresql_access_restricted"
+    def get_inbound_postgresql_access(self, all_inbound_permissions) -> List:
+        test_name = "aws_ec2_inbound_postgresql_access_restricted"
         return self._get_inbound_port_access(all_inbound_permissions, 5432, test_name)
 
-    def aws_ec2_get_inbound_tcp_netbios_access(self, all_inbound_permissions):
-        test_name = "ec2_inbound_tcp_netbios_access_restricted"
+    def get_inbound_tcp_netbios_access(self, all_inbound_permissions):
+        test_name = "aws_ec2_inbound_tcp_netbios_access_restricted"
         result = []
         instances = []
         NAMERESPORT = 137
@@ -222,8 +222,8 @@ class Tester(interfaces.TesterInterface):
         
         return result
 
-    def aws_ec2_get_inbound_dns_access(self, all_inbound_permissions):
-        test_name = "ec2_inbound_dns_access_restricted"
+    def get_inbound_dns_access(self, all_inbound_permissions):
+        test_name = "aws_ec2_inbound_dns_access_restricted"
         result = []
         target_port = 53
         instances = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: (permission['IpProtocol'] == "-1") or ((permission['FromPort'] <= target_port and permission['ToPort'] >= target_port) and (permission['IpProtocol'] == "tcp" or permission['IpProtocol'] == "udp")), all_inbound_permissions))))
@@ -236,12 +236,12 @@ class Tester(interfaces.TesterInterface):
             result.append(self._get_result_object(i, "ec2_security_group", test_name, "no_issue_found"))
         return result
 
-    def aws_ec2_get_inbound_telnet_access(self, all_inbound_permissions):
-        test_name = "ec2_inbound_telnet_access_restricted"
+    def get_inbound_telnet_access(self, all_inbound_permissions):
+        test_name = "aws_ec2_inbound_telnet_access_restricted"
         return self._get_inbound_port_access(all_inbound_permissions, 23, test_name)
 
-    def aws_ec2_get_inbound_cifs_access(self, all_inbound_permissions):
-        test_name = "ec2_inbound_cifs_access_restricted"
+    def get_inbound_cifs_access(self, all_inbound_permissions):
+        test_name = "aws_ec2_inbound_cifs_access_restricted"
         result = []
         instances = []
         PORT137 = 137
@@ -272,8 +272,8 @@ class Tester(interfaces.TesterInterface):
         
         return result
     
-    def aws_ec2_get_inbound_elasticsearch_access(self, all_inbound_permissions):
-        test_name = "ec2_inbound_elasticsearch_access_restricted"
+    def get_inbound_elasticsearch_access(self, all_inbound_permissions):
+        test_name = "aws_ec2_inbound_elasticsearch_access_restricted"
         results = []
         instances = []
         PORT9200 = 9200
@@ -294,8 +294,8 @@ class Tester(interfaces.TesterInterface):
     
         return results
     
-    def aws_ec2_get_inbound_smtp_access(self, all_inbound_permissions):
-        test_name = "ec2_inbound_smtp_access_restricted"
+    def get_inbound_smtp_access(self, all_inbound_permissions):
+        test_name = "aws_ec2_inbound_smtp_access_restricted"
         result = []
         PORT25 = 25
         PORT587 = 587
@@ -316,12 +316,12 @@ class Tester(interfaces.TesterInterface):
         
         return result
 
-    def aws_ec2_get_inbound_rpc_access(self, all_inbound_permissions):
-        test_name = "ec2_inbound_rpc_access_restricted"
+    def get_inbound_rpc_access(self, all_inbound_permissions):
+        test_name = "aws_ec2_inbound_rpc_access_restricted"
         return self._get_inbound_port_access(all_inbound_permissions, 135, test_name)
 
-    def aws_ec2_get_inbound_ftp_access(self, all_inbound_permissions):
-        test_name = "ec2_inbound_ftp_access_restricted"
+    def get_inbound_ftp_access(self, all_inbound_permissions):
+        test_name = "aws_ec2_inbound_ftp_access_restricted"
         result = []
         instances = []
         DATAPORT = 20
@@ -342,8 +342,8 @@ class Tester(interfaces.TesterInterface):
         
         return result
 
-    def aws_ec2_get_inbound_udp_netbios(self, all_inbound_permissions):
-        test_name = "ec2_inbound_udp_netbios_access_restricted"
+    def get_inbound_udp_netbios(self, all_inbound_permissions):
+        test_name = "aws_ec2_inbound_udp_netbios_access_restricted"
         result = []
         instances = []
         NAMERESPORT = 137
@@ -368,8 +368,8 @@ class Tester(interfaces.TesterInterface):
         
         return result
 
-    def aws_ec2_get_outbound_access_to_all_ports(self, all_outbound_permissions):
-        test_name = "ec2_outbound_access_to_all_ports_restricted"
+    def get_outbound_access_to_all_ports(self, all_outbound_permissions):
+        test_name = "aws_ec2_outbound_access_to_all_ports_restricted"
         result = []
         security_groups = []
 
@@ -387,8 +387,8 @@ class Tester(interfaces.TesterInterface):
 
         return result 
 
-    def aws_ec2_get_vpc_default_security_group_restrict_traffic(self):
-        test_name = "vpc_default_security_group_restrict_all_traffic"
+    def get_vpc_default_security_group_restrict_traffic(self):
+        test_name = "aws_ec2_vpc_default_security_group_restrict_all_traffic"
         result = []
         
         all_vpcs = []
@@ -418,8 +418,8 @@ class Tester(interfaces.TesterInterface):
             result.append(self._get_result_object(vpc, "aws_vpc", test_name, "no_issue_found"))
         return result
     
-    def aws_ec2_get_inbound_oracle_access(self, all_inbound_permissions):
-        test_name = "ec2_inbound_oracle_access_restricted"
+    def get_inbound_oracle_access(self, all_inbound_permissions):
+        test_name = "aws_ec2_inbound_oracle_access_restricted"
         PORT1521 = 1521
         PORT2483 = 2483
         PORT2484 = 2484
@@ -445,8 +445,8 @@ class Tester(interfaces.TesterInterface):
         
         return result
 
-    def aws_ec2_get_inbound_icmp_access(self, all_inbound_permissions):
-        test_name = "ec2_inbound_icmp_access_restricted"
+    def get_inbound_icmp_access(self, all_inbound_permissions):
+        test_name = "aws_ec2_inbound_icmp_access_restricted"
         result = []
         instances = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: permission['IpProtocol'] == "icmp" or permission['IpProtocol'] == "-1" or permission['IpProtocol'] == "icmpv6", all_inbound_permissions))))
         instances_with_issue = set(instances)
@@ -458,8 +458,8 @@ class Tester(interfaces.TesterInterface):
 
         return result
 
-    def aws_ec2_get_security_group_allows_ingress_from_anywhere(self, all_inbound_permissions):
-        test_name = "security_group_allows_ingress_to_remote_administration_ports_from_anywhere"
+    def get_security_group_allows_ingress_from_anywhere(self, all_inbound_permissions):
+        test_name = "aws_ec2_security_group_allows_ingress_to_remote_administration_ports_from_anywhere"
         result = []
         security_groups = []
         SSHPORT = 22
@@ -486,8 +486,8 @@ class Tester(interfaces.TesterInterface):
             result.append(self._get_result_object(s, "ec2_security_group", test_name, "no_issue_found"))
         return result
     
-    def aws_ec2_get_instance_uses_metadata_service_version_2(self, instances):
-        test_name = "instance_uses_metadata_service_version_2"
+    def get_instance_uses_metadata_service_version_2(self, instances):
+        test_name = "aws_ec2_instance_uses_metadata_service_version_2"
         result = []
         
         for instance in instances:
@@ -499,8 +499,8 @@ class Tester(interfaces.TesterInterface):
 
         return result
 
-    def aws_ec2_get_security_group_allows_https_access(self, all_inbound_permissions):
-        test_name = "security_group_allows_https_access"
+    def get_security_group_allows_https_access(self, all_inbound_permissions):
+        test_name = "aws_ec2_security_group_allows_https_access"
         results = []
         instances = []
         PORT443 = 443
@@ -519,8 +519,8 @@ class Tester(interfaces.TesterInterface):
     
         return results
 
-    def aws_ec2_get_security_group_allows_inbound_access_from_ports_higher_than_1024(self, all_inbound_permissions):
-        test_name = "security_group_allows_inbound_access_from_ports_higher_than_1024"
+    def get_security_group_allows_inbound_access_from_ports_higher_than_1024(self, all_inbound_permissions):
+        test_name = "aws_ec2_security_group_allows_inbound_access_from_ports_higher_than_1024"
         results = []
         instances = []
         PORT1024 = 1024
@@ -543,8 +543,8 @@ class Tester(interfaces.TesterInterface):
     
         return results
 
-    def aws_ec2_get_unrestricted_admin_port_access_in_network_acl(self):
-        test_name = "unrestricted_admin_port_access_in_network_acl"
+    def get_unrestricted_admin_port_access_in_network_acl(self):
+        test_name = "aws_ec2_unrestricted_admin_port_access_in_network_acl"
         results = []
         can_paginate = self.aws_ec2_client.can_paginate('describe_network_acls')
         acls = []
@@ -570,8 +570,8 @@ class Tester(interfaces.TesterInterface):
                 results.append(self._get_result_object(acl['NetworkAclId'], "ec2_network_acl", test_name, "no_issue_found"))
         return results
 
-    def aws_ec2_get_internet_gateway_presence_detected(self, instances):
-        test_name = "internet_gateway_presence_detected"
+    def get_internet_gateway_presence_detected(self, instances):
+        test_name = "aws_ec2_internet_gateway_presence_detected"
         result = []
         gateways = []
         can_paginate = self.aws_ec2_client.can_paginate('describe_internet_gateways')
@@ -599,8 +599,8 @@ class Tester(interfaces.TesterInterface):
 
         return result
     
-    def aws_ec2_get_sensitive_instance_tenancy_not_dedicated(self, instances):
-        test_name = "sensitive_instance_tenancy_not_dedicated"
+    def get_sensitive_instance_tenancy_not_dedicated(self, instances):
+        test_name = "aws_ec2_sensitive_instance_tenancy_not_dedicated"
         result = []
         sensitive_tag = self.sensitive_instance_tag if self.sensitive_instance_tag else "sensitive"
         for instance in instances:
@@ -615,8 +615,8 @@ class Tester(interfaces.TesterInterface):
             else: pass
         return result
 
-    def aws_ec2_get_aws_config_not_enabled_for_all_regions(self, region_names):
-        test_name = "aws_config_not_enabled_for_all_regions"
+    def get_aws_config_not_enabled_for_all_regions(self, region_names):
+        test_name = "aws_ec2_aws_config_not_enabled_for_all_regions"
         clients = self._get_service_clients_for_all_regions('config')
         result = []
         for i in range(len(clients)):
@@ -631,8 +631,8 @@ class Tester(interfaces.TesterInterface):
 
         return result
 
-    def aws_ec2_get_nearing_regional_limit_for_elastic_ip_addresses(self, region_names):
-        test_name = "nearing_regional_limit_for_elastic_ip_addresses"
+    def get_nearing_regional_limit_for_elastic_ip_addresses(self, region_names):
+        test_name = "aws_ec2_nearing_regional_limit_for_elastic_ip_addresses"
         clients = self._get_service_clients_for_all_regions('ec2')
         result = []
         for i in range(len(clients)):
@@ -648,8 +648,8 @@ class Tester(interfaces.TesterInterface):
             else: pass
         return result
     
-    def aws_ec2_get_ec2_instance_iam_role_not_enabled(self, instances):
-        test_name = "ec2_instance_iam_role_not_enabled"
+    def get_ec2_instance_iam_role_not_enabled(self, instances):
+        test_name = "aws_ec2_instance_iam_role_not_enabled"
         result = []
         for instance in instances:
             instance_id = instance['InstanceId']
@@ -670,8 +670,8 @@ class Tester(interfaces.TesterInterface):
     
         return vpcs
     
-    def aws_ec2_get_security_group_allows_inbound_traffic(self, all_inbound_permissions):
-        test_name = "security_group_allows_all_inbound_traffic"
+    def get_security_group_allows_inbound_traffic(self, all_inbound_permissions):
+        test_name = "aws_ec2_security_group_allows_all_inbound_traffic"
         result = []
         instances = list(map(lambda i: i['security_group'].id, list(filter(lambda permission: any([range.get('CidrIp', '') == '0.0.0.0/0' or range.get('CidrIp', '') == '::/0' for range in permission['IpRanges']]), all_inbound_permissions))))
         
@@ -685,8 +685,8 @@ class Tester(interfaces.TesterInterface):
             result.append(self._get_result_object(i, "ec2_security_group", test_name, "no_issue_found"))
         return result
 
-    def aws_ec2_get_instance_with_upcoming_system_maintenance_scheduled_event(self, instances):
-        test_name = "instance_with_upcoming_system_maintenance_scheduled_event"
+    def get_instance_with_upcoming_system_maintenance_scheduled_event(self, instances):
+        test_name = "aws_ec2_instance_with_upcoming_system_maintenance_scheduled_event"
         result = []
         instances_with_issue = self.aws_ec2_client.describe_instance_status(Filters=[{'Name': 'event.code', 'Values': ['system-maintenance']}])
         instances_with_issue = set(list(map(lambda x: x['InstanceId'], instances_with_issue['InstanceStatuses'])))
@@ -698,8 +698,8 @@ class Tester(interfaces.TesterInterface):
             result.append(self._get_result_object(i, "ec2_instance", test_name, "no_issue_found"))
         return result
 
-    def aws_ec2_get_instance_with_upcoming_instance_stop_scheduled_event(self, instances):
-        test_name = "instance_with_upcoming_instance_stop_scheduled_event"
+    def get_instance_with_upcoming_instance_stop_scheduled_event(self, instances):
+        test_name = "aws_ec2_instance_with_upcoming_instance_stop_scheduled_event"
         result = []
         instances_with_issue = self.aws_ec2_client.describe_instance_status(Filters=[{'Name': 'event.code', 'Values': ['instance-stop']}])
         instances_with_issue = set(list(map(lambda x: x['InstanceId'], instances_with_issue['InstanceStatuses'])))
@@ -711,8 +711,8 @@ class Tester(interfaces.TesterInterface):
             result.append(self._get_result_object(i, "ec2_instance", test_name, "no_issue_found"))
         return result
 
-    def aws_ec2_get_instance_with_upcoming_instance_reboot_scheduled_event(self, instances):
-        test_name = "instance_with_upcoming_instance_reboot_scheduled_event"
+    def get_instance_with_upcoming_instance_reboot_scheduled_event(self, instances):
+        test_name = "aws_ec2_instance_with_upcoming_instance_reboot_scheduled_event"
         result = []
         instances_with_issue = self.aws_ec2_client.describe_instance_status(Filters=[{'Name': 'event.code', 'Values': ['instance-reboot']}])
         instances_with_issue = set(list(map(lambda x: x['InstanceId'], instances_with_issue['InstanceStatuses'])))
@@ -724,8 +724,8 @@ class Tester(interfaces.TesterInterface):
             result.append(self._get_result_object(i, "ec2_instance", test_name, "no_issue_found"))
         return result
 
-    def aws_ec2_get_instance_with_upcoming_system_reboot_scheduled_event(self, instances):
-        test_name = "instance_with_upcoming_system_reboot_scheduled_event"
+    def get_instance_with_upcoming_system_reboot_scheduled_event(self, instances):
+        test_name = "aws_ec2_instance_with_upcoming_system_reboot_scheduled_event"
         result = []
         instances_with_issue = self.aws_ec2_client.describe_instance_status(Filters=[{'Name': 'event.code', 'Values': ['system-reboot']}])
         instances_with_issue = set(list(map(lambda x: x['InstanceId'], instances_with_issue['InstanceStatuses'])))
@@ -737,8 +737,8 @@ class Tester(interfaces.TesterInterface):
             result.append(self._get_result_object(i, "ec2_instance", test_name, "no_issue_found"))
         return result
 
-    def aws_ec2_get_region_nearing_limits_of_ec2_instances(self, region_names):
-        test_name = "region_nearing_limits_of_ec2_instances"
+    def get_region_nearing_limits_of_ec2_instances(self, region_names):
+        test_name = "aws_ec2_region_nearing_limits_of_ec2_instances"
         result = []
         cpu_count_limit = int(self.per_region_max_cpu_count_diff) if self.per_region_max_cpu_count_diff else 50
         service_quota_clients = self._get_service_clients_for_all_regions('service-quotas')
@@ -756,9 +756,9 @@ class Tester(interfaces.TesterInterface):
                 result.append(self._get_result_object(region_names[i], "ec2_region", test_name, "no_issue_found"))
         return result
 
-    def aws_ec2_get_elastic_ip_in_use(self):
+    def get_elastic_ip_in_use(self):
         result = []
-        test_name = "elastic_ip_in_use"
+        test_name = "aws_ec2_elastic_ip_in_use"
 
         response = self.aws_ec2_client.describe_addresses()
         addresses = response['Addresses']
@@ -773,9 +773,9 @@ class Tester(interfaces.TesterInterface):
         
         return result
 
-    def aws_ec2_get_unrestricted_mysql_access(self, all_inbound_permissions):
+    def get_unrestricted_mysql_access(self, all_inbound_permissions):
         result = []
-        test_name = "unrestricted_mysql_access"
+        test_name = "aws_ec2_unrestricted_mysql_access"
 
         filtered_port = list(filter(lambda permission: (permission['IpProtocol'] == "-1") or 
                                                     ((permission['FromPort'] <= 3306 and permission['ToPort'] >= 3306) and permission['IpProtocol'] == 'tcp'), all_inbound_permissions))
@@ -791,9 +791,9 @@ class Tester(interfaces.TesterInterface):
         
         return result
 
-    def aws_ec2_detect_classic_ec2_instances(self):
+    def detect_classic_ec2_instances(self):
         result = []
-        test_name = "detect_classic_ec2_instances"
+        test_name = "aws_ec2_detect_classic_ec2_instances"
 
         ec2_instances = self.ec2_instances
 
@@ -808,8 +808,8 @@ class Tester(interfaces.TesterInterface):
         
         return result
     
-    def aws_ec2_get_security_group_should_allow_access_to_specific_private_networks_only(self):
-        test_name = "security_group_should_allow_access_to_specific_private_networks_only"
+    def get_security_group_should_allow_access_to_specific_private_networks_only(self):
+        test_name = "aws_ec2_security_group_should_allow_access_to_specific_private_networks_only"
         result = []
         security_groups = self.aws_ec2_client.describe_security_groups(Filters=[{'Name':'ip-permission.cidr', 'Values': ['10.0.0.0/8','172.16.0.0/12','192.168.0.0/16']}])
         instances_with_issue = set(list(map(lambda x: x['GroupId'], security_groups['SecurityGroups'])))
@@ -820,9 +820,9 @@ class Tester(interfaces.TesterInterface):
             result.append(self._get_result_object(i, "ec2_security_group", test_name, "no_issue_found"))
         return result
     
-    def aws_ec2_get_network_firewall_used(self):
+    def get_network_firewall_used(self):
         result = []
-        test_name = "network_firewall_used"
+        test_name = "aws_ec2_network_firewall_used"
 
         paginator = self.aws_nfw_client.get_paginator('list_firewalls')
         response_iterator = paginator.paginate()
