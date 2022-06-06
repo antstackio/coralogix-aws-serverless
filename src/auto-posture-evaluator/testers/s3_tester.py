@@ -780,6 +780,7 @@ class Tester(interfaces.TesterInterface):
                                 "item": bucket_name,
                                 "item_type": "s3_bucket",
                                 "test_name": test_name,
+                                "policy": policy_obj,
                                 "test_result": "issue_found"
                             })
                         else:
@@ -1108,6 +1109,7 @@ class Tester(interfaces.TesterInterface):
                                 "item": bucket_name,
                                 "item_type": "s3_bucket",
                                 "test_name": test_name,
+                                "policy": policy_obj,
                                 "test_result": "issue_found"
                             })
                         else:
