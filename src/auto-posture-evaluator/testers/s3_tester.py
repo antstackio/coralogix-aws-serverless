@@ -542,31 +542,41 @@ class Tester(interfaces.TesterInterface):
     def detect_bucket_not_encrypted_with_cmk(self, buckets_list):
         test_name = "aws_s3_bucket_not_encrypted_with_cmk"
         result = []
-        for bucket in buckets_list["Buckets"]:
+        buckets = buckets_list["Buckets"]
+        for bucket in buckets:
             issue_detected = False
             bucket_name = bucket["Name"]
             try:
                 encryption = self.aws_s3_client.get_bucket_encryption(Bucket=bucket_name)
-                for rule in encryption['ServerSideEncryptionConfiguration']['Rules']:
+                encryption_rules = encryption['ServerSideEncryptionConfiguration']['Rules']
+                for rule in encryption_rules:
                     if not rule['BucketKeyEnabled']: continue
-                    sse_algorithm = rule['ApplyServerSideEncryptionByDefault']['SSEAlgorithm']
+                    default_sse = rule['ApplyServerSideEncryptionByDefault']
+                    sse_algorithm = default_sse['SSEAlgorithm']
                     if sse_algorithm == 'AES256':
                         issue_detected = True
                         break
                     else:
-                        if not rule['ApplyServerSideEncryptionByDefault'].get('KMSMasterKeyID'):
+                        if not default_sse.get('KMSMasterKeyID'):
                             issue_detected = True
                             break
-                        key_id = rule['ApplyServerSideEncryptionByDefault']['KMSMasterKeyID']
+                        key_id = default_sse['KMSMasterKeyID']
                         try:
+                            kms_key_description_response = self.aws_kms_client.describe_key(KeyId=key_id)
+                            key_id = kms_key_description_response['KeyMetadata']['KeyId']
                             kms_response = self.aws_kms_client.list_aliases(KeyId=key_id)
+                            key_aliases = kms_response['Aliases']
+
+                            for alias in key_aliases:
+                                alias_name = alias['AliasName']
+                                if alias_name.startswith('alias/aws/') or alias_name.startswith('alias/'):
+                                    issue_detected = False
+                                else:
+                                    issue_detected = True
+                                    break
                         except Exception:
                             issue_detected = True
                             break
-                        for alias in kms_response['Aliases']:
-                            if alias['AliasName'] == 'alias/aws/s3':
-                                issue_detected = True
-                                break
             except botocore.exceptions.ClientError as ex:
                 if ex.response['Error']['Code'] == 'ServerSideEncryptionConfigurationNotFoundError':
                     issue_detected = True
