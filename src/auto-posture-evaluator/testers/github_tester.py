@@ -3,7 +3,7 @@ import time
 import requests
 import interfaces
 import jmespath
-from datetime import date, datetime
+from datetime import datetime
 
 
 class Tester(interfaces.TesterInterface):
@@ -17,79 +17,79 @@ class Tester(interfaces.TesterInterface):
         self.BASE_URL_USERS = "http://api.github.com/users"
 
         self.tests = {
-            "users_without_mfa": {
+            "github_organization_users_without_mfa": {
                 "method": self.get_users_without_mfa,
                 "result_item_type": "github_user"
             },
-            "forking_enabled_repos": {
+            "github_repository_forking_enabled_repos": {
                 "method": self.get_forkable_repositories,
                 "result_item_type": "github_repository"
             },
-            "too_many_admin_users_per_org": {
+            "github_organization_too_many_admin_users_per_org": {
                 "method": self.check_for_too_many_admin_users,
                 "result_item_type": "github_organization"
             },
-            "two_factor_authentication_is_enforced": {
+            "github_organization_two_factor_authentication_is_enforced": {
                 "method": self.get_2fa_authentication_enforced,
                 "result_item_type": "github_organization"
             },
-            "base_permissions_not_set_to_admin": {
+            "github_organization_base_permissions_not_set_to_admin": {
                 "method": self.get_base_permission_not_admin,
                 "result_item_type": "github_organization"
             },
-            "members_can_not_create_public_repositories": {
+            "github_organization_members_can_not_create_public_repositories": {
                 "method": self.get_members_can_not_create_public_repos,
                 "result_item_type": "github_organization"
             },
-            "organization's_domains_are_not_verified": {
+            "github_organization_domains_are_not_verified": {
                 "method": self.get_org_domains_are_not_verified,
                 "result_item_type": "github_organization"
             },
-            "github_pages_is_disabled": {
+            "github_repository_pages_is_disabled": {
                 "method": self.get_github_pages_disabled,
                 "result_item_type": "github_repository"
             },
-            "members_without_signing_gpg_keys": {
+            "github_organization_members_without_signing_gpg_keys": {
                 "method": self.get_members_without_gpg_keys,
                 "result_item_type": "github_organization"
             },
-            "code_security_alerts_are_enabled": {
+            "github_repository_code_security_alerts_are_enabled": {
                 "method": self.get_code_security_alerts_are_enabled,
                 "result_item_type": "github_repository"
             },
-            "no_outside_collaborators_with_admin_permission": {
+            "github_repository_no_outside_collaborators_with_admin_permission": {
                 "method": self.get_no_outside_collaborators_with_admin_permission,
                 "result_item_type": "github_repository"
             },
-            "pending_invitations_for_outside_collaborators_with_admin_permissions": {
+            "github_repository_pending_invitations_for_outside_collaborators_with_admin_permissions": {
                 "method": self.get_pending_invitation_with_admin_permissions,
                 "result_item_type": "github_repository"
             },
-            "deploy_keys_are_fresh":{
+            "github_repository_deploy_keys_are_fresh": {
                 "method": self.get_deploy_keys_are_fresh,
                 "result_item_type": "github_repository"
             },
-            "sso_is_enabled":{
+            "github_organization_sso_is_enabled": {
                 "method": self.get_sso_enabled_for_organization,
                 "result_item_type": "github_organization"
             },
-            "all_repositories_monitored_for_code_vulnerabilities": {
+            "github_organization_all_repositories_monitored_for_code_vulnerabilities": {
                 "method": self.get_all_repositories_monitored_for_code_vulnerabilities,
                 "result_item_type": "github_organization"
             },
-            "outside_collaborators_dont_have_admin_permissions": {
+            "github_organization_outside_collaborators_dont_have_admin_permissions": {
                 "method": self.get_outside_collaborators_with_admin_permission,
                 "result_item_type": "github_organization"
             },
-            "third_party_apps_with_pullrequest_write_permission": {
+            "github_organization_third_party_apps_with_pullrequest_write_permission": {
                 "method": self.get_third_party_apps_with_write_permission,
                 "result_item_type": "github_organization"
             },
-            "the_evidence_repositories_list_is_public": {
+            "github_repository_the_evidence_repositories_list_is_public": {
                 "method": self.evidence_repositories_are_public,
                 "result_item_type": "github_repository"
             },
-            "no_vulnerabilities_were_found_on_the_repositories": {
+            "github_repository_no_vulnerabilities_were_found_on_the_repositories": {
                 "method": self.get_vulnerabilities_found_on_repositories,
                 "result_item_type": "github_repository"
             }
@@ -221,17 +221,17 @@ class Tester(interfaces.TesterInterface):
                 response_headers = raw_response.headers
                 link = response_headers.get('Link')
                 result.extend(response_obj)
-            
+
                 if link is not None:
                     if 'rel="next"' not in link:
                         has_page = False
                     else:
                         page += 1
                 else:
-                    has_page = False 
-        
+                    has_page = False
+
         response = {"status_code": status_code, "result": result}
-        
+
         return response
 
     def get_2fa_authentication_enforced(self, organization):
@@ -240,7 +240,7 @@ class Tester(interfaces.TesterInterface):
         raw_api_response = requests.get(
             headers=self.request_headers, url=api)
         status_code = raw_api_response.status_code
-        
+
         if status_code == 200:
             raw_api_response_obj = raw_api_response.json()
             enforced_2fa = raw_api_response_obj.get('two_factor_requirement_enabled')
@@ -258,7 +258,7 @@ class Tester(interfaces.TesterInterface):
         raw_api_response = requests.get(
             headers=self.request_headers, url=api)
         status_code = raw_api_response.status_code
-        
+
         if status_code == 200:
             raw_api_response_obj = raw_api_response.json()
             default_repo_permission = raw_api_response_obj.get('default_repository_permission')
@@ -317,7 +317,7 @@ class Tester(interfaces.TesterInterface):
         api = f"{self.BASE_URL_ORGS}/{organization}/repos"
         respone = self._get_paginated_result(api)
         status_code = respone['status_code']
-        
+
         if status_code == 200:
             repos_details = respone['result']
             for repo in repos_details:
@@ -335,7 +335,7 @@ class Tester(interfaces.TesterInterface):
         api = f"{self.BASE_URL_ORGS}/{organization}/members"
         response = self._get_paginated_result(api)
         status_code = response['status_code']
-        
+
         if status_code == 200:
             org_members = response['result']
             members_without_gpg_keys_count = 0
@@ -366,7 +366,7 @@ class Tester(interfaces.TesterInterface):
         api = f"{self.BASE_URL_ORGS}/{organization}/repos"
         response = self._get_paginated_result(api)
         status_code = response['status_code']
-        
+
         if status_code == 200:
             repos_details = response['result']
 
@@ -377,7 +377,7 @@ class Tester(interfaces.TesterInterface):
                 raw_response = requests.get(
                     headers=self.request_headers, url=api)
                 response_code = raw_response.status_code
-                
+
                 if response_code == 204:
                     result.append({"item": repo_name, "issue": False})
                 elif response_code == 404:
@@ -385,7 +385,7 @@ class Tester(interfaces.TesterInterface):
                     message = response_obj['message']
                     if message == 'Not Found': pass
                     else: result.append({"item": repo_name, "issue": True})
-        
+
         else: pass
         return result
 
@@ -424,13 +424,13 @@ class Tester(interfaces.TesterInterface):
             temp = response['result']
             invitations = {"result": temp}
             admin_invitation = jmespath.search("result[?role=='admin']", invitations)
-        
+
             if len(admin_invitation) > 0:
                 result.append({"item": organization, "issue": True})
             else:
                 result.append({"item": organization, "issue": False})
         else: pass
-        
+
         return result
 
     def get_deploy_keys_are_fresh(self, organization):
@@ -439,7 +439,7 @@ class Tester(interfaces.TesterInterface):
         response = self._get_paginated_result(api)
         status_code = response['status_code']
         freshness_threshold = int(self.deploy_keys_max_days_old) if self.deploy_keys_max_days_old is not None else 30
-        
+
         if status_code == 200:
             repos_details = response['result']
             for repo in repos_details:
@@ -448,7 +448,7 @@ class Tester(interfaces.TesterInterface):
                 api = f"{self.BASE_URL_REPOS}/{owner}/{repo_name}/keys"
                 response = self._get_paginated_result(api)
                 status_code = response['status_code']
-                
+
                 if status_code == 200:
                     deploy_keys = response['result']
                     if len(deploy_keys) > 0:
@@ -536,11 +536,11 @@ class Tester(interfaces.TesterInterface):
                     pg_status_code = raw_response.status_code
                     response = raw_response.json()
                     response_headers = raw_response.headers
-                        
+
                     if pg_status_code == 200: collaborators.extend(response)
                     elif pg_status_code == 403: pass
                     else: pass
-                    
+
                     link = response_headers.get('Link')
                     if link is not None:
                         if 'rel="next"' not in link:
@@ -557,15 +557,15 @@ class Tester(interfaces.TesterInterface):
                             outside_collab_with_admin = True
                             break
                         else: pass
-                
+
                     if outside_collab_with_admin:
                         result.append({"item": repo_name, "issue": True})
                     else:
                         result.append({"item": repo_name, "issue": False})
                 else:
                     result.append({"item": repo_name, "issue": False})
-        else: pass 
-        
+        else: pass
+
         return result
 
     def get_third_party_apps_with_write_permission(self, organization):
@@ -592,16 +592,16 @@ class Tester(interfaces.TesterInterface):
                 if 'rel="next"' not in link:
                     has_page = False
                 else:
-                    page += 1 
+                    page += 1
             else: has_page = False
 
         app_info = {"status_code": status_code, "result": pg_result}
-        
+
         if app_info['status_code'] == 200:
             app_installations = app_info['result']
             if len(app_installations) > 0:
                 apps_with_access_count = False
-            
+
                 for i in app_installations:
                     pullrequest = i['permissions'].get('pull_requests')
 
@@ -650,9 +650,9 @@ class Tester(interfaces.TesterInterface):
                 api = f"{self.BASE_URL_REPOS}/{owner}/{repo_name}/code-scanning/alerts"
                 raw_response = requests.get(headers=self.request_headers, url=api)
                 status_code = raw_response.status_code
-                
+
                 if status_code == 403:
-                   result.append({"item": repo_name, "issue": True})
+                    result.append({"item": repo_name, "issue": True})
                 elif status_code == 404:
                     result.append({"item": repo_name, "issue": False})
                 elif status_code == 200:
