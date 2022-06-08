@@ -17,79 +17,79 @@ class Tester(interfaces.TesterInterface):
         self.BASE_URL_USERS = "http://api.github.com/users"
 
         self.tests = {
-            "github_organization_users_without_mfa": {
+            "organization_users_without_mfa": {
                 "method": self.get_users_without_mfa,
                 "result_item_type": "github_user"
             },
-            "github_repository_forking_enabled_repos": {
+            "repository_forking_enabled_repos": {
                 "method": self.get_forkable_repositories,
                 "result_item_type": "github_repository"
             },
-            "github_organization_too_many_admin_users_per_org": {
+            "organization_too_many_admin_users_per_org": {
                 "method": self.check_for_too_many_admin_users,
                 "result_item_type": "github_organization"
             },
-            "github_organization_two_factor_authentication_is_enforced": {
+            "organization_two_factor_authentication_is_enforced": {
                 "method": self.get_2fa_authentication_enforced,
                 "result_item_type": "github_organization"
             },
-            "github_organization_base_permissions_not_set_to_admin": {
+            "organization_base_permissions_not_set_to_admin": {
                 "method": self.get_base_permission_not_admin,
                 "result_item_type": "github_organization"
             },
-            "github_organization_members_can_not_create_public_repositories": {
+            "organization_members_can_not_create_public_repositories": {
                 "method": self.get_members_can_not_create_public_repos,
                 "result_item_type": "github_organization"
             },
-            "github_organization_domains_are_not_verified": {
+            "organization_domains_are_not_verified": {
                 "method": self.get_org_domains_are_not_verified,
                 "result_item_type": "github_organization"
             },
-            "github_repository_pages_is_disabled": {
+            "repository_pages_is_disabled": {
                 "method": self.get_github_pages_disabled,
                 "result_item_type": "github_repository"
             },
-            "github_organization_members_without_signing_gpg_keys": {
+            "organization_members_without_signing_gpg_keys": {
                 "method": self.get_members_without_gpg_keys,
                 "result_item_type": "github_organization"
             },
-            "github_repository_code_security_alerts_are_enabled": {
+            "repository_code_security_alerts_are_enabled": {
                 "method": self.get_code_security_alerts_are_enabled,
                 "result_item_type": "github_repository"
             },
-            "github_repository_no_outside_collaborators_with_admin_permission": {
+            "repository_no_outside_collaborators_with_admin_permission": {
                 "method": self.get_no_outside_collaborators_with_admin_permission,
                 "result_item_type": "github_repository"
             },
-            "github_repository_pending_invitations_for_outside_collaborators_with_admin_permissions": {
+            "repository_pending_invitations_for_outside_collaborators_with_admin_permissions": {
                 "method": self.get_pending_invitation_with_admin_permissions,
                 "result_item_type": "github_repository"
             },
-            "github_repository_deploy_keys_are_fresh": {
+            "repository_deploy_keys_are_fresh": {
                 "method": self.get_deploy_keys_are_fresh,
                 "result_item_type": "github_repository"
             },
-            "github_organization_sso_is_enabled": {
+            "organization_sso_is_enabled": {
                 "method": self.get_sso_enabled_for_organization,
                 "result_item_type": "github_organization"
             },
-            "github_organization_all_repositories_monitored_for_code_vulnerabilities": {
+            "organization_all_repositories_monitored_for_code_vulnerabilities": {
                 "method": self.get_all_repositories_monitored_for_code_vulnerabilities,
                 "result_item_type": "github_organization"
             },
-            "github_organization_outside_collaborators_dont_have_admin_permissions": {
+            "organization_outside_collaborators_dont_have_admin_permissions": {
                 "method": self.get_outside_collaborators_with_admin_permission,
                 "result_item_type": "github_organization"
             },
-            "github_organization_third_party_apps_with_pullrequest_write_permission": {
+            "organization_third_party_apps_with_pullrequest_write_permission": {
                 "method": self.get_third_party_apps_with_write_permission,
                 "result_item_type": "github_organization"
             },
-            "github_repository_the_evidence_repositories_list_is_public": {
+            "repository_the_evidence_repositories_list_is_public": {
                 "method": self.evidence_repositories_are_public,
                 "result_item_type": "github_repository"
             },
-            "github_repository_no_vulnerabilities_were_found_on_the_repositories": {
+            "repository_no_vulnerabilities_were_found_on_the_repositories": {
                 "method": self.get_vulnerabilities_found_on_repositories,
                 "result_item_type": "github_repository"
             }
