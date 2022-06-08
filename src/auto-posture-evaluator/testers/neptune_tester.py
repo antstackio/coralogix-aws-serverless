@@ -46,7 +46,7 @@ class Tester(interfaces.TesterInterface):
     
     def get_database_encryption_disabled(self):
         result = []
-        test_name = "database_encryption_disabled"
+        test_name = "aws_neptune_database_encryption_disabled"
 
         db_clusters = self.db_clusters
 
@@ -63,7 +63,7 @@ class Tester(interfaces.TesterInterface):
 
     def get_neptune_cluster_audit_logs_disabled(self):
         result = []
-        test_name = "neptune_cluster_audit_logs_disabled"
+        test_name = "aws_neptune_cluster_audit_logs_disabled"
 
         db_clusters = self.db_clusters
 
