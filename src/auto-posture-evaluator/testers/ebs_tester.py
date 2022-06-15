@@ -1,17 +1,16 @@
-from inspect import Attribute
 import time
-from typing import Dict, List, Set
+from typing import List
 import boto3
 import interfaces
 import datetime as dt
 from datetime import datetime
 import os
 
+
 class Tester(interfaces.TesterInterface):
-    def __init__(self) -> None:
-        self.aws_ec2_client = boto3.client('ec2')
-        self.aws_ec2_resource = boto3.resource('ec2')
-        self.aws_kms_client = boto3.client('kms')
+    def __init__(self, region_name) -> None:
+        self.aws_ec2_client = boto3.client('ec2', region_name=region_name)
+        self.aws_kms_client = boto3.client('kms', region_name=region_name)
         self.user_id = boto3.client('sts').get_caller_identity().get('UserId')
         self.account_arn = boto3.client('sts').get_caller_identity().get('Arn')
         self.account_id = boto3.client('sts').get_caller_identity().get('Account')
@@ -131,7 +130,7 @@ class Tester(interfaces.TesterInterface):
                 create_date = snapshot['StartTime']
                 current_date = datetime.now(tz=dt.timezone.utc)
                 time_diff = (current_date - create_date).days
-                if time_diff<os.environ.get('THRESHOLD', 7):
+                if time_diff < os.environ.get('THRESHOLD', 7):
                     recent_snapshot_found = True
                     break
             if recent_snapshot_found:
@@ -210,12 +209,12 @@ class Tester(interfaces.TesterInterface):
     def get_volume_snapshots_are_public(self):
         test_name = "aws_ebs_volume_snapshots_are_public"
         result = []
-        snapshots = self.aws_ec2_client.describe_snapshots(OwnerIds=[self.account_id], Filters=[{"Name": "status", "Values":["completed"]}])
+        snapshots = self.aws_ec2_client.describe_snapshots(OwnerIds=[self.account_id], Filters=[{"Name": "status", "Values": ["completed"]}])
 
         for snapshot in snapshots["Snapshots"]:
             snapshot_id = snapshot["SnapshotId"]
             attrs = self.aws_ec2_client.describe_snapshot_attribute(SnapshotId=snapshot_id, Attribute="createVolumePermission")
-            if any([attr["Group"]=="all" for attr in attrs["CreateVolumePermissions"]]):
+            if any([attr["Group"] == "all" for attr in attrs["CreateVolumePermissions"]]):
                 result.append({
                     "user": self.user_id,
                     "account_arn": self.account_arn,
@@ -238,4 +237,3 @@ class Tester(interfaces.TesterInterface):
                     "test_result": "no_issue_found"
                 })
         return result
-
