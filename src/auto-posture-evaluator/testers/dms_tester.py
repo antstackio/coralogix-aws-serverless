@@ -5,8 +5,8 @@ from datetime import timezone, datetime
 
 
 class Tester(interfaces.TesterInterface):
-    def __init__(self):
-        self.aws_dms_client = boto3.client('dms')
+    def __init__(self, region_name):
+        self.aws_dms_client = boto3.client('dms', region_name=region_name)
         self.cache = {}
         self.user_id = boto3.client('sts').get_caller_identity().get('UserId')
         self.account_arn = boto3.client('sts').get_caller_identity().get('Arn')
