@@ -2,6 +2,7 @@ import time
 import boto3
 import interfaces
 from datetime import timezone, datetime
+from concurrent.futures import ThreadPoolExecutor
 
 
 class Tester(interfaces.TesterInterface):
@@ -20,11 +21,20 @@ class Tester(interfaces.TesterInterface):
         return 'aws'
 
     def run_tests(self) -> list:
-        return self.detect_dms_certificate_is_not_expired() + \
-            self.detect_dms_endpoint_should_use_ssl() + \
-            self.detect_dms_replication_instance_should_not_be_publicly_accessible() + \
-            self.detect_replication_instances_have_auto_minor_version_upgrade_enabled() + \
-            self.detect_multi_az_is_enabled()
+        executor_list = []
+        return_value = []
+
+        with ThreadPoolExecutor() as executor:
+            executor_list.append(executor.submit(self.detect_dms_certificate_is_not_expired))
+            executor_list.append(executor.submit(self.detect_dms_endpoint_should_use_ssl))
+            executor_list.append(executor.submit(self.detect_dms_replication_instance_should_not_be_publicly_accessible))
+            executor_list.append(executor.submit(self.detect_replication_instances_have_auto_minor_version_upgrade_enabled))
+            executor_list.append(executor.submit(self.detect_multi_az_is_enabled))
+
+            for future in executor_list:
+                return_value.extend(future.result())
+
+        return return_value
 
     def _append_dms_test_result(self, dms_data, test_name, issue_status):
         return {
