@@ -5,6 +5,7 @@ import interfaces
 import datetime as dt
 from datetime import datetime
 import os
+from concurrent.futures import ThreadPoolExecutor
 
 
 class Tester(interfaces.TesterInterface):
@@ -24,12 +25,20 @@ class Tester(interfaces.TesterInterface):
 
     def run_tests(self) -> list:
         self.ebs_volumes = self._get_ebs_volumes()
-        return \
-            self.get_volume_is_not_encrypted(self.ebs_volumes) + \
-            self.get_volume_attached_to_ec2(self.ebs_volumes) + \
-            self.get_volume_does_not_have_recent_snapshots(self.ebs_volumes) + \
-            self.get_volume_not_encrypted_with_kms_customer_keys(self.ebs_volumes) + \
-            self.get_volume_snapshots_are_public()
+        executor_list = []
+        return_values = []
+
+        with ThreadPoolExecutor() as executor:
+            executor_list.append(executor.submit(self.get_volume_is_not_encrypted, self.ebs_volumes))
+            executor_list.append(executor.submit(self.get_volume_attached_to_ec2, self.ebs_volumes))
+            executor_list.append(executor.submit(self.get_volume_does_not_have_recent_snapshots, self.ebs_volumes))
+            executor_list.append(executor.submit(self.get_volume_not_encrypted_with_kms_customer_keys, self.ebs_volumes))
+            executor_list.append(executor.submit(self.get_volume_snapshots_are_public))
+
+            for future in executor_list:
+                return_values.extend(future.result())
+
+        return return_values
 
     def _get_ebs_volumes(self):
         volumes = []
