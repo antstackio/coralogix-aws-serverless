@@ -81,12 +81,15 @@ class Tester(interfaces.TesterInterface):
         result = []
         test_name = "aws_kms_cmk_pending_deletion"
 
-        for key in keys:
-            key_id = key['KeyId']
-            response = self.aws_kms_client.describe_key(KeyId=key_id)
-            rotation_status = response['KeyMetadata']['KeyState']
-            if rotation_status == 'PendingDeletion':
-                result.append(self._get_result_object(key_id, "kms_policy", test_name, "issue_found"))
-            else:
-                result.append(self._get_result_object(key_id, "kms_policy", test_name, "no_issue_found"))
-        return result
+        try:
+            for key in keys:
+                key_id = key['KeyId']
+                response = self.aws_kms_client.describe_key(KeyId=key_id)
+                rotation_status = response['KeyMetadata']['KeyState']
+                if rotation_status == 'PendingDeletion':
+                    result.append(self._get_result_object(key_id, "kms_policy", test_name, "issue_found"))
+                else:
+                    result.append(self._get_result_object(key_id, "kms_policy", test_name, "no_issue_found"))
+            return result
+        except botocore.exceptions.ClientError as ex:
+            raise ex
