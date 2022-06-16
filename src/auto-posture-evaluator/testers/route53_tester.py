@@ -6,6 +6,7 @@ import botocore.exceptions
 import interfaces
 import datetime as dt
 from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor
 
 
 class Tester(interfaces.TesterInterface):
@@ -26,13 +27,22 @@ class Tester(interfaces.TesterInterface):
         return 'aws'
 
     def run_tests(self) -> list:
+        executor_list = []
+        return_values = []
+
         if self.hosted_zones is not None and 'HostedZones' in self.hosted_zones:
-            return \
-                self.detect_dangling_dns_records() + \
-                self.route53_domain_expiry_in_7_days() + \
-                self.detect_domain_is_not_locked_for_transfer() + \
-                self.detect_domain_auto_renewal_disabled() + \
-                self.detect_domain_expired()
+            with ThreadPoolExecutor() as executor:
+                executor_list.append(executor.submit(self.detect_dangling_dns_records))
+                executor_list.append(executor.submit(self.route53_domain_expiry_in_7_days))
+                executor_list.append(executor.submit(self.detect_domain_is_not_locked_for_transfer))
+                executor_list.append(executor.submit(self.detect_domain_auto_renewal_disabled))
+                executor_list.append(executor.submit(self.detect_domain_expired))
+                executor_list.append(executor.submit(self.detect_dns_not_used))
+
+                for future in executor_list:
+                    return_values.extend(future.result())
+            return return_values
+
         else:
             raise Exception("No Route53 data could be retrieved.")
 
