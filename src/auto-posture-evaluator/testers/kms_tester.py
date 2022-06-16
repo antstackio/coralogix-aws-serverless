@@ -1,6 +1,8 @@
 import interfaces
 import boto3
 import time
+import botocore.exceptions
+from concurrent.futures import ThreadPoolExecutor
 
 
 class Tester(interfaces.TesterInterface):
@@ -19,9 +21,18 @@ class Tester(interfaces.TesterInterface):
 
     def run_tests(self) -> list:
         self.kms_keys = self._get_kms_keys()
-        return \
-            self.get_rotation_for_cmks_is_enabled(self.kms_keys) + \
-            self.get_kms_cmk_pending_deletion(self.kms_keys)
+
+        executor_list = []
+        return_values = []
+
+        with ThreadPoolExecutor() as executor:
+            executor_list.append(executor.submit(self.get_rotation_for_cmks_is_enabled, self.kms_keys))
+            executor_list.append(executor.submit(self.get_kms_cmk_pending_deletion, self.kms_keys))
+
+            for future in executor_list:
+                return_values.extend(future.result())
+
+        return return_values
 
     def _get_result_object(self, item, item_type, test_name, issue_status):
         return {
@@ -53,16 +64,18 @@ class Tester(interfaces.TesterInterface):
         result = []
         test_name = "aws_kms_rotation_for_cmks_is_enabled"
 
-        for key in keys:
-            key_id = key['KeyId']
-            response = self.aws_kms_client.get_key_rotation_status(KeyId=key_id)
-            rotation_status = response['KeyRotationEnabled']
-            if rotation_status:
-                result.append(self._get_result_object(key_id, "kms_policy", test_name, "no_issue_found"))
-            else:
-                result.append(self._get_result_object(key_id, "kms_policy", test_name, "issue_found"))
-
-        return result
+        try:
+            for key in keys:
+                key_id = key['KeyId']
+                response = self.aws_kms_client.get_key_rotation_status(KeyId=key_id)
+                rotation_status = response['KeyRotationEnabled']
+                if rotation_status:
+                    result.append(self._get_result_object(key_id, "kms_policy", test_name, "no_issue_found"))
+                else:
+                    result.append(self._get_result_object(key_id, "kms_policy", test_name, "issue_found"))
+            return result
+        except botocore.exceptions.ClientError as ex:
+            raise ex
 
     def get_kms_cmk_pending_deletion(self, keys):
         result = []
