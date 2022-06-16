@@ -5,6 +5,7 @@ import botocore.exceptions
 import interfaces
 import requests
 import urllib.parse
+from concurrent.futures import ThreadPoolExecutor
 
 
 class Tester(interfaces.TesterInterface):
@@ -26,31 +27,39 @@ class Tester(interfaces.TesterInterface):
         return 'aws'
 
     def run_tests(self) -> list:
-        return \
-            self.detect_write_enabled_buckets(self.s3_buckets) + \
-            self.detect_publicly_accessible_s3_buckets_by_acl(self.s3_buckets) + \
-            self.detect_non_versioned_s3_buckets(self.s3_buckets) + \
-            self.detect_not_encrypted_s3_buckets(self.s3_buckets) + \
-            self.detect_full_control_allowed_s3_buckets(self.s3_buckets) + \
-            self.detect_buckets_without_mfa_delete_s3_buckets(self.s3_buckets) + \
-            self.detect_buckets_without_block_public_access_set(self.s3_buckets) + \
-            self.detect_publicly_accessible_s3_buckets_by_policy(self.s3_buckets) + \
-            self.detect_bucket_content_listable_by_users(self.s3_buckets) + \
-            self.detect_bucket_content_permissions_viewable_by_users(self.s3_buckets) + \
-            self.detect_bucket_content_permissions_modifiable_by_users(self.s3_buckets) + \
-            self.detect_bucket_content_writable_by_anonymous(self.s3_buckets) + \
-            self.detect_buckets_without_logging_set(self.s3_buckets) + \
-            self.detect_buckets_accessible_by_http_url(self.s3_buckets) + \
-            self.detect_buckets_accessible_by_https_url(self.s3_buckets) + \
-            self.detect_bucket_logging_disabled(self.s3_buckets) + \
-            self.detect_bucket_not_encrypted_with_cmk(self.s3_buckets) + \
-            self.detect_block_public_access_setting_disabled() + \
-            self.detect_bucket_not_configured_with_block_public_access(self.s3_buckets) + \
-            self.detect_buckets_with_global_upload_and_delete_permission(self.s3_buckets) + \
-            self.detect_bucket_has_global_list_acl_permission_through_acl(self.s3_buckets) + \
-            self.detect_bucket_has_global_put_permissions_enabled_via_bucket_policy(self.s3_buckets) + \
-            self.detect_bucket_has_global_list_permissions_enabled_via_bucket_policy(self.s3_buckets) + \
-            self.detect_bucket_has_global_get_permissions_enabled_via_bucket_policy(self.s3_buckets)
+        executor_list = []
+        return_values = []
+
+        with ThreadPoolExecutor() as executor:
+            executor_list.append(executor.submit(self.detect_write_enabled_buckets, self.s3_buckets))
+            executor_list.append(executor.submit(self.detect_publicly_accessible_s3_buckets_by_acl, self.s3_buckets))
+            executor_list.append(executor.submit(self.detect_non_versioned_s3_buckets, self.s3_buckets))
+            executor_list.append(executor.submit(self.detect_not_encrypted_s3_buckets, self.s3_buckets))
+            executor_list.append(executor.submit(self.detect_full_control_allowed_s3_buckets, self.s3_buckets))
+            executor_list.append(executor.submit(self.detect_buckets_without_mfa_delete_s3_buckets, self.s3_buckets))
+            executor_list.append(executor.submit(self.detect_buckets_without_block_public_access_set, self.s3_buckets))
+            executor_list.append(executor.submit(self.detect_publicly_accessible_s3_buckets_by_policy, self.s3_buckets))
+            executor_list.append(executor.submit(self.detect_bucket_content_listable_by_users, self.s3_buckets))
+            executor_list.append(executor.submit(self.detect_bucket_content_permissions_viewable_by_users, self.s3_buckets))
+            executor_list.append(executor.submit(self.detect_bucket_content_permissions_modifiable_by_users, self.s3_buckets))
+            executor_list.append(executor.submit(self.detect_bucket_content_writable_by_anonymous, self.s3_buckets))
+            executor_list.append(executor.submit(self.detect_buckets_without_logging_set, self.s3_buckets))
+            executor_list.append(executor.submit(self.detect_buckets_accessible_by_http_url, self.s3_buckets))
+            executor_list.append(executor.submit(self.detect_buckets_accessible_by_https_url, self.s3_buckets))
+            executor_list.append(executor.submit(self.detect_bucket_logging_disabled, self.s3_buckets))
+            executor_list.append(executor.submit(self.detect_bucket_not_encrypted_with_cmk, self.s3_buckets))
+            executor_list.append(executor.submit(self.detect_block_public_access_setting_disabled))
+            executor_list.append(executor.submit(self.detect_bucket_not_configured_with_block_public_access, self.s3_buckets))
+            executor_list.append(executor.submit(self.detect_buckets_with_global_upload_and_delete_permission, self.s3_buckets))
+            executor_list.append(executor.submit(self.detect_bucket_has_global_list_acl_permission_through_acl, self.s3_buckets))
+            executor_list.append(executor.submit(self.detect_bucket_has_global_put_permissions_enabled_via_bucket_policy, self.s3_buckets))
+            executor_list.append(executor.submit(self.detect_bucket_has_global_list_permissions_enabled_via_bucket_policy, self.s3_buckets))
+            executor_list.append(executor.submit(self.detect_bucket_has_global_get_permissions_enabled_via_bucket_policy, self.s3_buckets))
+
+            for future in executor_list:
+                return_values.extend(future.result())
+
+        return return_values
 
     def detect_write_enabled_buckets(self, buckets_list):
         return self._detect_buckets_with_permissions_matching(buckets_list, "WRITE", "aws_s3_write_enabled_s3_buckets")
