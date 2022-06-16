@@ -4,8 +4,8 @@ import time
 
 
 class Tester(interfaces.TesterInterface):
-    def __init__(self) -> None:
-        self.aws_kms_client = boto3.client('kms')
+    def __init__(self, region_name) -> None:
+        self.aws_kms_client = boto3.client('kms', region_name=region_name)
         self.user_id = boto3.client('sts').get_caller_identity().get('UserId')
         self.account_arn = boto3.client('sts').get_caller_identity().get('Arn')
         self.account_id = boto3.client('sts').get_caller_identity().get('Account')
