@@ -66,7 +66,7 @@ class Tester(interfaces.TesterInterface):
             for record in zone_records:
                 record_name = record["Name"]
                 dangling_ip_addresses = []
-                registered_addresses = [record["ResourceRecords"] for record in zone_records if record["Name"] == record_name][0]
+                registered_addresses = [record.get("ResourceRecords", []) for record in zone_records if record["Name"] == record_name][0]
                 registered_ip_addresses = [resource_record["Value"] for resource_record in registered_addresses if re.match('\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}', str(resource_record["Value"]))]
 
                 for registered_ip_address in registered_ip_addresses:
