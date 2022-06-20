@@ -58,7 +58,15 @@ class Tester(interfaces.TesterInterface):
         else:
             response = self.aws_kms_client.list_keys()
             keys.extend(response['Keys'])
-        return keys
+
+        for key in keys:
+            key_id = key['KeyId']
+            response = self.aws_kms_client.describe_key(KeyId=key_id)
+            key_manager = response['KeyMetadata']['KeyManager']
+            key['key_manager'] = key_manager
+
+        final_keys = list(filter(lambda x: x['key_manager'] == 'CUSTOMER', keys))
+        return final_keys
 
     def get_rotation_for_cmks_is_enabled(self, keys):
         result = []
