@@ -264,6 +264,7 @@ class Tester(interfaces.TesterInterface):
                 bucket_policy_status = self.aws_s3_client.get_bucket_policy_status(Bucket=bucket_name)
                 if bucket_policy_status["PolicyStatus"]["IsPublic"]:
                     bucket_policy = self._get_bucket_policy(bucket_name)["Policy"]
+                    bucket_policy = json.loads(bucket_policy)
                     result.append({
                         "user": self.user_id,
                         "account_arn": self.account_arn,
