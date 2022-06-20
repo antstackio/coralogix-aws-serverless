@@ -440,6 +440,7 @@ class Tester(interfaces.TesterInterface):
                 policy_statements = json.loads(bucket_policy['Policy'])['Statement']
                 for statement in policy_statements:
                     if statement["Principal"] == '*' and "s3:PutObject" in statement["Action"] and str(statement["Resource"]).endswith('*'):
+                        bucket_policy = json.loads(bucket_policy['Policy'])
                         result.append({
                             "user": self.user_id,
                             "account_arn": self.account_arn,
