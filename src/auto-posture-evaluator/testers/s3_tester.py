@@ -307,6 +307,7 @@ class Tester(interfaces.TesterInterface):
                 policy_statements = json.loads(bucket_policy['Policy'])['Statement']
                 for statement in policy_statements:
                     if str(statement["Resource"]).endswith('*'):
+                        policy_for_response = json.loads(bucket_policy['Policy'])
                         result.append({
                             "user": self.user_id,
                             "account_arn": self.account_arn,
@@ -315,7 +316,7 @@ class Tester(interfaces.TesterInterface):
                             "item": bucket_name,
                             "item_type": "s3_bucket",
                             "test_name": test_name,
-                            "policy": bucket_policy,
+                            "policy": policy_for_response,
                             "test_result": "issue_found"
                         })
                         issue_detected = True
