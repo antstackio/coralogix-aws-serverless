@@ -9,16 +9,16 @@ from concurrent.futures import ThreadPoolExecutor
 
 
 class Tester(interfaces.TesterInterface):
-    def __init__(self):
+    def __init__(self, region_name):
         self.aws_s3_client = boto3.client('s3')
         self.aws_s3_resource = boto3.resource('s3')
         self.aws_s3_control_client = boto3.client('s3control')
-        self.aws_kms_client = boto3.client('kms')
+        self.aws_kms_client = boto3.client('kms', region_name=region_name)
         self.cache = {}
         self.user_id = boto3.client('sts').get_caller_identity().get('UserId')
         self.account_arn = boto3.client('sts').get_caller_identity().get('Arn')
         self.account_id = boto3.client('sts').get_caller_identity().get('Account')
-        self.s3_buckets = boto3.client('s3').list_buckets()
+        self.s3_buckets = self._get_s3_buckets_by_region(region_name=region_name)
 
     def declare_tested_service(self) -> str:
         return 's3'
@@ -55,11 +55,27 @@ class Tester(interfaces.TesterInterface):
             executor_list.append(executor.submit(self.detect_bucket_has_global_put_permissions_enabled_via_bucket_policy, self.s3_buckets))
             executor_list.append(executor.submit(self.detect_bucket_has_global_list_permissions_enabled_via_bucket_policy, self.s3_buckets))
             executor_list.append(executor.submit(self.detect_bucket_has_global_get_permissions_enabled_via_bucket_policy, self.s3_buckets))
+            executor_list.append(executor.submit(self.detect_bucket_has_global_delete_permissions_enabled_via_bucket_policy, self.s3_buckets))
 
             for future in executor_list:
                 return_values.extend(future.result())
 
         return return_values
+
+    def _get_s3_buckets_by_region(self, region_name):
+        filtered_buckets = []
+        response = self.aws_s3_client.list_buckets()
+        buckets = response['Buckets']
+
+        for bucket in buckets:
+            bucket_name = bucket['Name']
+            response = self.aws_s3_client.get_bucket_location(Bucket=bucket_name)
+            location_constraint = response['LocationConstraint'] if response['LocationConstraint'] else 'us-east-1'
+            if location_constraint == region_name:
+                filtered_buckets.append(bucket)
+
+        return_value = {"Buckets": filtered_buckets}
+        return return_value
 
     def detect_write_enabled_buckets(self, buckets_list):
         return self._detect_buckets_with_permissions_matching(buckets_list, "WRITE", "aws_s3_write_enabled_s3_buckets")
