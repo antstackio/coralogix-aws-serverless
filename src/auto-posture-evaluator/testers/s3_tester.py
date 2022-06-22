@@ -736,6 +736,7 @@ class Tester(interfaces.TesterInterface):
         result = []
         for bucket in buckets_list["Buckets"]:
             bucket_name = bucket["Name"]
+            bucket_region = bucket["location_constraint"]
             issue_detected = False
             try:
                 public_access = self.aws_s3_client.get_public_access_block(Bucket=bucket_name)
@@ -756,7 +757,8 @@ class Tester(interfaces.TesterInterface):
                     "item": bucket_name,
                     "item_type": "s3_bucket",
                     "test_name": test_name,
-                    "test_result": "issue_found"
+                    "test_result": "issue_found",
+                    "region": bucket_region
                 })
             else:
                 result.append({
@@ -767,7 +769,8 @@ class Tester(interfaces.TesterInterface):
                     "item": bucket_name,
                     "item_type": "s3_bucket",
                     "test_name": test_name,
-                    "test_result": "no_issue_found"
+                    "test_result": "no_issue_found",
+                    "region": bucket_region
                 })
         return result
 
@@ -776,6 +779,7 @@ class Tester(interfaces.TesterInterface):
         result = []
         for bucket_meta in buckets_list["Buckets"]:
             bucket_name = bucket_meta["Name"]
+            bucket_region = bucket_meta["location_constraint"]
             bucket_acl = self.aws_s3_client.get_bucket_acl(Bucket=bucket_name)
             issue_found = False
             for grant in bucket_acl["Grants"]:
@@ -788,7 +792,8 @@ class Tester(interfaces.TesterInterface):
                         "item": bucket_name,
                         "item_type": "s3_bucket",
                         "test_name": test_name,
-                        "test_result": "issue_found"
+                        "test_result": "issue_found",
+                        "region": bucket_region
                     })
                     issue_found = True
                     break
@@ -801,7 +806,8 @@ class Tester(interfaces.TesterInterface):
                     "item": bucket_name,
                     "item_type": "s3_bucket",
                     "test_name": test_name,
-                    "test_result": "no_issue_found"
+                    "test_result": "no_issue_found",
+                    "region": bucket_region
                 })
         return result
 
@@ -810,6 +816,7 @@ class Tester(interfaces.TesterInterface):
         result = []
         for bucket_meta in buckets_list["Buckets"]:
             bucket_name = bucket_meta["Name"]
+            bucket_region = bucket_meta["location_constraint"]
             bucket_acl = self.aws_s3_client.get_bucket_acl(Bucket=bucket_name)
             issue_found = False
             for grant in bucket_acl["Grants"]:
@@ -822,7 +829,8 @@ class Tester(interfaces.TesterInterface):
                         "item": bucket_name,
                         "item_type": "s3_bucket",
                         "test_name": test_name,
-                        "test_result": "issue_found"
+                        "test_result": "issue_found",
+                        "region": bucket_region
                     })
                     issue_found = True
                     break
@@ -835,7 +843,8 @@ class Tester(interfaces.TesterInterface):
                     "item": bucket_name,
                     "item_type": "s3_bucket",
                     "test_name": test_name,
-                    "test_result": "no_issue_found"
+                    "test_result": "no_issue_found",
+                    "region": bucket_region
                 })
         return result
 
@@ -846,6 +855,7 @@ class Tester(interfaces.TesterInterface):
 
         for bucket_meta in buckets:
             bucket_name = bucket_meta["Name"]
+            bucket_region = bucket_meta["location_constraint"]
             try:
                 response = self._get_bucket_policy(bucket_name=bucket_name)
                 policies = response['Policy']
@@ -875,7 +885,8 @@ class Tester(interfaces.TesterInterface):
                                 "item_type": "s3_bucket",
                                 "test_name": test_name,
                                 "policy": policy_obj,
-                                "test_result": "issue_found"
+                                "test_result": "issue_found",
+                                "region": bucket_region
                             })
                         else:
                             result.append({
@@ -886,7 +897,8 @@ class Tester(interfaces.TesterInterface):
                                 "item": bucket_name,
                                 "item_type": "s3_bucket",
                                 "test_name": test_name,
-                                "test_result": "no_issue_found"
+                                "test_result": "no_issue_found",
+                                "region": bucket_region
                             })
                     else:
                         result.append({
@@ -908,7 +920,8 @@ class Tester(interfaces.TesterInterface):
                         "item": bucket_name,
                         "item_type": "s3_bucket",
                         "test_name": test_name,
-                        "test_result": "no_issue_found"
+                        "test_result": "no_issue_found",
+                        "region": bucket_region
                     })
 
             except botocore.exceptions.ClientError as ex:
@@ -926,7 +939,7 @@ class Tester(interfaces.TesterInterface):
         buckets = buckets_list["Buckets"]
         for bucket_meta in buckets:
             bucket_name = bucket_meta["Name"]
-
+            bucket_region = bucket_meta["location_constraint"]
             try:
                 response = self._get_bucket_policy(bucket_name=bucket_name)
                 policies = response['Policy']
@@ -954,7 +967,8 @@ class Tester(interfaces.TesterInterface):
                                 "item_type": "s3_bucket",
                                 "test_name": test_name,
                                 "policy": policy_obj,
-                                "test_result": "issue_found"
+                                "test_result": "issue_found",
+                                "region": bucket_region
                             })
                         else:
                             result.append({
@@ -965,7 +979,8 @@ class Tester(interfaces.TesterInterface):
                                 "item": bucket_name,
                                 "item_type": "s3_bucket",
                                 "test_name": test_name,
-                                "test_result": "no_issue_found"
+                                "test_result": "no_issue_found",
+                                "region": bucket_region
                             })
                     else:
                         result.append({
@@ -976,7 +991,8 @@ class Tester(interfaces.TesterInterface):
                             "item": bucket_name,
                             "item_type": "s3_bucket",
                             "test_name": test_name,
-                            "test_result": "no_issue_found"
+                            "test_result": "no_issue_found",
+                            "region": bucket_region
                         })
                 else:
                     result.append({
@@ -987,7 +1003,8 @@ class Tester(interfaces.TesterInterface):
                         "item": bucket_name,
                         "item_type": "s3_bucket",
                         "test_name": test_name,
-                        "test_result": "no_issue_found"
+                        "test_result": "no_issue_found",
+                        "region": bucket_region
                     })
             except botocore.exceptions.ClientError as ex:
                 if ex.response['Error']['Code'] == 'NoSuchBucketPolicy':
@@ -1005,7 +1022,7 @@ class Tester(interfaces.TesterInterface):
 
         for bucket_meta in buckets:
             bucket_name = bucket_meta["Name"]
-
+            bucket_region = bucket_meta["location_constraint"]
             try:
                 response = self._get_bucket_policy(bucket_name=bucket_name)
                 policies = response['Policy']
@@ -1033,7 +1050,8 @@ class Tester(interfaces.TesterInterface):
                                 "item_type": "s3_bucket",
                                 "test_name": test_name,
                                 "policy": policy_obj,
-                                "test_result": "issue_found"
+                                "test_result": "issue_found",
+                                "region": bucket_region
                             })
                         else:
                             result.append({
@@ -1044,7 +1062,8 @@ class Tester(interfaces.TesterInterface):
                                 "item": bucket_name,
                                 "item_type": "s3_bucket",
                                 "test_name": test_name,
-                                "test_result": "no_issue_found"
+                                "test_result": "no_issue_found",
+                                "region": bucket_region
                             })
                     else:
                         result.append({
@@ -1055,7 +1074,8 @@ class Tester(interfaces.TesterInterface):
                             "item": bucket_name,
                             "item_type": "s3_bucket",
                             "test_name": test_name,
-                            "test_result": "no_issue_found"
+                            "test_result": "no_issue_found",
+                            "region": bucket_region
                         })
                 else:
                     result.append({
@@ -1066,7 +1086,8 @@ class Tester(interfaces.TesterInterface):
                         "item": bucket_name,
                         "item_type": "s3_bucket",
                         "test_name": test_name,
-                        "test_result": "no_issue_found"
+                        "test_result": "no_issue_found",
+                        "region": bucket_region
                     })
             except botocore.exceptions.ClientError as ex:
                 if ex.response['Error']['Code'] == 'NoSuchBucketPolicy':
@@ -1183,7 +1204,7 @@ class Tester(interfaces.TesterInterface):
         buckets = buckets_list["Buckets"]
         for bucket_meta in buckets:
             bucket_name = bucket_meta['Name']
-
+            bucket_region = bucket_meta["location_constraint"]
             try:
                 response = self._get_bucket_policy(bucket_name=bucket_name)
                 policies = response['Policy']
@@ -1211,7 +1232,8 @@ class Tester(interfaces.TesterInterface):
                                 "item_type": "s3_bucket",
                                 "test_name": test_name,
                                 "policy": policy_obj,
-                                "test_result": "issue_found"
+                                "test_result": "issue_found",
+                                "region": bucket_region
                             })
                         else:
                             result.append({
@@ -1222,7 +1244,8 @@ class Tester(interfaces.TesterInterface):
                                 "item": bucket_name,
                                 "item_type": "s3_bucket",
                                 "test_name": test_name,
-                                "test_result": "no_issue_found"
+                                "test_result": "no_issue_found",
+                                "region": bucket_region
                             })
                     else:
                         result.append({
@@ -1233,7 +1256,8 @@ class Tester(interfaces.TesterInterface):
                             "item": bucket_name,
                             "item_type": "s3_bucket",
                             "test_name": test_name,
-                            "test_result": "no_issue_found"
+                            "test_result": "no_issue_found",
+                            "region": bucket_region
                         })
                 else:
                     result.append({
@@ -1244,7 +1268,8 @@ class Tester(interfaces.TesterInterface):
                         "item": bucket_name,
                         "item_type": "s3_bucket",
                         "test_name": test_name,
-                        "test_result": "no_issue_found"
+                        "test_result": "no_issue_found",
+                        "region": bucket_region
                     })
             except botocore.exceptions.ClientError as c:
                 if c.response['Error']['Code'] == 'NoSuchBucketPolicy':
