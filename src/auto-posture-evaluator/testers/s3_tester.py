@@ -19,7 +19,7 @@ class Tester(interfaces.TesterInterface):
         self.user_id = boto3.client('sts').get_caller_identity().get('UserId')
         self.account_arn = boto3.client('sts').get_caller_identity().get('Arn')
         self.account_id = boto3.client('sts').get_caller_identity().get('Account')
-        self.s3_buckets = self._get_s3_buckets_by_region()
+        self.s3_buckets = self._get_s3_buckets_and_region()
 
     def declare_tested_service(self) -> str:
         return 's3'
@@ -67,7 +67,7 @@ class Tester(interfaces.TesterInterface):
         else:
             return None
 
-    def _get_s3_buckets_by_region(self):
+    def _get_s3_buckets_and_region(self):
         response = self.aws_s3_client.list_buckets()
         buckets = response['Buckets']
 
