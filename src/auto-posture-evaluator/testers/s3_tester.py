@@ -1088,6 +1088,7 @@ class Tester(interfaces.TesterInterface):
         write_enabled_buckets = []
         for bucket_meta in buckets_list["Buckets"]:
             bucket_name = bucket_meta["Name"]
+            bucket_region = bucket_meta['location_constraint']
             cur_bucket_permissions = self._get_bucket_acl(bucket_name)
             issue_detected = False
             for grantee in cur_bucket_permissions.grants:
@@ -1103,7 +1104,8 @@ class Tester(interfaces.TesterInterface):
                             "item_type": "s3_bucket",
                             "test_name": test_name,
                             "permissions": cur_bucket_permissions.grants,
-                            "test_result": "issue_found"
+                            "test_result": "issue_found",
+                            "region": bucket_region
                         })
                         issue_detected = True
             if not issue_detected:
@@ -1115,7 +1117,8 @@ class Tester(interfaces.TesterInterface):
                     "item": bucket_name,
                     "item_type": "s3_bucket",
                     "test_name": test_name,
-                    "test_result": "no_issue_found"
+                    "test_result": "no_issue_found",
+                    "region": bucket_region
                 })
         return result
 
