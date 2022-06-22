@@ -300,6 +300,7 @@ class Tester(interfaces.TesterInterface):
         for bucket_meta in buckets_list["Buckets"]:
             issue_detected = False
             bucket_name = bucket_meta["Name"]
+            bucket_region = bucket_meta['location_constraint']
             try:
                 bucket_policy_status = self.aws_s3_client.get_bucket_policy_status(Bucket=bucket_name)
                 if bucket_policy_status["PolicyStatus"]["IsPublic"]:
@@ -314,7 +315,8 @@ class Tester(interfaces.TesterInterface):
                         "item_type": "s3_bucket",
                         "test_name": test_name,
                         "policy": bucket_policy,
-                        "test_result": "issue_found"
+                        "test_result": "issue_found",
+                        "region": bucket_region
                     })
                     issue_detected = True
             except botocore.exceptions.ClientError as ex:
@@ -333,7 +335,9 @@ class Tester(interfaces.TesterInterface):
                     "item": bucket_name,
                     "item_type": "s3_bucket",
                     "test_name": test_name,
-                    "test_result": "no_issue_found"})
+                    "test_result": "no_issue_found",
+                    "region": bucket_region
+                })
 
         return result
 
@@ -343,6 +347,7 @@ class Tester(interfaces.TesterInterface):
         for bucket_meta in buckets_list["Buckets"]:
             issue_detected = False
             bucket_name = bucket_meta["Name"]
+            bucket_region = bucket_meta['location_constraint']
             try:
                 bucket_policy = self._get_bucket_policy(bucket_name)
                 policy_statements = json.loads(bucket_policy['Policy'])['Statement']
@@ -358,7 +363,8 @@ class Tester(interfaces.TesterInterface):
                             "item_type": "s3_bucket",
                             "test_name": test_name,
                             "policy": policy_for_response,
-                            "test_result": "issue_found"
+                            "test_result": "issue_found",
+                            "region": bucket_region
                         })
                         issue_detected = True
             except botocore.exceptions.ClientError as ex:
@@ -377,7 +383,9 @@ class Tester(interfaces.TesterInterface):
                     "item": bucket_name,
                     "item_type": "s3_bucket",
                     "test_name": test_name,
-                    "test_result": "no_issue_found"})
+                    "test_result": "no_issue_found",
+                    "region": bucket_region
+                })
 
         return result
 
@@ -387,6 +395,7 @@ class Tester(interfaces.TesterInterface):
         for bucket_meta in buckets_list["Buckets"]:
             issue_detected = False
             bucket_name = bucket_meta["Name"]
+            bucket_region = bucket_meta['location_constraint']
             try:
                 bucket_policy = self._get_bucket_policy(bucket_name)
                 policy_statements = json.loads(bucket_policy['Policy'])['Statement']
@@ -402,7 +411,8 @@ class Tester(interfaces.TesterInterface):
                             "item_type": "s3_bucket",
                             "test_name": test_name,
                             "policy": bucket_policy,
-                            "test_result": "issue_found"
+                            "test_result": "issue_found",
+                            "region": bucket_region
                         })
                         issue_detected = True
             except botocore.exceptions.ClientError as ex:
@@ -421,7 +431,9 @@ class Tester(interfaces.TesterInterface):
                     "item": bucket_name,
                     "item_type": "s3_bucket",
                     "test_name": test_name,
-                    "test_result": "no_issue_found"})
+                    "test_result": "no_issue_found",
+                    "region": bucket_region
+                })
 
         return result
 
@@ -431,6 +443,7 @@ class Tester(interfaces.TesterInterface):
         for bucket_meta in buckets_list["Buckets"]:
             issue_detected = False
             bucket_name = bucket_meta["Name"]
+            bucket_region = bucket_meta['location_constraint']
             try:
                 bucket_policy = self._get_bucket_policy(bucket_name)
                 policy_statements = json.loads(bucket_policy['Policy'])['Statement']
@@ -446,7 +459,8 @@ class Tester(interfaces.TesterInterface):
                             "item_type": "s3_bucket",
                             "test_name": test_name,
                             "policy": bucket_policy,
-                            "test_result": "issue_found"
+                            "test_result": "issue_found",
+                            "region": bucket_region
                         })
                         issue_detected = True
             except botocore.exceptions.ClientError as ex:
@@ -465,7 +479,9 @@ class Tester(interfaces.TesterInterface):
                     "item": bucket_name,
                     "item_type": "s3_bucket",
                     "test_name": test_name,
-                    "test_result": "no_issue_found"})
+                    "test_result": "no_issue_found",
+                    "region": bucket_region
+                })
 
         return result
 
@@ -475,6 +491,7 @@ class Tester(interfaces.TesterInterface):
         for bucket_meta in buckets_list["Buckets"]:
             issue_detected = False
             bucket_name = bucket_meta["Name"]
+            bucket_region = bucket_meta['location_constraint']
             try:
                 bucket_policy = self._get_bucket_policy(bucket_name)
                 policy_statements = json.loads(bucket_policy['Policy'])['Statement']
@@ -490,7 +507,8 @@ class Tester(interfaces.TesterInterface):
                             "item_type": "s3_bucket",
                             "test_name": test_name,
                             "policy": bucket_policy,
-                            "test_result": "issue_found"
+                            "test_result": "issue_found",
+                            "region": bucket_region
                         })
                         issue_detected = True
             except botocore.exceptions.ClientError as ex:
@@ -509,7 +527,9 @@ class Tester(interfaces.TesterInterface):
                     "item": bucket_name,
                     "item_type": "s3_bucket",
                     "test_name": test_name,
-                    "test_result": "no_issue_found"})
+                    "test_result": "no_issue_found",
+                    "region": bucket_region
+                })
 
         return result
 
@@ -519,6 +539,7 @@ class Tester(interfaces.TesterInterface):
         for bucket_meta in buckets_list["Buckets"]:
             issue_detected = False
             bucket_name = bucket_meta["Name"]
+            bucket_region = bucket_meta['location_constraint']
             try:
                 raw_logging_policy = self.aws_s3_resource.BucketLogging(bucket_name)
                 if not raw_logging_policy.logging_enabled:
@@ -530,7 +551,8 @@ class Tester(interfaces.TesterInterface):
                         "item": bucket_name,
                         "item_type": "s3_bucket",
                         "test_name": test_name,
-                        "test_result": "issue_found"
+                        "test_result": "issue_found",
+                        "region": bucket_region
                     })
                     issue_detected = True
             except botocore.exceptions.ClientError as ex:
@@ -545,7 +567,9 @@ class Tester(interfaces.TesterInterface):
                     "item": bucket_name,
                     "item_type": "s3_bucket",
                     "test_name": test_name,
-                    "test_result": "no_issue_found"})
+                    "test_result": "no_issue_found",
+                    "region": bucket_region
+                })
 
         return result
 
@@ -568,6 +592,7 @@ class Tester(interfaces.TesterInterface):
         result = []
         for bucket in buckets_list["Buckets"]:
             bucket_name = bucket["Name"]
+            bucket_region = bucket["location_constraint"]
             logging = self.aws_s3_client.get_bucket_logging(Bucket=bucket_name)
             if not logging.get("LoggingEnabled"):
                 result.append({
@@ -578,7 +603,8 @@ class Tester(interfaces.TesterInterface):
                     "item": bucket_name,
                     "item_type": "s3_bucket",
                     "test_name": test_name,
-                    "test_result": "issue_found"
+                    "test_result": "issue_found",
+                    "region": bucket_region
                 })
             else:
                 result.append({
@@ -589,7 +615,8 @@ class Tester(interfaces.TesterInterface):
                     "item": bucket_name,
                     "item_type": "s3_bucket",
                     "test_name": test_name,
-                    "test_result": "no_issue_found"
+                    "test_result": "no_issue_found",
+                    "region": bucket_region
                 })
         return result
 
@@ -600,6 +627,7 @@ class Tester(interfaces.TesterInterface):
         for bucket in buckets:
             issue_detected = False
             bucket_name = bucket["Name"]
+            bucket_region = bucket["location_constraint"]
             try:
                 encryption = self.aws_s3_client.get_bucket_encryption(Bucket=bucket_name)
                 encryption_rules = encryption['ServerSideEncryptionConfiguration']['Rules']
@@ -646,7 +674,8 @@ class Tester(interfaces.TesterInterface):
                     "item": bucket_name,
                     "item_type": "s3_bucket",
                     "test_name": test_name,
-                    "test_result": "no_issue_found"
+                    "test_result": "no_issue_found",
+                    "region": bucket_region
                 })
             else:
                 result.append({
@@ -657,7 +686,8 @@ class Tester(interfaces.TesterInterface):
                     "item": bucket_name,
                     "item_type": "s3_bucket",
                     "test_name": test_name,
-                    "test_result": "issue_found"
+                    "test_result": "issue_found",
+                    "region": bucket_region
                 })
 
         return result
@@ -1051,6 +1081,7 @@ class Tester(interfaces.TesterInterface):
         result = []
         for bucket_meta in buckets_list["Buckets"]:
             bucket_name = bucket_meta["Name"]
+            bucket_region = bucket_meta["location_constraint"]
             issue_detected = False
             try:
                 url = protocol + "://" + urllib.parse.quote_plus(bucket_name) + ".s3.amazonaws.com"
@@ -1065,7 +1096,8 @@ class Tester(interfaces.TesterInterface):
                         "item_type": "s3_bucket",
                         "test_name": test_name,
                         "bucket_url": url,
-                        "test_result": "issue_found"
+                        "test_result": "issue_found",
+                        "region": bucket_region
                     })
                     issue_detected = True
             except Exception:
@@ -1079,7 +1111,9 @@ class Tester(interfaces.TesterInterface):
                     "item": bucket_name,
                     "item_type": "s3_bucket",
                     "test_name": test_name,
-                    "test_result": "no_issue_found"})
+                    "test_result": "no_issue_found",
+                    "region": bucket_region
+                })
         return result
 
     def _get_bucket_policy(self, bucket_name):
