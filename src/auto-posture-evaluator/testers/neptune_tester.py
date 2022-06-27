@@ -50,7 +50,14 @@ class Tester(interfaces.TesterInterface):
         db_clusters = []
 
         paginator = self.aws_neptune_client.get_paginator('describe_db_clusters')
-        response_iterator = paginator.paginate()
+        response_iterator = paginator.paginate(
+            Filters=[
+                {
+                    'Name': 'engine',
+                    'Values': ['neptune']
+                }
+            ]
+        )
 
         for page in response_iterator:
             db_clusters.extend(page["DBClusters"])
