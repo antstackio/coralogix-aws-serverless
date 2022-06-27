@@ -76,7 +76,8 @@ class Tester(interfaces.TesterInterface):
             "item": item,
             "item_type": item_type,
             "test_name": test_name,
-            "test_result": issue_status
+            "test_result": issue_status,
+            "region": self.aws_region
         }
 
     def emr_cluster_should_have_a_security_configuration(self):
