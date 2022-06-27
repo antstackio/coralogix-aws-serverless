@@ -65,7 +65,8 @@ class Tester(interfaces.TesterInterface):
             "item": item,
             "item_type": item_type,
             "test_name": test_name,
-            "test_result": issue_status
+            "test_result": issue_status,
+            "region_name": self.aws_region
         }
 
     def codebuild_project_build_artifacts_should_be_encrypted(self):
