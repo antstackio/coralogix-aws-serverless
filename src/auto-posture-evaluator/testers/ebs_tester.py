@@ -174,7 +174,7 @@ class Tester(interfaces.TesterInterface):
             snapshot_id = snapshot["SnapshotId"]
             attrs = self.aws_ec2_client.describe_snapshot_attribute(SnapshotId=snapshot_id,
                                                                     Attribute="createVolumePermission")
-            if any([attr["Group"] == "all" for attr in attrs["CreateVolumePermissions"]]):
+            if any([attr.get("Group", "") == "all" for attr in attrs["CreateVolumePermissions"]]):
                 result.append(self._append_ebs_test_result(snapshot_id, "ebs_snapshot", test_name, "issue_found"))
             else:
                 result.append(self._append_ebs_test_result(snapshot_id, "ebs_snapshot", test_name, "no_issue_found"))
