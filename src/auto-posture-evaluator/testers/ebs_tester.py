@@ -45,6 +45,19 @@ class Tester(interfaces.TesterInterface):
         else:
             return None
 
+    def _append_ebs_test_result(self, item, item_type, test_name, issue_status):
+        return {
+            "user": self.user_id,
+            "account_arn": self.account_arn,
+            "account": self.account_id,
+            "timestamp": time.time(),
+            "item": item,
+            "item_type": item_type,
+            "test_name": test_name,
+            "test_result": issue_status,
+            "region": self.aws_region
+        }
+
     def _get_all_aws_regions(self):
         all_regions = []
         ec2_client = boto3.client('ec2', region_name='us-east-1')
@@ -76,27 +89,9 @@ class Tester(interfaces.TesterInterface):
         for volume in volumes:
             volume_id = volume['VolumeId']
             if not volume['Encrypted']:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": volume_id,
-                    "item_type": "ebs_volume",
-                    "test_name": test_name,
-                    "test_result": "issue_found"
-                })
+                result.append(self._append_ebs_test_result(volume_id, "ebs_volume", test_name, "issue_found"))
             else:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": volume_id,
-                    "item_type": "ebs_volume",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                })
+                result.append(self._append_ebs_test_result(volume_id, "ebs_volume", test_name, "no_issue_found"))
 
         return result
 
@@ -108,27 +103,9 @@ class Tester(interfaces.TesterInterface):
             volume_id = volume['VolumeId']
             attachments = volume['Attachments']
             if len(attachments) > 0:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": volume_id,
-                    "item_type": "ebs_volume",
-                    "test_name": test_name,
-                    "test_result": "issue_found"
-                })
+                result.append(self._append_ebs_test_result(volume_id, "ebs_volume", test_name, "issue_found"))
             else:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": volume_id,
-                    "item_type": "ebs_volume",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                })
+                result.append(self._append_ebs_test_result(volume_id, "ebs_volume", test_name, "no_issue_found"))
 
         return result
 
@@ -160,27 +137,9 @@ class Tester(interfaces.TesterInterface):
                     recent_snapshot_found = True
                     break
             if recent_snapshot_found:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": volume_id,
-                    "item_type": "ebs_volume",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                })
+                result.append(self._append_ebs_test_result(volume_id, "ebs_volume", test_name, "no_issue_found"))
             else:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": volume_id,
-                    "item_type": "ebs_volume",
-                    "test_name": test_name,
-                    "test_result": "issue_found"
-                })
+                result.append(self._append_ebs_test_result(volume_id, "ebs_volume", test_name, "issue_found"))
         return result
 
     def get_volume_not_encrypted_with_kms_customer_keys(self, volumes):
@@ -190,16 +149,7 @@ class Tester(interfaces.TesterInterface):
         for volume in volumes:
             volume_id = volume['VolumeId']
             if not volume['Encrypted'] or not volume['KmsKeyId']:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": volume_id,
-                    "item_type": "ebs_volume",
-                    "test_name": test_name,
-                    "test_result": "issue_found"
-                })
+                result.append(self._append_ebs_test_result(volume_id, "ebs_volume", test_name, "issue_found"))
             else:
                 key_id = volume['KmsKeyId']
                 kms_response = self.aws_kms_client.list_aliases(KeyId=key_id)
@@ -209,27 +159,9 @@ class Tester(interfaces.TesterInterface):
                         issue_found = True
                         break
                 if not issue_found:
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": volume_id,
-                        "item_type": "ebs_volume",
-                        "test_name": test_name,
-                        "test_result": "no_issue_found"
-                    })
+                    result.append(self._append_ebs_test_result(volume_id, "ebs_volume", test_name, "no_issue_found"))
                 else:
-                    result.append({
-                        "user": self.user_id,
-                        "account_arn": self.account_arn,
-                        "account": self.account_id,
-                        "timestamp": time.time(),
-                        "item": volume_id,
-                        "item_type": "ebs_volume",
-                        "test_name": test_name,
-                        "test_result": "issue_found"
-                    })
+                    result.append(self._append_ebs_test_result(volume_id, "ebs_volume", test_name, "issue_found"))
         return result
 
     def get_volume_snapshots_are_public(self):
@@ -243,25 +175,8 @@ class Tester(interfaces.TesterInterface):
             attrs = self.aws_ec2_client.describe_snapshot_attribute(SnapshotId=snapshot_id,
                                                                     Attribute="createVolumePermission")
             if any([attr["Group"] == "all" for attr in attrs["CreateVolumePermissions"]]):
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": snapshot_id,
-                    "item_type": "ebs_snapshot",
-                    "test_name": test_name,
-                    "test_result": "issue_found"
-                })
+                result.append(self._append_ebs_test_result(snapshot_id, "ebs_snapshot", test_name, "issue_found"))
             else:
-                result.append({
-                    "user": self.user_id,
-                    "account_arn": self.account_arn,
-                    "account": self.account_id,
-                    "timestamp": time.time(),
-                    "item": snapshot_id,
-                    "item_type": "ebs_snapshot",
-                    "test_name": test_name,
-                    "test_result": "no_issue_found"
-                })
+                result.append(self._append_ebs_test_result(snapshot_id, "ebs_snapshot", test_name, "no_issue_found"))
+
         return result
