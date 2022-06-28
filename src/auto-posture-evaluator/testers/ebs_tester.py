@@ -1,6 +1,5 @@
-from inspect import Attribute
 import time
-from typing import Dict, List, Set
+from typing import List
 import boto3
 import interfaces
 import datetime as dt
@@ -8,8 +7,10 @@ from datetime import datetime
 import os
 import concurrent.futures
 
+
 class Tester(interfaces.TesterInterface):
-    def __init__(self, region_name) -> None:
+    def __init__(self, region_name: str) -> None:
+        self.aws_region = region_name
         self.aws_ec2_client = boto3.client('ec2', region_name=region_name)
         self.aws_ec2_resource = boto3.resource('ec2', region_name=region_name)
         self.aws_kms_client = boto3.client('kms', region_name=region_name)
@@ -25,19 +26,34 @@ class Tester(interfaces.TesterInterface):
         return 'aws'
 
     def run_tests(self) -> list:
-        self.ebs_volumes = self._get_ebs_volumes()
-        executor_list = []
-        return_value = []
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            executor_list.append(executor.submit(self.get_volume_is_not_encrypted, self.ebs_volumes))
-            executor_list.append(executor.submit(self.get_volume_attached_to_ec2, self.ebs_volumes))
-            executor_list.append(executor.submit(self.get_volume_does_not_have_recent_snapshots, self.ebs_volumes))
-            executor_list.append(
-                executor.submit(self.get_volume_not_encrypted_with_kms_customer_keys, self.ebs_volumes))
-            executor_list.append(executor.submit(self.get_volume_snapshots_are_public))
-            for future in executor_list:
-                return_value += future.result()
-        return return_value
+        all_regions = self._get_all_aws_regions()
+
+        if any([self.aws_region == region for region in all_regions]):
+            self.ebs_volumes = self._get_ebs_volumes()
+            executor_list = []
+            return_value = []
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                executor_list.append(executor.submit(self.get_volume_is_not_encrypted, self.ebs_volumes))
+                executor_list.append(executor.submit(self.get_volume_attached_to_ec2, self.ebs_volumes))
+                executor_list.append(executor.submit(self.get_volume_does_not_have_recent_snapshots, self.ebs_volumes))
+                executor_list.append(
+                    executor.submit(self.get_volume_not_encrypted_with_kms_customer_keys, self.ebs_volumes))
+                executor_list.append(executor.submit(self.get_volume_snapshots_are_public))
+                for future in executor_list:
+                    return_value += future.result()
+            return return_value
+        else:
+            return None
+
+    def _get_all_aws_regions(self):
+        all_regions = []
+        ec2_client = boto3.client('ec2', region_name='us-east-1')
+        response = ec2_client.describe_regions(AllRegions=True)
+
+        for i in response['Regions']:
+            all_regions.append(i['RegionName'])
+
+        return all_regions
 
     def _get_ebs_volumes(self):
         volumes = []
@@ -249,4 +265,3 @@ class Tester(interfaces.TesterInterface):
                     "test_result": "no_issue_found"
                 })
         return result
-
