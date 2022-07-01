@@ -352,7 +352,24 @@ class Tester(interfaces.TesterInterface):
                 bucket_policy = self._get_bucket_policy(bucket_name)
                 policy_statements = json.loads(bucket_policy['Policy'])['Statement']
                 for statement in policy_statements:
-                    if str(statement["Resource"]).endswith('*'):
+                    policy_resource = statement['Resource']
+                    if isinstance(policy_resource, str):
+                        if str(statement["Resource"]).endswith('*'):
+                            policy_for_response = json.loads(bucket_policy['Policy'])
+                            result.append({
+                                "user": self.user_id,
+                                "account_arn": self.account_arn,
+                                "account": self.account_id,
+                                "timestamp": time.time(),
+                                "item": bucket_name,
+                                "item_type": "s3_bucket",
+                                "test_name": test_name,
+                                "policy": policy_for_response,
+                                "test_result": "issue_found",
+                                "region": bucket_region
+                            })
+                            issue_detected = True
+                    elif any([resource.endswith('*') for resource in policy_resource]):
                         policy_for_response = json.loads(bucket_policy['Policy'])
                         result.append({
                             "user": self.user_id,
