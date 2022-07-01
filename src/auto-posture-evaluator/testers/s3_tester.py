@@ -632,7 +632,6 @@ class Tester(interfaces.TesterInterface):
                 encryption = self.aws_s3_client.get_bucket_encryption(Bucket=bucket_name)
                 encryption_rules = encryption['ServerSideEncryptionConfiguration']['Rules']
                 for rule in encryption_rules:
-                    if not rule['BucketKeyEnabled']: continue
                     default_sse = rule['ApplyServerSideEncryptionByDefault']
                     sse_algorithm = default_sse['SSEAlgorithm']
                     if sse_algorithm == 'AES256':
@@ -645,17 +644,11 @@ class Tester(interfaces.TesterInterface):
                         key_id = default_sse['KMSMasterKeyID']
                         try:
                             kms_key_description_response = self.aws_kms_client.describe_key(KeyId=key_id)
-                            key_id = kms_key_description_response['KeyMetadata']['KeyId']
-                            kms_response = self.aws_kms_client.list_aliases(KeyId=key_id)
-                            key_aliases = kms_response['Aliases']
-
-                            for alias in key_aliases:
-                                alias_name = alias['AliasName']
-                                if alias_name.startswith('alias/aws/') or alias_name.startswith('alias/'):
-                                    issue_detected = False
-                                else:
-                                    issue_detected = True
-                                    break
+                            key_manager = kms_key_description_response['KeyMetadata']['KeyManager']
+                            if key_manager == 'CUSTOMER':
+                                issue_detected = False
+                            else:
+                                issue_detected = True
                         except Exception:
                             issue_detected = True
                             break
