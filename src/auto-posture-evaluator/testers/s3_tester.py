@@ -130,7 +130,7 @@ class Tester(interfaces.TesterInterface):
             bucket_name = bucket_meta["Name"]
             bucket_region = bucket_meta['location_constraint']
             cur_bucket_versioning = self._get_bucket_versioning(bucket_name)
-            if not cur_bucket_versioning.status:
+            if cur_bucket_versioning.status is None or cur_bucket_versioning == 'Suspended':
                 result.append({
                     "user": self.user_id,
                     "account_arn": self.account_arn,
