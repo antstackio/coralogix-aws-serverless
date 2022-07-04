@@ -1178,7 +1178,8 @@ class Tester(interfaces.TesterInterface):
             cur_bucket_permissions = self._get_bucket_acl(bucket_name)
             issue_detected = False
             for grantee in cur_bucket_permissions.grants:
-                if grantee["Permission"] == permission_to_check:
+                permission = grantee["Permission"]
+                if permission.startswith(permission_to_check) or permission == "FULL_CONTROL":
                     if bucket_name not in write_enabled_buckets:
                         write_enabled_buckets.append(bucket_name)
                         result.append({
