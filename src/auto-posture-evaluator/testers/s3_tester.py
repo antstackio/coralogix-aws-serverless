@@ -1319,9 +1319,3 @@ class Tester(interfaces.TesterInterface):
                     raise c
 
         return result
-
-
-tester = Tester('global')
-buckets = tester.s3_buckets
-
-print(tester.detect_bucket_content_writable_by_anonymous(buckets))
