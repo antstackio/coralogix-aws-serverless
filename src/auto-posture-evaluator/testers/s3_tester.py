@@ -505,6 +505,7 @@ class Tester(interfaces.TesterInterface):
     def detect_bucket_content_writable_by_anonymous(self, buckets_list):
         test_name = "aws_s3_bucket_content_writable_by_anonymous"
         result = []
+        bucket_issue_dict = {}
         for bucket_meta in buckets_list["Buckets"]:
             issue_detected = False
             bucket_name = bucket_meta["Name"]
@@ -512,22 +513,51 @@ class Tester(interfaces.TesterInterface):
             try:
                 bucket_policy = self._get_bucket_policy(bucket_name)
                 policy_statements = json.loads(bucket_policy['Policy'])['Statement']
+                bucket_policy = json.loads(bucket_policy['Policy'])
                 for statement in policy_statements:
-                    if statement["Principal"] == '*' and "s3:PutObject" in statement["Action"] and str(statement["Resource"]).endswith('*'):
-                        bucket_policy = json.loads(bucket_policy['Policy'])
-                        result.append({
-                            "user": self.user_id,
-                            "account_arn": self.account_arn,
-                            "account": self.account_id,
-                            "timestamp": time.time(),
-                            "item": bucket_name,
-                            "item_type": "s3_bucket",
-                            "test_name": test_name,
-                            "policy": bucket_policy,
-                            "test_result": "issue_found",
-                            "region": bucket_region
-                        })
-                        issue_detected = True
+                    if statement["Principal"] == '*' and statement["Effect"] == 'Allow':
+                        actions = statement['Action']
+                        if isinstance(actions, str):
+                            if actions == "s3:*" or actions == "s3:PutObject":
+                                if bucket_issue_dict.get(bucket_name) is None:
+                                    bucket_issue_dict[bucket_name] = 1
+                                    result.append({
+                                        "user": self.user_id,
+                                        "account_arn": self.account_arn,
+                                        "account": self.account_id,
+                                        "timestamp": time.time(),
+                                        "item": bucket_name,
+                                        "item_type": "s3_bucket",
+                                        "test_name": test_name,
+                                        "policy": bucket_policy,
+                                        "test_result": "issue_found",
+                                        "region": bucket_region
+                                    })
+                                    issue_detected = True
+                                else:
+                                    pass
+                            else:
+                                pass
+                        else:
+                            if any([action == "s3:PutObject" or action == "s3:*" for action in actions]):
+                                if bucket_issue_dict.get(bucket_name) is None:
+                                    bucket_issue_dict[bucket_name] = 1
+                                    result.append({
+                                        "user": self.user_id,
+                                        "account_arn": self.account_arn,
+                                        "account": self.account_id,
+                                        "timestamp": time.time(),
+                                        "item": bucket_name,
+                                        "item_type": "s3_bucket",
+                                        "test_name": test_name,
+                                        "policy": bucket_policy,
+                                        "test_result": "issue_found",
+                                        "region": bucket_region
+                                    })
+                                    issue_detected = True
+                                else:
+                                    pass
+                            else: pass
             except botocore.exceptions.ClientError as ex:
                 if ex.response['Error']['Code'] == 'NoSuchBucketPolicy':
                     # No policy means the bucket content is not listable by policy
@@ -1289,3 +1319,9 @@ class Tester(interfaces.TesterInterface):
                     raise c
 
         return result
+
+
+tester = Tester('global')
+buckets = tester.s3_buckets
+
+print(tester.detect_bucket_content_writable_by_anonymous(buckets))
