@@ -1207,7 +1207,12 @@ class Tester(interfaces.TesterInterface):
             bucket_region = bucket_meta['location_constraint']
             cur_bucket_permissions = self._get_bucket_acl(bucket_name)
             issue_detected = False
-            for grantee in cur_bucket_permissions.grants:
+            if permission_to_check == 'FULL_CONTROL':
+                grants = list(filter(lambda x: not x['Grantee']['Type'] == 'CanonicalUser', cur_bucket_permissions.grants))
+            else:
+                grants = cur_bucket_permissions.grants
+
+            for grantee in grants:
                 permission = grantee["Permission"]
                 if permission.startswith(permission_to_check) or permission == "FULL_CONTROL":
                     if bucket_name not in write_enabled_buckets:
