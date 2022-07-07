@@ -423,7 +423,7 @@ class Tester(interfaces.TesterInterface):
                 policy_statements = json.loads(bucket_policy['Policy'])['Statement']
                 for statement in policy_statements:
                     bucket_policy_resp = json.loads(bucket_policy['Policy'])
-                    if statement["Principal"] == '*' and statement['Effect'] == 'Allow':
+                    if (statement["Principal"] == '*' or statement['Principal'] == {"AWS": "*"}) and statement['Effect'] == 'Allow':
                         action = statement["Action"]
                         if isinstance(action, str):
                             if action == "s3:*" or action == "s3:Get*" or action == "s3:GetObjectAcl":
@@ -499,7 +499,7 @@ class Tester(interfaces.TesterInterface):
                 policy_statements = json.loads(bucket_policy['Policy'])['Statement']
                 for statement in policy_statements:
                     if bucket_cache.get(bucket_name) is None:
-                        if statement["Principal"] == '*' and statement['Effect'] == "Allow":
+                        if (statement["Principal"] == '*' or statement['Principal'] == {"AWS": "*"}) and statement['Effect'] == "Allow":
                             actions = statement['Action']
                             if isinstance(actions, str):
                                 if actions == "s3:*" or actions == "s3:Put*" or actions == "s3:PutObjectAcl":
@@ -574,7 +574,7 @@ class Tester(interfaces.TesterInterface):
                 policy_statements = json.loads(bucket_policy['Policy'])['Statement']
                 bucket_policy = json.loads(bucket_policy['Policy'])
                 for statement in policy_statements:
-                    if statement["Principal"] == '*' and statement["Effect"] == 'Allow':
+                    if (statement["Principal"] == '*' or statement['Principal'] == {"AWS": "*"}) and statement["Effect"] == 'Allow':
                         actions = statement['Action']
                         if isinstance(actions, str):
                             if actions == "s3:*" or actions == "s3:PutObject":
