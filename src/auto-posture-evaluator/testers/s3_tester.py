@@ -447,6 +447,7 @@ class Tester(interfaces.TesterInterface):
                         else:
                             if any([a == "s3:*" or a == "s3:Get*" or a == "s3:GetObjectAcl" for a in action]):
                                 if bucket_cache.get(bucket_name) is None:
+                                    bucket_cache[bucket_name] = 1
                                     result.append({
                                         "user": self.user_id,
                                         "account_arn": self.account_arn,
