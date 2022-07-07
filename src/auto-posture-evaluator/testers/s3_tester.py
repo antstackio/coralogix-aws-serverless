@@ -356,7 +356,7 @@ class Tester(interfaces.TesterInterface):
                     policy_resource = statement['Resource']
                     policy_for_response = json.loads(bucket_policy['Policy'])
                     if isinstance(policy_resource, str):
-                        if str(statement["Resource"]).endswith('*'):
+                        if str(statement["Resource"]).endswith('*') and statement['Effect'] == 'Allow':
                             if bucket_cache.get(bucket_name) is None:
                                 bucket_cache[bucket_name] = 1
                                 result.append({
@@ -372,7 +372,7 @@ class Tester(interfaces.TesterInterface):
                                     "region": bucket_region
                                 })
                                 issue_detected = True
-                    elif any([resource.endswith('*') for resource in policy_resource]):
+                    elif any([resource.endswith('*') for resource in policy_resource]) and statement['Effect'] == 'Allow':
                         if bucket_cache.get(bucket_name) is None:
                             bucket_cache[bucket_name] = 1
                             result.append({
