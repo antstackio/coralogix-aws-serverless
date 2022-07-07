@@ -353,7 +353,6 @@ class Tester(interfaces.TesterInterface):
                 bucket_policy = self._get_bucket_policy(bucket_name)
                 policy_statements = json.loads(bucket_policy['Policy'])['Statement']
                 for statement in policy_statements:
-                    print("Bucket", bucket_name, sep=" :: ")
                     policy_resource = statement['Resource']
                     policy_for_response = json.loads(bucket_policy['Policy'])
                     if isinstance(policy_resource, str):
@@ -487,6 +486,7 @@ class Tester(interfaces.TesterInterface):
     def detect_bucket_content_permissions_modifiable_by_users(self, buckets_list):
         test_name = "aws_s3_bucket_content_permissions_modifiable_by_users"
         result = []
+        bucket_cache = {}
         for bucket_meta in buckets_list["Buckets"]:
             issue_detected = False
             bucket_name = bucket_meta["Name"]
@@ -495,21 +495,47 @@ class Tester(interfaces.TesterInterface):
                 bucket_policy = self._get_bucket_policy(bucket_name)
                 policy_statements = json.loads(bucket_policy['Policy'])['Statement']
                 for statement in policy_statements:
-                    if statement["Principal"] == '*' and "s3:PutObjectAcl" in statement["Action"] and str(statement["Resource"]).endswith('*'):
-                        bucket_policy = json.loads(bucket_policy['Policy'])
-                        result.append({
-                            "user": self.user_id,
-                            "account_arn": self.account_arn,
-                            "account": self.account_id,
-                            "timestamp": time.time(),
-                            "item": bucket_name,
-                            "item_type": "s3_bucket",
-                            "test_name": test_name,
-                            "policy": bucket_policy,
-                            "test_result": "issue_found",
-                            "region": bucket_region
-                        })
-                        issue_detected = True
+                    if bucket_cache.get(bucket_name) is None:
+                        if statement["Principal"] == '*' and statement['Effect'] == "Allow":
+                            actions = statement['Action']
+                            if isinstance(actions, str):
+                                if actions == "s3:*" or actions == "s3:Put*" or actions == "s3:PutObjectAcl":
+                                    bucket_cache[bucket_name] = 1
+                                    bucket_policy = json.loads(bucket_policy['Policy'])
+                                    result.append({
+                                        "user": self.user_id,
+                                        "account_arn": self.account_arn,
+                                        "account": self.account_id,
+                                        "timestamp": time.time(),
+                                        "item": bucket_name,
+                                        "item_type": "s3_bucket",
+                                        "test_name": test_name,
+                                        "policy": bucket_policy,
+                                        "test_result": "issue_found",
+                                        "region": bucket_region
+                                    })
+                                    issue_detected = True
+                                else: pass
+                            else:
+                                if any([a == 's3:*' or a == 's3:Put*' or a == 's3:PutObjectAcl' for a in actions]):
+                                    bucket_cache[bucket_name] = 1
+                                    bucket_policy = json.loads(bucket_policy['Policy'])
+                                    result.append({
+                                        "user": self.user_id,
+                                        "account_arn": self.account_arn,
+                                        "account": self.account_id,
+                                        "timestamp": time.time(),
+                                        "item": bucket_name,
+                                        "item_type": "s3_bucket",
+                                        "test_name": test_name,
+                                        "policy": bucket_policy,
+                                        "test_result": "issue_found",
+                                        "region": bucket_region
+                                    })
+                                    issue_detected = True
+                                else: pass
+                        else: pass
+                    else: pass
             except botocore.exceptions.ClientError as ex:
                 if ex.response['Error']['Code'] == 'NoSuchBucketPolicy':
                     # No policy means the bucket content is not listable by policy
@@ -1354,8 +1380,3 @@ class Tester(interfaces.TesterInterface):
                     raise c
 
         return result
-
-
-tester = Tester('global')
-buckets = tester.s3_buckets
-print(tester.detect_bucket_content_permissions_viewable_by_users(buckets_list=buckets))
