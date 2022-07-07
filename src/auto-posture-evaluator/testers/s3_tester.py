@@ -413,6 +413,7 @@ class Tester(interfaces.TesterInterface):
     def detect_bucket_content_permissions_viewable_by_users(self, buckets_list):
         test_name = "aws_s3_bucket_content_permissions_viewable_by_users"
         result = []
+        bucket_cache = {}
         for bucket_meta in buckets_list["Buckets"]:
             issue_detected = False
             bucket_name = bucket_meta["Name"]
@@ -421,21 +422,46 @@ class Tester(interfaces.TesterInterface):
                 bucket_policy = self._get_bucket_policy(bucket_name)
                 policy_statements = json.loads(bucket_policy['Policy'])['Statement']
                 for statement in policy_statements:
-                    if statement["Principal"] == '*' and "s3:GetObjectAcl" in statement["Action"] and str(statement["Resource"]).endswith('*'):
-                        bucket_policy = json.loads(bucket_policy['Policy'])
-                        result.append({
-                            "user": self.user_id,
-                            "account_arn": self.account_arn,
-                            "account": self.account_id,
-                            "timestamp": time.time(),
-                            "item": bucket_name,
-                            "item_type": "s3_bucket",
-                            "test_name": test_name,
-                            "policy": bucket_policy,
-                            "test_result": "issue_found",
-                            "region": bucket_region
-                        })
-                        issue_detected = True
+                    bucket_policy_resp = json.loads(bucket_policy['Policy'])
+                    if statement["Principal"] == '*' and statement['Effect'] == 'Allow':
+                        action = statement["Action"]
+                        if isinstance(action, str):
+                            if action == "s3:*" or action == "s3:Get*" or action == "s3:GetObjectAcl":
+                                if bucket_cache.get(bucket_name) is None:
+                                    result.append({
+                                        "user": self.user_id,
+                                        "account_arn": self.account_arn,
+                                        "account": self.account_id,
+                                        "timestamp": time.time(),
+                                        "item": bucket_name,
+                                        "item_type": "s3_bucket",
+                                        "test_name": test_name,
+                                        "policy": bucket_policy_resp,
+                                        "test_result": "issue_found",
+                                        "region": bucket_region
+                                    })
+                                    issue_detected = True
+                                else: pass
+                            else: pass
+                        else:
+                            if any([a == "s3:*" or a == "s3:Get*" or a == "s3:GetObjectAcl" for a in action]):
+                                if bucket_cache.get(bucket_name) is None:
+                                    result.append({
+                                        "user": self.user_id,
+                                        "account_arn": self.account_arn,
+                                        "account": self.account_id,
+                                        "timestamp": time.time(),
+                                        "item": bucket_name,
+                                        "item_type": "s3_bucket",
+                                        "test_name": test_name,
+                                        "policy": bucket_policy_resp,
+                                        "test_result": "issue_found",
+                                        "region": bucket_region
+                                    })
+                                    issue_detected = True
+                                else: pass
+                            else: pass
+                    else: pass
             except botocore.exceptions.ClientError as ex:
                 if ex.response['Error']['Code'] == 'NoSuchBucketPolicy':
                     # No policy means the bucket content is not listable by policy
@@ -1332,4 +1358,4 @@ class Tester(interfaces.TesterInterface):
 
 tester = Tester('global')
 buckets = tester.s3_buckets
-print(tester.detect_bucket_content_listable_by_users(buckets_list=buckets))
+print(tester.detect_bucket_content_permissions_viewable_by_users(buckets_list=buckets))
