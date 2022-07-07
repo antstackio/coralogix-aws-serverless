@@ -374,6 +374,7 @@ class Tester(interfaces.TesterInterface):
                                 issue_detected = True
                     elif any([resource.endswith('*') for resource in policy_resource]):
                         if bucket_cache.get(bucket_name) is None:
+                            bucket_cache[bucket_name] = 1
                             result.append({
                                 "user": self.user_id,
                                 "account_arn": self.account_arn,
